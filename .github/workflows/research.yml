@@ -1,0 +1,38 @@
+name: Galka Historical Replay
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "research/**"
+      - ".github/workflows/research.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: research/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r research/requirements.txt
+      - name: Synthetic no-network smoke test
+        run: python research/run_candidate.py --synthetic --output research/output/smoke.galka.zip
+      - name: Replay selected candidate on Binance history
+        run: python research/run_candidate.py
+      - name: List results
+        run: ls -lh research/output && unzip -t research/output/BTCUSDT_15m_dual_failure_v5.galka.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galka-btc15m-history
+          path: |
+            research/output/BTCUSDT_15m_dual_failure_v5.galka.zip
+          if-no-files-found: error
+          retention-days: 30
