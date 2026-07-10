@@ -35,10 +35,12 @@ Then open `http://localhost:8080/terminal/`.
 First installation from the current MVP branch:
 
 ```bash
-pkg update -y && pkg install git python -y && rm -rf ~/Galka && git clone --branch feat/galka-terminal-mvp --single-branch https://github.com/CryptoJonic/MeteoraAgent.git ~/Galka && cd ~/Galka && bash scripts/start-termux.sh
+pkg update -y && pkg install git python -y && git clone --branch feat/galka-terminal-mvp --single-branch https://github.com/CryptoJonic/MeteoraAgent.git ~/Galka && cd ~/Galka && bash scripts/start-termux.sh
 ```
 
-Later launches:
+If `~/Galka` already exists, do not run the installation command again. Use the update command below.
+
+Later launches and updates:
 
 ```bash
 cd ~/Galka && git pull && bash scripts/start-termux.sh
