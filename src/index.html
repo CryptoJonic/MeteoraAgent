@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Galka Research Terminal</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Galka Research Terminal</h1>
+    <label class="upload">Загрузить .galka.zip или .galka.json<input id="fileInput" type="file" accept=".zip,.json,.galka.zip,.galka.json" /></label>
+  </header>
+  <main>
+    <aside>
+      <section id="summary"><h2>Сводка</h2><p>Файл не загружен.</p></section>
+      <section><h2>Сделки</h2><select id="tradeSelect" size="14"></select></section>
+      <section id="tradeDetails"><h2>Детали сделки</h2></section>
+    </aside>
+    <section class="chart-wrap"><div id="chart"></div></section>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

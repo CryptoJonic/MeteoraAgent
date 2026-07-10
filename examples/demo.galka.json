@@ -1,0 +1,22 @@
+{
+  "schema_version":"1.0",
+  "meta":{"symbol":"BTCUSDT","timeframe":"5m","model_id":"galka-demo-v1","generated_at":"2026-07-10T14:30:00Z"},
+  "summary":{"trades":1,"win_rate":1,"net_pnl":42.5,"max_drawdown":-18.0},
+  "candles":[
+    {"time":"2026-07-01T10:00:00Z","open":101,"high":102,"low":100,"close":101.5},
+    {"time":"2026-07-01T10:05:00Z","open":101.5,"high":102,"low":98,"close":98.5},
+    {"time":"2026-07-01T10:10:00Z","open":98.5,"high":99,"low":96,"close":97},
+    {"time":"2026-07-01T10:15:00Z","open":97,"high":100,"low":96.5,"close":99.5},
+    {"time":"2026-07-01T10:20:00Z","open":99.5,"high":100.5,"low":97.2,"close":97.8},
+    {"time":"2026-07-01T10:25:00Z","open":97.8,"high":98,"low":94,"close":95},
+    {"time":"2026-07-01T10:30:00Z","open":95,"high":96,"low":92,"close":93},
+    {"time":"2026-07-01T10:35:00Z","open":93,"high":97,"low":92.5,"close":96.5},
+    {"time":"2026-07-01T10:40:00Z","open":96.5,"high":99,"low":96,"close":98}
+  ],
+  "trades":[{
+    "id":"G-0001","status":"target","v_low":96,"v_low_time":"2026-07-01T10:10:00Z","break_time":"2026-07-01T10:25:00Z","break_price":95.8,
+    "last_limit":92,"risk_money":100,"avg_entry":93.7,"exit_time":"2026-07-01T10:40:00Z","exit_price":96,"exit_reason":"return_to_v_low","pnl":42.5,
+    "fills":[{"level":1,"time":"2026-07-01T10:25:00Z","price":95,"qty":5},{"level":2,"time":"2026-07-01T10:30:00Z","price":92.5,"qty":5}],
+    "parameters":{"depth_pct":4.17,"levels":2,"allocation":"equal_notional"}
+  }]
+}
