@@ -4,8 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-# Compatibility bridge: early installations were pinned to a merged feature branch.
-# Preserve local edits, migrate to main, then restart this script from the current version.
+# Compatibility bridge: early installations were cloned with --single-branch
+# and pinned to a merged feature branch. Explicitly add/fetch main, preserve
+# local edits, migrate to main, then restart this script from the current code.
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   CURRENT_BRANCH="$(git branch --show-current || true)"
   if [[ -n "$CURRENT_BRANCH" && "$CURRENT_BRANCH" != "main" ]]; then
@@ -15,13 +16,18 @@ if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/n
       git stash push -u -m "$STASH_NAME" >/dev/null
       echo "Локальные изменения сохранены в git stash: $STASH_NAME"
     fi
-    git fetch origin main
+
+    # A --single-branch clone may not have an origin/main refspec.
+    git remote set-branches --add origin main
+    git fetch origin main:refs/remotes/origin/main
+
     if git show-ref --verify --quiet refs/heads/main; then
       git switch main
+      git reset --hard origin/main
     else
       git switch -c main --track origin/main
     fi
-    git pull --ff-only origin main
+    git branch --set-upstream-to=origin/main main >/dev/null 2>&1 || true
     exec bash "$ROOT_DIR/scripts/start-termux.sh" "${1:-}"
   fi
 fi
