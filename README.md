@@ -30,6 +30,22 @@ python -m http.server 8080
 
 Then open `http://localhost:8080/terminal/`.
 
+## Run in Termux
+
+First installation from the current MVP branch:
+
+```bash
+pkg update -y && pkg install git python -y && rm -rf ~/Galka && git clone --branch feat/galka-terminal-mvp --single-branch https://github.com/CryptoJonic/MeteoraAgent.git ~/Galka && cd ~/Galka && bash scripts/start-termux.sh
+```
+
+Later launches:
+
+```bash
+cd ~/Galka && git pull && bash scripts/start-termux.sh
+```
+
+The launcher opens `http://127.0.0.1:8080/terminal/` in the phone browser. Return to Termux and press `Ctrl+C` to stop the local server.
+
 The terminal can load:
 
 - `.galka.zip` for full research runs;
