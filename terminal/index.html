@@ -4,499 +4,70 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1020" />
-  <title>Galka — аудит стратегии</title>
+  <title>Galka Terminal</title>
   <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #070b14;
-      --panel: #0f1627;
-      --panel-2: #131d31;
-      --line: #27334a;
-      --text: #e9eef9;
-      --muted: #8f9bb3;
-      --accent: #65a7ff;
-      --good: #36c98f;
-      --bad: #ff6b78;
-      --warn: #ffba5c;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 Inter, system-ui, sans-serif; }
-    button, input { font: inherit; }
-    .app { min-height: 100vh; display: grid; grid-template-rows: auto auto minmax(520px, 1fr); }
-    header { display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 14px 18px; background: #0a1020; border-bottom: 1px solid var(--line); }
-    .brand { display: flex; align-items: center; gap: 10px; min-width: 180px; }
-    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #36557d; border-radius: 9px; color: var(--accent); font-weight: 800; }
-    h1 { margin: 0; font-size: 16px; }
-    .subtitle { color: var(--muted); font-size: 12px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-    .btn, .file-label { border: 1px solid #33425f; background: #16223a; color: var(--text); border-radius: 8px; padding: 9px 12px; cursor: pointer; }
-    .btn:hover, .file-label:hover { border-color: var(--accent); }
-    .file-label { background: #1c4f87; border-color: #2d6ba7; }
-    #fileInput { display: none; }
-    .meta { display: grid; grid-template-columns: repeat(6, minmax(110px, 1fr)); gap: 8px; padding: 10px 12px; background: #0b1221; border-bottom: 1px solid var(--line); }
-    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 54px; }
-    .card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
-    .card .value { margin-top: 4px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .workspace { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
-    .chart-panel { min-width: 0; min-height: 520px; position: relative; border-right: 1px solid var(--line); }
-    #chart { position: absolute; inset: 0; }
-    .empty { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; pointer-events: none; }
-    .empty-box { max-width: 520px; margin: 20px; padding: 24px; background: rgba(15,22,39,.94); border: 1px dashed #3a4b6b; border-radius: 12px; text-align: center; }
-    .empty-box strong { display: block; margin-bottom: 8px; font-size: 17px; }
-    .side { min-height: 0; background: var(--panel); display: grid; grid-template-rows: auto auto minmax(0,1fr); }
-    .status { padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--muted); white-space: pre-wrap; }
-    .status.error { color: var(--bad); }
-    .status.warn { color: var(--warn); }
-    .filters { display: flex; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
-    select { width: 100%; border: 1px solid #33425f; background: #0b1221; color: var(--text); border-radius: 7px; padding: 8px; }
-    .trade-list { overflow: auto; }
-    .trade { padding: 10px 12px; border-bottom: 1px solid #202b40; cursor: pointer; }
-    .trade:hover, .trade.active { background: var(--panel-2); }
-    .trade-head { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; }
-    .trade-meta { margin-top: 5px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; color: var(--muted); font-size: 12px; }
-    .pnl.good { color: var(--good); }
-    .pnl.bad { color: var(--bad); }
-    .legend { position: absolute; top: 10px; left: 10px; z-index: 3; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
-    .chip { padding: 4px 7px; border-radius: 6px; background: rgba(10,16,32,.86); border: 1px solid #2f3d58; color: var(--muted); font-size: 11px; }
-    @media (max-width: 900px) {
-      .app { grid-template-rows: auto auto auto; }
-      header { align-items: flex-start; }
-      .meta { grid-template-columns: repeat(3, minmax(90px, 1fr)); }
-      .workspace { grid-template-columns: 1fr; grid-template-rows: 62vh 380px; }
-      .chart-panel { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
-    }
-    @media (max-width: 560px) {
-      header { flex-direction: column; }
-      .actions { justify-content: flex-start; }
-      .meta { grid-template-columns: repeat(2, minmax(100px, 1fr)); }
-      .workspace { grid-template-rows: 58vh 420px; }
-    }
+    :root{color-scheme:dark;--bg:#070b14;--panel:#0f1627;--line:#27334a;--text:#e9eef9;--muted:#8f9bb3;--accent:#65a7ff;--good:#36c98f;--bad:#ff6b78;--warn:#ffba5c}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,sans-serif}button,input,select{font:inherit}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px;background:#0a1020;border-bottom:1px solid var(--line)}
+    h1{font-size:17px;margin:0}.sub{font-size:12px;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    button,.file{border:1px solid #33425f;background:#16223a;color:var(--text);border-radius:8px;padding:9px 11px;cursor:pointer}.primary{background:#1c4f87}.file input{display:none}
+    .meta{display:grid;grid-template-columns:repeat(6,minmax(100px,1fr));gap:8px;padding:10px;background:#0b1221;border-bottom:1px solid var(--line)}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px}.label{font-size:11px;color:var(--muted);text-transform:uppercase}.value{font-weight:700;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:calc(100vh - 132px)}.chart-panel{position:relative;min-height:560px;border-right:1px solid var(--line)}#chart{position:absolute;inset:0}
+    aside{background:var(--panel);display:grid;grid-template-rows:auto auto minmax(0,1fr);min-height:0}.status{padding:10px;border-bottom:1px solid var(--line);white-space:pre-wrap;color:var(--muted)}.status.error{color:var(--bad)}.status.warn{color:var(--warn)}
+    .filters{padding:9px;border-bottom:1px solid var(--line);display:flex;gap:7px}select{width:100%;background:#0b1221;color:var(--text);border:1px solid #33425f;border-radius:7px;padding:8px}
+    .list{overflow:auto}.trade{padding:10px;border-bottom:1px solid #202b40;cursor:pointer}.trade:hover,.trade.active{background:#131d31}.head{display:flex;justify-content:space-between;font-weight:700}.good{color:var(--good)}.bad{color:var(--bad)}.details{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:5px;font-size:12px;color:var(--muted)}
+    .empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.empty div{background:rgba(15,22,39,.95);border:1px dashed #3a4b6b;border-radius:12px;padding:22px;text-align:center;max-width:520px}
+    @media(max-width:900px){header{align-items:flex-start}.meta{grid-template-columns:repeat(3,1fr)}.workspace{grid-template-columns:1fr;grid-template-rows:58vh 420px}.chart-panel{min-height:0;border-right:0;border-bottom:1px solid var(--line)}}
+    @media(max-width:560px){header{flex-direction:column}.meta{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
 <body>
-<div class="app">
-  <header>
-    <div class="brand">
-      <div class="brand-mark">V</div>
-      <div><h1>Galka Terminal</h1><div class="subtitle">Визуальный аудит бэктестов</div></div>
-    </div>
-    <div class="actions">
-      <button class="btn" id="demoBtn">Открыть демо</button>
-      <button class="btn" id="downloadBtn">Скачать пример</button>
-      <label class="file-label" for="fileInput">Загрузить файл</label>
-      <input id="fileInput" type="file" accept=".zip,.json,.galka.zip,.galka.json,application/zip,application/json" />
-    </div>
-  </header>
-
-  <section class="meta" id="metaCards"></section>
-
-  <main class="workspace">
-    <section class="chart-panel">
-      <div class="legend">
-        <span class="chip">V-low: синий круг</span>
-        <span class="chip">Пробой: оранжевая стрелка</span>
-        <span class="chip">Покупка: зелёная стрелка</span>
-        <span class="chip">Выход: метка над свечой</span>
-      </div>
-      <div id="chart"></div>
-      <div class="empty" id="emptyState"><div class="empty-box"><strong>Загрузите результат исследования</strong>Поддерживаются <code>.galka.zip</code> и <code>.galka.json</code>. Данные читаются локально в браузере и никуда не отправляются.</div></div>
-    </section>
-    <aside class="side">
-      <div class="status" id="status">Терминал готов.</div>
-      <div class="filters">
-        <select id="resultFilter">
-          <option value="all">Все сделки</option>
-          <option value="win">Только прибыльные</option>
-          <option value="loss">Только убыточные</option>
-          <option value="breakeven">Безубыточные</option>
-          <option value="open">Открытые</option>
-        </select>
-      </div>
-      <div class="trade-list" id="tradeList"></div>
-    </aside>
-  </main>
-</div>
-
+<header>
+  <div><h1>Galka Terminal</h1><div class="sub">Визуальная проверка исторических сделок</div></div>
+  <div class="actions">
+    <button class="primary" id="btcBtn">Открыть BTC историю</button>
+    <button id="demoBtn">Демо</button>
+    <label class="file">Загрузить файл<input id="fileInput" type="file" accept=".zip,.json,.galka.zip,.galka.json" /></label>
+  </div>
+</header>
+<section class="meta" id="meta"></section>
+<main class="workspace">
+  <section class="chart-panel"><div id="chart"></div><div class="empty" id="empty"><div><b>Нажмите «Открыть BTC историю»</b><br>Архив уже находится в репозитории и загрузится без выбора файла на телефоне.</div></div></section>
+  <aside>
+    <div class="status" id="status">Терминал готов.</div>
+    <div class="filters"><select id="resultFilter"><option value="all">Все сделки</option><option value="win">Прибыльные</option><option value="loss">Убыточные</option></select><select id="sampleFilter"><option value="all">Вся история</option><option value="final_oos">Только final OOS</option></select></div>
+    <div class="list" id="tradeList"></div>
+  </aside>
+</main>
 <script>
-(() => {
-  'use strict';
-
-  const els = {
-    chart: document.getElementById('chart'),
-    empty: document.getElementById('emptyState'),
-    status: document.getElementById('status'),
-    cards: document.getElementById('metaCards'),
-    tradeList: document.getElementById('tradeList'),
-    resultFilter: document.getElementById('resultFilter'),
-    fileInput: document.getElementById('fileInput'),
-    demoBtn: document.getElementById('demoBtn'),
-    downloadBtn: document.getElementById('downloadBtn'),
-  };
-
-  const state = {
-    data: null,
-    chart: null,
-    candleSeries: null,
-    markerApi: null,
-    priceLines: [],
-    activeTradeId: null,
-  };
-
-  function setStatus(message, type = '') {
-    els.status.textContent = message;
-    els.status.className = `status ${type}`.trim();
-  }
-
-  function toTime(value) {
-    if (value === null || value === undefined || value === '') return null;
-    if (typeof value === 'number') return Math.floor(value > 1e12 ? value / 1000 : value);
-    const raw = String(value).trim();
-    if (/^\d+(\.\d+)?$/.test(raw)) {
-      const number = Number(raw);
-      return Math.floor(number > 1e12 ? number / 1000 : number);
-    }
-    const ms = Date.parse(raw);
-    if (!Number.isFinite(ms)) throw new Error(`Некорректное время: ${value}`);
-    return Math.floor(ms / 1000);
-  }
-
-  function num(value, fallback = 0) {
-    if (value === null || value === undefined || value === '') return fallback;
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
-  }
-
-  function parseCSVLine(line) {
-    const cells = [];
-    let current = '';
-    let quoted = false;
-    for (let i = 0; i < line.length; i += 1) {
-      const char = line[i];
-      if (char === '"') {
-        if (quoted && line[i + 1] === '"') { current += '"'; i += 1; }
-        else quoted = !quoted;
-      } else if (char === ',' && !quoted) {
-        cells.push(current);
-        current = '';
-      } else current += char;
-    }
-    cells.push(current);
-    return cells;
-  }
-
-  function parseCSV(text) {
-    const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim() !== '');
-    if (!lines.length) return [];
-    const headers = parseCSVLine(lines[0]).map(v => v.trim());
-    return lines.slice(1).map(line => {
-      const values = parseCSVLine(line);
-      return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? '']));
-    });
-  }
-
-  async function readZip(file) {
-    if (!window.JSZip) throw new Error('Модуль ZIP не загрузился. Проверьте интернет-соединение и перезагрузите страницу.');
-    const zip = await JSZip.loadAsync(file);
-    const manifestEntry = zip.file('manifest.json');
-    if (!manifestEntry) throw new Error('В архиве отсутствует manifest.json');
-    const manifest = JSON.parse(await manifestEntry.async('string'));
-    const files = manifest.files || {};
-    const readJson = async (path, optional = false) => {
-      const entry = zip.file(path);
-      if (!entry) { if (optional) return {}; throw new Error(`В архиве отсутствует ${path}`); }
-      return JSON.parse(await entry.async('string'));
-    };
-    const readCsv = async (path, optional = false) => {
-      const entry = zip.file(path);
-      if (!entry) { if (optional) return []; throw new Error(`В архиве отсутствует ${path}`); }
-      return parseCSV(await entry.async('string'));
-    };
-    return {
-      manifest,
-      candles: await readCsv(files.candles || 'candles.csv'),
-      patterns: await readCsv(files.patterns || 'patterns.csv'),
-      orders: await readCsv(files.orders || 'orders.csv'),
-      trades: await readCsv(files.trades || 'trades.csv'),
-      summary: await readJson(files.summary || 'summary.json', true),
-      parameters: await readJson(files.parameters || 'parameters.json', true),
-    };
-  }
-
-  function normalize(raw) {
-    const manifest = raw.manifest || {};
-    const candles = (raw.candles || []).map(c => ({
-      time: toTime(c.time), open: num(c.open), high: num(c.high), low: num(c.low), close: num(c.close), volume: num(c.volume),
-    })).sort((a, b) => a.time - b.time);
-    const patterns = (raw.patterns || []).map(p => ({
-      ...p,
-      pattern_id: String(p.pattern_id),
-      v_low_time: toTime(p.v_low_time),
-      v_low_price: num(p.v_low_price),
-      break_time: toTime(p.break_time),
-      break_price: num(p.break_price),
-      depth_limit_price: num(p.depth_limit_price),
-      target_price: num(p.target_price || p.v_low_price),
-    }));
-    const orders = (raw.orders || []).map(o => ({
-      ...o,
-      order_id: String(o.order_id), trade_id: String(o.trade_id), pattern_id: String(o.pattern_id),
-      time: toTime(o.time), price: num(o.price), quantity: num(o.quantity), fee: num(o.fee), level: num(o.level),
-    }));
-    const trades = (raw.trades || []).map(t => ({
-      ...t,
-      trade_id: String(t.trade_id), pattern_id: String(t.pattern_id),
-      entry_time: toTime(t.entry_time), exit_time: toTime(t.exit_time),
-      average_entry: num(t.average_entry), exit_price: num(t.exit_price), quantity: num(t.quantity),
-      gross_pnl: num(t.gross_pnl), fees: num(t.fees), net_pnl: num(t.net_pnl), net_pnl_pct: num(t.net_pnl_pct),
-      max_planned_loss: num(t.max_planned_loss), result: String(t.result || 'open').toLowerCase(),
-    }));
-    return { manifest, candles, patterns, orders, trades, summary: raw.summary || {}, parameters: raw.parameters || {} };
-  }
-
-  function validate(data) {
-    const errors = [];
-    const warnings = [];
-    if (!data.candles.length) errors.push('Нет свечей.');
-    if (!data.manifest.schema_version) warnings.push('Не указана schema_version.');
-    for (let i = 1; i < data.candles.length; i += 1) {
-      if (data.candles[i].time <= data.candles[i - 1].time) { errors.push('Время свечей содержит дубликаты или нарушает порядок.'); break; }
-    }
-    const patternMap = new Map(data.patterns.map(p => [p.pattern_id, p]));
-    const tradeMap = new Map(data.trades.map(t => [t.trade_id, t]));
-    data.trades.forEach(t => {
-      if (!patternMap.has(t.pattern_id)) errors.push(`Сделка ${t.trade_id} ссылается на отсутствующий паттерн ${t.pattern_id}.`);
-      if (!(t.max_planned_loss > 0)) warnings.push(`Сделка ${t.trade_id}: не указан положительный max_planned_loss.`);
-    });
-    data.orders.forEach(o => {
-      const pattern = patternMap.get(o.pattern_id);
-      if (!tradeMap.has(o.trade_id)) errors.push(`Ордер ${o.order_id} ссылается на отсутствующую сделку ${o.trade_id}.`);
-      if (pattern && o.side === 'buy' && ['filled', 'partial'].includes(String(o.status).toLowerCase())) {
-        if (o.time < pattern.break_time) errors.push(`Ордер ${o.order_id} исполнен до пробоя V-low.`);
-        if (o.price < pattern.depth_limit_price) errors.push(`Ордер ${o.order_id} исполнен ниже последней разрешённой лимитки.`);
-      }
-    });
-    if (data.orders.length > 5000) warnings.push('Очень много меток ордеров: отображение на телефоне может быть тяжёлым.');
-    return { errors: [...new Set(errors)], warnings: [...new Set(warnings)] };
-  }
-
-  function initChart() {
-    if (state.chart) return;
-    if (!window.LightweightCharts) throw new Error('Графический модуль не загрузился. Проверьте интернет-соединение и перезагрузите страницу.');
-    state.chart = LightweightCharts.createChart(els.chart, {
-      autoSize: true,
-      layout: { background: { type: 'solid', color: '#070b14' }, textColor: '#a8b3c7', panes: { separatorColor: '#27334a' } },
-      grid: { vertLines: { color: '#172033' }, horzLines: { color: '#172033' } },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-      rightPriceScale: { borderColor: '#27334a' },
-      timeScale: { borderColor: '#27334a', timeVisible: true, secondsVisible: false, rightOffset: 8, barSpacing: 7, enableConflation: true },
-      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
-      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
-    });
-    state.candleSeries = state.chart.addSeries(LightweightCharts.CandlestickSeries, {
-      upColor: '#36c98f', downColor: '#ff6b78', borderVisible: false, wickUpColor: '#36c98f', wickDownColor: '#ff6b78',
-      priceLineVisible: false,
-    });
-  }
-
-  function buildMarkers(data) {
-    const markers = [];
-    data.patterns.forEach(p => {
-      markers.push({ time: p.v_low_time, position: 'belowBar', color: '#65a7ff', shape: 'circle', text: `V ${formatPrice(p.v_low_price)}` });
-      markers.push({ time: p.break_time, position: 'aboveBar', color: '#ffba5c', shape: 'arrowDown', text: 'Пробой' });
-    });
-    data.orders.filter(o => o.side === 'buy' && ['filled', 'partial'].includes(String(o.status).toLowerCase())).forEach(o => {
-      markers.push({ time: o.time, position: 'belowBar', color: '#36c98f', shape: 'arrowUp', text: `L${o.level || ''} ${formatPrice(o.price)}` });
-    });
-    data.trades.filter(t => t.exit_time).forEach(t => {
-      const good = t.net_pnl >= 0;
-      markers.push({ time: t.exit_time, position: 'aboveBar', color: good ? '#65a7ff' : '#ff6b78', shape: 'square', text: `${good ? '+' : ''}${formatMoney(t.net_pnl)}` });
-    });
-    return markers.sort((a, b) => a.time - b.time);
-  }
-
-  function renderChart(data) {
-    initChart();
-    state.candleSeries.setData(data.candles);
-    if (state.markerApi) state.markerApi.setMarkers([]);
-    state.markerApi = LightweightCharts.createSeriesMarkers(state.candleSeries, buildMarkers(data));
-    state.chart.timeScale().fitContent();
-    els.empty.style.display = 'none';
-  }
-
-  function formatMoney(value) {
-    const currency = state.data?.manifest?.currency || 'USDT';
-    return `${num(value).toFixed(2)} ${currency}`;
-  }
-
-  function formatPrice(value) {
-    const precision = Math.max(0, Math.min(8, num(state.data?.manifest?.price_precision, 2)));
-    return num(value).toFixed(precision);
-  }
-
-  function formatPct(value) { return `${num(value).toFixed(2)}%`; }
-  function formatDate(value) { return value ? new Date(value * 1000).toLocaleString('ru-RU', { timeZone: 'UTC' }) + ' UTC' : '—'; }
-
-  function computeSummary(data) {
-    const closed = data.trades.filter(t => t.result !== 'open');
-    const wins = closed.filter(t => t.net_pnl > 0).length;
-    const net = data.trades.reduce((sum, t) => sum + t.net_pnl, 0);
-    const supplied = data.summary || {};
-    return {
-      trades: supplied.trades ?? data.trades.length,
-      winRate: supplied.win_rate != null ? num(supplied.win_rate) * (num(supplied.win_rate) <= 1 ? 100 : 1) : (closed.length ? wins / closed.length * 100 : 0),
-      netPnl: supplied.net_pnl ?? net,
-      maxDrawdown: supplied.max_drawdown ?? null,
-    };
-  }
-
-  function renderCards(data) {
-    const s = computeSummary(data);
-    const cards = [
-      ['Инструмент', `${data.manifest.symbol || '—'} · ${data.manifest.timeframe || '—'}`],
-      ['Модель', data.manifest.strategy_version || data.manifest.strategy || 'Galka'],
-      ['Свечей', data.candles.length.toLocaleString('ru-RU')],
-      ['Сделок', String(s.trades)],
-      ['Win rate', formatPct(s.winRate)],
-      ['Net PnL', formatMoney(s.netPnl)],
-    ];
-    els.cards.innerHTML = cards.map(([label, value]) => `<div class="card"><div class="label">${escapeHtml(label)}</div><div class="value" title="${escapeHtml(value)}">${escapeHtml(value)}</div></div>`).join('');
-  }
-
-  function renderTrades() {
-    const filter = els.resultFilter.value;
-    const trades = state.data.trades.filter(t => filter === 'all' || t.result === filter);
-    if (!trades.length) { els.tradeList.innerHTML = '<div class="trade"><span class="subtitle">Сделок по фильтру нет.</span></div>'; return; }
-    els.tradeList.innerHTML = trades.map(t => {
-      const pnlClass = t.net_pnl >= 0 ? 'good' : 'bad';
-      return `<div class="trade ${state.activeTradeId === t.trade_id ? 'active' : ''}" data-trade-id="${escapeHtml(t.trade_id)}">
-        <div class="trade-head"><span>#${escapeHtml(t.trade_id)}</span><span class="pnl ${pnlClass}">${t.net_pnl >= 0 ? '+' : ''}${escapeHtml(formatMoney(t.net_pnl))}</span></div>
-        <div class="trade-meta"><span>Вход</span><span>${escapeHtml(formatPrice(t.average_entry))}</span><span>Выход</span><span>${escapeHtml(t.exit_time ? formatPrice(t.exit_price) : 'открыта')}</span><span>Риск</span><span>${escapeHtml(formatMoney(t.max_planned_loss))}</span><span>Время</span><span>${escapeHtml(formatDate(t.entry_time))}</span></div>
-      </div>`;
-    }).join('');
-    els.tradeList.querySelectorAll('.trade[data-trade-id]').forEach(row => row.addEventListener('click', () => selectTrade(row.dataset.tradeId)));
-  }
-
-  function clearPriceLines() {
-    state.priceLines.forEach(line => { try { state.candleSeries.removePriceLine(line); } catch (_) {} });
-    state.priceLines = [];
-  }
-
-  function addPriceLine(price, color, title, style = LightweightCharts.LineStyle.Dashed) {
-    if (!(price > 0)) return;
-    state.priceLines.push(state.candleSeries.createPriceLine({ price, color, lineWidth: 1, lineStyle: style, axisLabelVisible: true, title }));
-  }
-
-  function selectTrade(tradeId) {
-    const trade = state.data.trades.find(t => t.trade_id === tradeId);
-    if (!trade) return;
-    const pattern = state.data.patterns.find(p => p.pattern_id === trade.pattern_id);
-    state.activeTradeId = tradeId;
-    renderTrades();
-    clearPriceLines();
-    if (pattern) {
-      addPriceLine(pattern.v_low_price, '#65a7ff', 'V-low');
-      addPriceLine(pattern.depth_limit_price, '#ff6b78', 'Последняя лимитка');
-      addPriceLine(pattern.target_price, '#ffba5c', 'Цель');
-    }
-    addPriceLine(trade.average_entry, '#36c98f', 'Средний вход', LightweightCharts.LineStyle.Solid);
-    if (trade.exit_time && trade.exit_price) addPriceLine(trade.exit_price, trade.net_pnl >= 0 ? '#65a7ff' : '#ff6b78', 'Выход');
-
-    const start = pattern?.v_low_time || trade.entry_time;
-    const end = trade.exit_time || state.data.candles[state.data.candles.length - 1].time;
-    const span = Math.max(60, end - start);
-    state.chart.timeScale().setVisibleRange({ from: start - span * 0.35, to: end + span * 0.35 });
-    setStatus(`Сделка #${trade.trade_id}\nПаттерн: ${trade.pattern_id} · вход ${formatPrice(trade.average_entry)} · PnL ${formatMoney(trade.net_pnl)}`);
-  }
-
-  async function loadRaw(raw, sourceName) {
-    const data = normalize(raw);
-    const validation = validate(data);
-    if (validation.errors.length) throw new Error(validation.errors.slice(0, 12).join('\n'));
-    state.data = data;
-    state.activeTradeId = null;
-    clearPriceLines();
-    renderChart(data);
-    renderCards(data);
-    renderTrades();
-    const details = [`Загружен: ${sourceName}`, `${data.manifest.symbol || '—'} ${data.manifest.timeframe || ''}`, `${data.trades.length} сделок, ${data.orders.length} ордеров`];
-    if (validation.warnings.length) details.push('', 'Предупреждения:', ...validation.warnings.slice(0, 8));
-    setStatus(details.join('\n'), validation.warnings.length ? 'warn' : '');
-  }
-
-  async function handleFile(file) {
-    setStatus(`Чтение ${file.name}…`);
-    const lower = file.name.toLowerCase();
-    const raw = lower.endsWith('.zip') ? await readZip(file) : JSON.parse(await file.text());
-    await loadRaw(raw, file.name);
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
-  }
-
-  function demoData() {
-    const start = Date.UTC(2026, 0, 3, 0, 0, 0) / 1000;
-    const step = 300;
-    const candles = [];
-    let last = 100;
-    for (let i = 0; i < 180; i += 1) {
-      let target = 100 + Math.sin(i / 13) * 2 + i * 0.012;
-      if (i >= 45 && i <= 65) target = 105 - (i - 45) * 0.45;
-      if (i > 65 && i <= 86) target = 96 + (i - 65) * 0.43;
-      if (i > 86 && i <= 102) target = 105 - (i - 86) * 0.72;
-      if (i > 102 && i <= 128) target = 93.5 + (i - 102) * 0.48;
-      const open = last;
-      const close = target + Math.sin(i * 1.7) * 0.25;
-      const high = Math.max(open, close) + 0.35 + (i % 4) * 0.06;
-      const low = Math.min(open, close) - 0.35 - (i % 3) * 0.05;
-      candles.push({ time: start + i * step, open, high, low, close, volume: 100 + i * 2 });
-      last = close;
-    }
-    const vLowTime = candles[65].time;
-    const breakTime = candles[99].time;
-    const entryTime = candles[101].time;
-    const exitTime = candles[126].time;
-    return {
-      manifest: {
-        schema_version: '1.0', strategy: 'Galka', strategy_version: 'galka-demo-v0.1', run_id: 'demo-001',
-        symbol: 'BTCUSDT', market: 'Demo', timeframe: '5m', timezone: 'UTC', currency: 'USDT', price_precision: 2,
-        created_at: new Date().toISOString(), lookahead_safe: true,
-      },
-      candles,
-      patterns: [{ pattern_id: 'P-001', v_low_time: vLowTime, v_low_price: 96, break_time: breakTime, break_price: 95.7, depth_limit_price: 92.8, target_price: 96, status: 'traded' }],
-      orders: [
-        { order_id: 'O-1', trade_id: 'T-001', pattern_id: 'P-001', time: candles[100].time, side: 'buy', type: 'limit', price: 94.8, quantity: 0.25, status: 'filled', level: 1, fee: 0.05 },
-        { order_id: 'O-2', trade_id: 'T-001', pattern_id: 'P-001', time: candles[101].time, side: 'buy', type: 'limit', price: 94.0, quantity: 0.30, status: 'filled', level: 2, fee: 0.06 },
-        { order_id: 'O-3', trade_id: 'T-001', pattern_id: 'P-001', time: candles[102].time, side: 'buy', type: 'limit', price: 93.2, quantity: 0.45, status: 'filled', level: 3, fee: 0.08 },
-        { order_id: 'O-4', trade_id: 'T-001', pattern_id: 'P-001', time: candles[102].time, side: 'buy', type: 'limit', price: 92.8, quantity: 0.55, status: 'planned', level: 4, fee: 0 },
-        { order_id: 'O-X', trade_id: 'T-001', pattern_id: 'P-001', time: exitTime, side: 'sell', type: 'target', price: 96, quantity: 1.0, status: 'filled', level: 0, fee: 0.10 },
-      ],
-      trades: [{ trade_id: 'T-001', pattern_id: 'P-001', entry_time: entryTime, exit_time: exitTime, average_entry: 93.84, exit_price: 96, quantity: 1.0, gross_pnl: 2.16, fees: 0.29, net_pnl: 1.87, net_pnl_pct: 1.99, max_planned_loss: 5.0, result: 'win', exit_reason: 'v_low_target' }],
-      summary: { patterns: 1, trades: 1, wins: 1, losses: 0, win_rate: 1, net_pnl: 1.87, out_of_sample: false },
-      parameters: { note: 'Synthetic terminal demonstration only' },
-    };
-  }
-
-  els.fileInput.addEventListener('change', async event => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try { await handleFile(file); }
-    catch (error) { console.error(error); setStatus(error.message || String(error), 'error'); }
-    finally { event.target.value = ''; }
-  });
-  els.demoBtn.addEventListener('click', () => loadRaw(demoData(), 'встроенное демо').catch(error => setStatus(error.message, 'error')));
-  els.downloadBtn.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(demoData(), null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'galka-demo.galka.json'; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  });
-  els.resultFilter.addEventListener('change', renderTrades);
-
-  renderCards({ manifest: {}, candles: [], trades: [], summary: {} });
+(()=>{
+'use strict';
+const HISTORY='../results/BTCUSDT_15m_dual_failure_v5.galka.zip';
+const $=id=>document.getElementById(id);
+const el={meta:$('meta'),status:$('status'),empty:$('empty'),list:$('tradeList'),file:$('fileInput'),btc:$('btcBtn'),demo:$('demoBtn'),result:$('resultFilter'),sample:$('sampleFilter'),chart:$('chart')};
+const state={data:null,chart:null,series:null,markerApi:null,lines:[],active:null};
+const num=(v,d=0)=>{const n=Number(v);return Number.isFinite(n)?n:d};
+const ts=v=>{if(v===null||v===undefined||v==='')return null;if(typeof v==='number')return Math.floor(v>1e12?v/1000:v);const s=String(v);if(/^\d+(\.\d+)?$/.test(s)){const n=Number(s);return Math.floor(n>1e12?n/1000:n)}const n=Date.parse(s);if(!Number.isFinite(n))throw new Error('Некорректное время: '+v);return Math.floor(n/1000)};
+const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function status(text,type=''){el.status.textContent=text;el.status.className='status '+type}
+function csvLine(line){const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(c===','&&!q){out.push(cur);cur=''}else cur+=c}out.push(cur);return out}
+function csv(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return[];const h=csvLine(lines[0]);return lines.slice(1).map(line=>{const v=csvLine(line);return Object.fromEntries(h.map((k,i)=>[k,v[i]??'']))})}
+async function parseZip(input){if(!window.JSZip)throw new Error('JSZip не загрузился. Нужен интернет при первом открытии терминала.');const z=await JSZip.loadAsync(input);const m=z.file('manifest.json');if(!m)throw new Error('В архиве нет manifest.json');const manifest=JSON.parse(await m.async('string'));const f=manifest.files||{};const readCsv=async(name,optional=false)=>{const x=z.file(name);if(!x){if(optional)return[];throw new Error('В архиве нет '+name)}return csv(await x.async('string'))};const readJson=async(name)=>{const x=z.file(name);return x?JSON.parse(await x.async('string')):{}};return{manifest,candles:await readCsv(f.candles||'candles.csv'),patterns:await readCsv(f.patterns||'patterns.csv'),orders:await readCsv(f.orders||'orders.csv'),trades:await readCsv(f.trades||'trades.csv'),summary:await readJson(f.summary||'summary.json'),parameters:await readJson(f.parameters||'parameters.json')}}
+function normalize(r){return{manifest:r.manifest||{},summary:r.summary||{},parameters:r.parameters||{},candles:(r.candles||[]).map(c=>({time:ts(c.time),open:num(c.open),high:num(c.high),low:num(c.low),close:num(c.close)})).sort((a,b)=>a.time-b.time),patterns:(r.patterns||[]).map(p=>({...p,pattern_id:String(p.pattern_id),v_low_time:ts(p.v_low_time),break_time:ts(p.break_time),v_low_price:num(p.v_low_price),break_price:num(p.break_price),depth_limit_price:num(p.depth_limit_price),target_price:num(p.target_price||p.v_low_price)})),orders:(r.orders||[]).map(o=>({...o,order_id:String(o.order_id),trade_id:String(o.trade_id),pattern_id:String(o.pattern_id),time:ts(o.time),price:num(o.price),quantity:num(o.quantity),fee:num(o.fee),level:num(o.level)})),trades:(r.trades||[]).map(t=>({...t,trade_id:String(t.trade_id),pattern_id:String(t.pattern_id),entry_time:ts(t.entry_time),exit_time:ts(t.exit_time),average_entry:num(t.average_entry),exit_price:num(t.exit_price),net_pnl:num(t.net_pnl),net_pnl_pct:num(t.net_pnl_pct),max_planned_loss:num(t.max_planned_loss),result:String(t.result||'open').toLowerCase()}))}}
+function init(){if(state.chart)return;if(!window.LightweightCharts)throw new Error('Графический модуль не загрузился.');state.chart=LightweightCharts.createChart(el.chart,{autoSize:true,layout:{background:{type:'solid',color:'#070b14'},textColor:'#a8b3c7'},grid:{vertLines:{color:'#172033'},horzLines:{color:'#172033'}},timeScale:{timeVisible:true,secondsVisible:false,rightOffset:8,barSpacing:7},rightPriceScale:{borderColor:'#27334a'},handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true},handleScale:{mouseWheel:true,pinch:true}});state.series=state.chart.addSeries(LightweightCharts.CandlestickSeries,{upColor:'#36c98f',downColor:'#ff6b78',borderVisible:false,wickUpColor:'#36c98f',wickDownColor:'#ff6b78',priceLineVisible:false})}
+function money(v){return num(v).toFixed(2)+' '+(state.data?.manifest?.currency||'USDT')}function price(v){return num(v).toFixed(num(state.data?.manifest?.price_precision,2))}function date(v){return v?new Date(v*1000).toLocaleString('ru-RU',{timeZone:'UTC'})+' UTC':'—'}
+function cards(){const d=state.data,s=d.summary||{},closed=d.trades.filter(t=>t.result!=='open'),wins=closed.filter(t=>t.net_pnl>0).length,wr=s.win_rate!=null?num(s.win_rate)*(num(s.win_rate)<=1?100:1):(closed.length?wins/closed.length*100:0);const values=[['Инструмент',(d.manifest.symbol||'—')+' · '+(d.manifest.timeframe||'—')],['Модель',d.manifest.strategy_version||d.manifest.strategy||'Galka'],['Свечей',d.candles.length.toLocaleString('ru-RU')],['Сделок',String(d.trades.length)],['Win rate',wr.toFixed(2)+'%'],['Net PnL',money(s.net_pnl??d.trades.reduce((a,t)=>a+t.net_pnl,0))]];el.meta.innerHTML=values.map(([a,b])=>`<div class="card"><div class="label">${esc(a)}</div><div class="value">${esc(b)}</div></div>`).join('')}
+function filtered(){return state.data.trades.filter(t=>(el.result.value==='all'||t.result===el.result.value)&&(el.sample.value==='all'||String(t.sample_role||t.fold||'').toLowerCase().includes('oos')))}
+function trades(){const a=filtered();el.list.innerHTML=a.length?a.map(t=>`<div class="trade ${state.active===t.trade_id?'active':''}" data-id="${esc(t.trade_id)}"><div class="head"><span>#${esc(t.trade_id)}</span><span class="${t.net_pnl>=0?'good':'bad'}">${t.net_pnl>=0?'+':''}${esc(money(t.net_pnl))}</span></div><div class="details"><span>Вход</span><span>${esc(price(t.average_entry))}</span><span>Выход</span><span>${esc(price(t.exit_price))}</span><span>Результат</span><span>${esc(t.result)}</span><span>Время</span><span>${esc(date(t.entry_time))}</span></div></div>`).join(''):'<div class="trade"><span class="sub">Сделок по фильтру нет.</span></div>';el.list.querySelectorAll('[data-id]').forEach(x=>x.onclick=()=>select(x.dataset.id))}
+function clearLines(){state.lines.forEach(x=>{try{state.series.removePriceLine(x)}catch(_){}});state.lines=[]}function line(v,color,title){if(v>0)state.lines.push(state.series.createPriceLine({price:v,color,lineWidth:1,lineStyle:LightweightCharts.LineStyle.Dashed,axisLabelVisible:true,title}))}
+function select(id){const t=state.data.trades.find(x=>x.trade_id===id);if(!t)return;const p=state.data.patterns.find(x=>x.pattern_id===t.pattern_id);const os=state.data.orders.filter(x=>x.trade_id===id);state.active=id;trades();clearLines();if(p){line(p.v_low_price,'#65a7ff','V-low');line(p.depth_limit_price,'#ff6b78','Последняя лимитка');line(p.target_price,'#ffba5c','Цель')}line(t.average_entry,'#36c98f','Средний вход');line(t.exit_price,t.net_pnl>=0?'#65a7ff':'#ff6b78','Выход');const markers=[];if(p){markers.push({time:p.v_low_time,position:'belowBar',color:'#65a7ff',shape:'circle',text:'V-low'});markers.push({time:p.break_time,position:'aboveBar',color:'#ffba5c',shape:'arrowDown',text:'Пробой'})}os.filter(o=>['filled','partial'].includes(String(o.status).toLowerCase())).forEach(o=>markers.push({time:o.time,position:o.side==='buy'?'belowBar':'aboveBar',color:o.side==='buy'?'#36c98f':'#ff6b78',shape:o.side==='buy'?'arrowUp':'arrowDown',text:(o.side==='buy'?'Buy ':'Sell ')+price(o.price)}));if(t.exit_time)markers.push({time:t.exit_time,position:'aboveBar',color:t.net_pnl>=0?'#65a7ff':'#ff6b78',shape:'square',text:'Exit '+money(t.net_pnl)});markers.sort((a,b)=>a.time-b.time);if(state.markerApi)state.markerApi.setMarkers([]);state.markerApi=LightweightCharts.createSeriesMarkers(state.series,markers);const start=p?.v_low_time||t.entry_time,end=t.exit_time||start+86400,span=Math.max(3600,end-start);state.chart.timeScale().setVisibleRange({from:start-span*.4,to:end+span*.4});status(`Сделка #${t.trade_id}\nВход ${price(t.average_entry)} · выход ${price(t.exit_price)} · PnL ${money(t.net_pnl)}`)}
+async function load(raw,name){status('Подготовка графика…');state.data=normalize(raw);if(!state.data.candles.length)throw new Error('В файле нет свечей');init();state.series.setData(state.data.candles);state.active=null;clearLines();if(state.markerApi)state.markerApi.setMarkers([]);cards();trades();el.empty.style.display='none';state.chart.timeScale().fitContent();status(`Загружен: ${name}\n${state.data.trades.length} сделок, ${state.data.patterns.length} галок`)}
+async function openBundled(){try{status('Загрузка BTC-истории из репозитория…');const r=await fetch(HISTORY,{cache:'no-store'});if(!r.ok)throw new Error('Файл не найден. Выполните git pull в Termux.');await load(await parseZip(await r.arrayBuffer()),'BTCUSDT 15m — GitHub')}catch(e){console.error(e);status(e.message||String(e),'error')}}
+function demo(){const start=Date.UTC(2026,0,1)/1000,c=[];let last=100;for(let i=0;i<140;i++){const close=100+Math.sin(i/11)*3+(i>50&&i<75?-(i-50)*.18:0);c.push({time:start+i*900,open:last,high:Math.max(last,close)+.4,low:Math.min(last,close)-.4,close});last=close}return{manifest:{schema_version:'1.0',strategy:'Galka demo',symbol:'BTCUSDT',timeframe:'15m',currency:'USDT',price_precision:2},candles:c,patterns:[{pattern_id:'P1',v_low_time:c[60].time,v_low_price:c[60].low,break_time:c[75].time,break_price:c[75].low,depth_limit_price:c[80].low,target_price:c[60].low}],orders:[{order_id:'O1',trade_id:'T1',pattern_id:'P1',time:c[78].time,side:'buy',price:c[78].close,quantity:1,status:'filled',level:1}],trades:[{trade_id:'T1',pattern_id:'P1',entry_time:c[78].time,exit_time:c[105].time,average_entry:c[78].close,exit_price:c[105].close,net_pnl:c[105].close-c[78].close,net_pnl_pct:1,max_planned_loss:5,result:'win'}],summary:{trades:1,win_rate:1,net_pnl:2}}}
+el.btc.onclick=openBundled;el.demo.onclick=()=>load(demo(),'демо').catch(e=>status(e.message,'error'));el.file.onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{status('Чтение '+f.name+'…');const raw=f.name.toLowerCase().endsWith('.zip')?await parseZip(f):JSON.parse(await f.text());await load(raw,f.name)}catch(x){status(x.message||String(x),'error')}finally{e.target.value=''}};el.result.onchange=trades;el.sample.onchange=trades;el.meta.innerHTML=['Инструмент','Модель','Свечей','Сделок','Win rate','Net PnL'].map(x=>`<div class="card"><div class="label">${x}</div><div class="value">—</div></div>`).join('');
 })();
 </script>
 </body>
