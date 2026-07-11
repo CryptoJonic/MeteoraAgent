@@ -65,7 +65,7 @@ details{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}sum
 .modal-card.small>input,.modal-card.small>.primary{display:block;width:calc(100% - 20px);height:38px;margin:10px;border-radius:5px;padding:0 8px}
 .mobile-nav{display:none}
 @media(max-width:900px){
-  :root{--right:280px}.top-actions button:not(#indicatorBtn):not(#alertBtn):not(#fullscreenBtn){display:none}.brand{min-width:auto}.brand span{display:none}
+  :root{--right:280px}.top-actions button:not(#indicatorBtn):not(#alertBtn):not(#fullscreenBtn):not(#radarBtn){display:none}.brand{min-width:auto}.brand span{display:none}
 }
 @media(max-width:700px){
   :root{--top:46px;--status:25px}.mobile-only{display:inline-grid;place-items:center}.topbar{gap:4px;padding:4px 6px}.brand{display:none}
@@ -98,3 +98,9 @@ details{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}sum
 /* Clean chart mode: maximize candles while keeping DOM hooks for existing code. */
 :root{--status:0px}
 .statusbar,.chart-toolbar,.bottom-strip{display:none!important}
+
+
+.radar-legend{position:absolute;left:10px;top:48px;z-index:7;display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line2);border-radius:7px;background:color-mix(in srgb,var(--panel) 88%,transparent);font-size:10px;pointer-events:none;box-shadow:0 5px 18px #0005}
+.radar-legend span{display:flex;align-items:center;gap:3px;color:var(--muted)}.radar-dot{width:7px;height:7px;border-radius:50%;display:inline-block}.radar-dot.strong{background:var(--green)}.radar-dot.medium{background:var(--orange)}.radar-dot.weak{background:var(--muted)}
+#radarBtn.active{background:color-mix(in srgb,var(--green) 22%,var(--panel2))!important;color:#8ff0d8!important;border-color:var(--green)!important}
+@media(max-width:700px){.radar-legend{top:38px;left:8px;padding:4px 6px;gap:6px}.top-actions #radarBtn{display:inline-grid!important}}

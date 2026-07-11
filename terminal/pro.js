@@ -2,7 +2,7 @@
 'use strict';
 
 const LWC = window.LightweightCharts;
-const VERSION = 'pro-v1.4.0-clean-chart';
+const VERSION = 'pro-v1.5.0-galka-radar';
 const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT'];
 const INTERVALS = ['1m','3m','5m','15m','30m','1h','4h','1d'];
 const REST = 'https://fapi.binance.com';
@@ -14,7 +14,7 @@ const COLORS = {green:'#089981',red:'#f23645',blue:'#2962ff',orange:'#ff9800',pu
 const $ = id => document.getElementById(id);
 const els = Object.fromEntries([
   'symbolSelect','intervalSelect','chartTypeSelect','indicatorBtn','alertBtn','replayBtn','snapshotBtn','fullscreenBtn',
-  'toggleTools','toggleSidebar','leftbar','sidebar','connectionDot','connectionText','tickerText','themeBtn','clock',
+  'toggleTools','toggleSidebar','leftbar','sidebar','connectionDot','connectionText','tickerText','themeBtn','clock','radarBtn','radarLegend',
   'ohlc','zoomOut','zoomIn','autoScaleBtn','scaleMode','goDateBtn','fitBtn','latestBtn','chartStack','chartMainWrap',
   'mainChart','drawingCanvas','watermark','loading','toast','indicatorPane','paneTitle','oscChart','closePane',
   'replayPanel','replayBack','replayPlay','replayStep','replaySlider','replayLabel','replayExit',
@@ -33,7 +33,7 @@ function defaultStore(){
       theme:'dark',symbol:'BTCUSDT',interval:'15m',chartType:'candles',compare:'',scaleMode:'normal',
       indicators:{sma20:false,ema20:false,ema50:false,bollinger:false,vwap:false,volume:true},
       lowerIndicator:'rsi',magnet:true,drawingsLocked:false,drawingsHidden:false,
-      drawings:{},templates:{},alerts:[]
+      drawings:{},templates:{},alerts:[],radar:{enabled:false,minScore:45}
     },
     paper:{
       settings:{startingBalance:1000,leverage:10,symbolNotional:400,maxHours:72,signalMode:'manual',ladderStepPct:0.15,manualDepthPct:1.50,exitMode:'trail',reclaimBufferPct:0.10,trailDistancePct:0.75,makerFee:0.0002,takerFee:0.0005,slippage:0.0002,maintenanceMargin:0.0125},
@@ -92,7 +92,7 @@ const runtime={
   tool:'cursor',drawingStart:null,drawingPreview:null,selectedDrawing:null,undo:[],redo:[],
   dpr:window.devicePixelRatio||1,toastTimer:null,lastCrosshair:null,
   replay:{active:false,index:0,playing:false,timer:null,source:null},
-  hiddenLiveUpdates:false,manualDrag:false,manualDragOriginal:null
+  hiddenLiveUpdates:false,manualDrag:false,manualDragOriginal:null,radarCandidates:[],radarSelected:null
 };
 
 function chartColors(){
@@ -116,6 +116,7 @@ function createMainChart(){
     handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}
   });
   runtime.mainChart.subscribeCrosshairMove(onCrosshair);
+  runtime.mainChart.subscribeClick(onRadarChartClick);
   runtime.mainChart.timeScale().subscribeVisibleTimeRangeChange(()=>drawAll());
   runtime.mainChart.timeScale().subscribeVisibleLogicalRangeChange(range=>{
     if(runtime.syncing||!runtime.oscChart||!range)return;
@@ -534,6 +535,55 @@ function beep(){
   try{const ac=new (window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(ac.currentTime+.15);}catch(_){}
 }
 
+
+/* Explainable Galka radar. It highlights candidates only and never opens trades. */
+function radarFeatureAt(rows,index){
+  const L=4,R=4;if(index<L||index+R>=rows.length)return null;
+  const cur=rows[index],window=rows.slice(index-L,index+R+1),minLow=Math.min(...window.map(x=>x.low));
+  if(cur.low>minLow+Math.max(1e-12,Math.abs(cur.low)*1e-10))return null;
+  const atr=atrValue(rows,index,14);if(!atr)return null;
+  const leftRows=rows.slice(index-L,index),rightRows=rows.slice(index+1,index+R+1);
+  const leftHigh=Math.max(...leftRows.map(x=>x.high)),rightHigh=Math.max(...rightRows.map(x=>x.high));
+  const leftDepth=leftHigh-cur.low,rightDepth=rightHigh-cur.low;if(leftDepth<=0||rightDepth<=0)return null;
+  const dropAtr=leftDepth/atr,recovery=rightDepth/leftDepth,balance=Math.min(leftDepth,rightDepth)/Math.max(leftDepth,rightDepth);
+  const neighbourLow=Math.min(rows[index-1].low,rows[index+1].low),sharpness=Math.max(0,(neighbourLow-cur.low)/atr);
+  const closeLift=Math.max(0,(cur.close-cur.low)/atr);
+  return{time:cur.time,level:cur.low,index,atr,dropAtr,recovery,balance,sharpness,closeLift,leftHigh,rightHigh};
+}
+function scoreRadarPattern(rows,index,symbol=runtime.symbol){
+  const f=radarFeatureAt(rows,index);if(!f)return null;
+  const score=20*clamp((f.dropAtr-.6)/2.4,0,1)+30*clamp((f.recovery-.25)/.85,0,1)+20*clamp(f.balance,0,1)+20*clamp(f.sharpness/.9,0,1)+10*clamp(f.closeLift/.7,0,1);
+  if(score<clamp(num(store.ui.radar?.minScore,45),25,90))return null;
+  const strength=score>=75?'strong':score>=60?'medium':'weak';
+  const manualMatch=store.training.manualExamples.some(x=>x.symbol===symbol&&x.interval===runtime.interval&&Math.abs(num(x.selectedCandleTime)-f.time)<=intervalSeconds(runtime.interval)*2);
+  return{...f,patternId:`R-${symbol}-${f.time}`,score:Number(score.toFixed(1)),strength,manualMatch};
+}
+function scanRadar(){
+  if(!store.ui.radar?.enabled){runtime.radarCandidates=[];return[];}
+  const rows=chartRows(),raw=[];
+  for(let i=14;i<rows.length-4;i++){const c=scoreRadarPattern(rows,i);if(c)raw.push(c);}
+  const merged=[];
+  for(const c of raw){const prev=merged.at(-1);if(prev&&c.index-prev.index<=3){if(c.score>prev.score)merged[merged.length-1]=c;}else merged.push(c);}
+  runtime.radarCandidates=merged;return merged;
+}
+function renderRadar(){
+  const on=!!store.ui.radar?.enabled,c=runtime.radarCandidates||[],strong=c.filter(x=>x.strength==='strong').length,medium=c.filter(x=>x.strength==='medium').length,weak=c.length-strong-medium;
+  els.radarBtn.classList.toggle('active',on);els.radarBtn.textContent=on?'◉':'◎';els.radarLegend.classList.toggle('hidden',!on);
+  if(on)els.radarLegend.innerHTML=`<b>Радар: ${c.length}</b><span><i class="radar-dot strong"></i>${strong}</span><span><i class="radar-dot medium"></i>${medium}</span><span><i class="radar-dot weak"></i>${weak}</span>`;
+}
+function toggleRadar(){
+  store.ui.radar.enabled=!store.ui.radar.enabled;runtime.radarSelected=null;save();scanRadar();renderRadar();updateMarkers();
+  toast(store.ui.radar.enabled?`Радар включён: найдено ${runtime.radarCandidates.length} галок`:'Радар выключен');
+}
+function radarCandidateColor(c){return c.manualMatch?COLORS.cyan:c.strength==='strong'?COLORS.green:c.strength==='medium'?COLORS.orange:COLORS.gray;}
+function onRadarChartClick(param){
+  if(!store.ui.radar?.enabled||runtime.tool!=='cursor'||!param?.time||!runtime.radarCandidates.length)return;
+  const t=typeof param.time==='number'?param.time:Math.floor(Date.UTC(param.time.year,param.time.month-1,param.time.day)/1000),maxGap=intervalSeconds(runtime.interval)*2;
+  let best=null,gap=Infinity;for(const c of runtime.radarCandidates){const d=Math.abs(c.time-t);if(d<gap){gap=d;best=c;}}
+  if(!best||gap>maxGap)return;runtime.radarSelected=best;updateMarkers();
+  toast(`Галка ${Math.round(best.score)}/100 · падение ${best.dropAtr.toFixed(2)} ATR · возврат ${(best.recovery*100).toFixed(0)}% · плечи ${(best.balance*100).toFixed(0)}%${best.manualMatch?' · совпала с твоим выбором':''}`,'alert');
+}
+
 /* Galka paper bot */
 function atrAt(rows,index,period=14){return atrValue(rows,index,period);}
 function evaluatePattern(rows,index,symbol){
@@ -611,7 +661,7 @@ function setManualGalka(p){
   if(active?.trainingExampleId){const old=store.training.manualExamples.find(x=>x.id===active.trainingExampleId);if(old)old.status='superseded';}
   const rows=chartRows(),idx=nearestIndex(rows,p.time),id='M-'+symbol+'-'+Date.now(),context=rows.slice(Math.max(0,idx-39),idx+1).map(c=>({time:c.time,open:c.open,high:c.high,low:c.low,close:c.close,volume:c.volume}));
   const pattern={patternId:id,source:'manual',trainingExampleId:id,vLow:p.price,vLowTime:p.time,confirmedTime:p.time,atr:atrValue(rows,idx,14)||Math.max(p.price*.001,1e-9),dropAtr:0,recovery:0,status:'trading',createdAt:nowIso()};
-  store.training.manualExamples.push({id,symbol,interval:runtime.interval,level:p.price,selectedCandleTime:p.time,selectedAt:nowIso(),status:'active',context});
+  store.training.manualExamples.push({id,symbol,interval:runtime.interval,level:p.price,selectedCandleTime:p.time,selectedAt:nowIso(),status:'active',context,features:radarFeatureAt(rows,idx)});
   ss.pattern=pattern;ss.campaign=createCampaign(symbol,pattern);save();renderPaper();updateMarkers();setTool('cursor');showMobilePanel('paper');
   toast(`${symbol}: уровень галки ${price(p.price,symbol)}, лимитки выставлены`,'alert');
 }
@@ -711,6 +761,11 @@ function updateMarkers(){
   for(const line of runtime.paperLines){try{runtime.priceSeries.removePriceLine(line);}catch(_){}}runtime.paperLines=[];
   const addPaperLine=(value,color,title)=>{if(value>0)runtime.paperLines.push(runtime.priceSeries.createPriceLine({price:value,color,lineWidth:2,lineStyle:LWC.LineStyle.Dashed,axisLabelVisible:true,title}));};
   const markers=[],symbol=runtime.symbol,ss=store.paper.symbols[symbol],p=ss.pattern,c=ss.campaign;
+  scanRadar();renderRadar();
+  if(store.ui.radar?.enabled){
+    for(const r of runtime.radarCandidates)markers.push({time:r.time,position:'belowBar',color:radarCandidateColor(r),shape:r.strength==='strong'?'arrowUp':'circle',text:`G${Math.round(r.score)}${r.manualMatch?'★':''}`});
+    if(runtime.radarSelected)addPaperLine(runtime.radarSelected.level,radarCandidateColor(runtime.radarSelected),`RADAR ${Math.round(runtime.radarSelected.score)}`);
+  }
   if(p)addPaperLine(p.vLow,p.source==='manual'?COLORS.orange:COLORS.blue,p.source==='manual'?'GALKA':'V-low');
   if(c)for(const l of c.levels)addPaperLine(l.price,l.status==='filled'?COLORS.green:COLORS.gray,'L'+l.index);
   if(c?.trailArmed&&c.trailStop)addPaperLine(c.trailStop,COLORS.red,'TRAIL STOP');
@@ -811,6 +866,7 @@ els.intervalSelect.onchange=e=>changeInterval(e.target.value);
 els.chartTypeSelect.onchange=e=>changeChartType(e.target.value);
 els.compareSelect.onchange=async e=>{store.ui.compare=e.target.value;save();await updateCompare();};
 els.themeBtn.onclick=()=>{store.ui.theme=store.ui.theme==='dark'?'light':'dark';save();applyTheme();};
+els.radarBtn.onclick=toggleRadar;
 els.zoomIn.onclick=()=>zoom(.72);els.zoomOut.onclick=()=>zoom(1.38);
 els.fitBtn.onclick=()=>runtime.mainChart.timeScale().fitContent();els.latestBtn.onclick=()=>runtime.mainChart.timeScale().scrollToRealTime();
 els.autoScaleBtn.onclick=()=>{const active=!els.autoScaleBtn.classList.contains('active');els.autoScaleBtn.classList.toggle('active',active);runtime.mainChart.priceScale('right').applyOptions({autoScale:active});};
@@ -872,5 +928,5 @@ setInterval(()=>{els.clock.textContent=new Date().toLocaleTimeString('ru-RU',{ho
 /* Init */
 document.body.dataset.theme=store.ui.theme;
 els.magnetBtn.classList.toggle('active',store.ui.magnet);els.lockBtn.classList.toggle('active',store.ui.drawingsLocked);els.hideDrawingsBtn.classList.toggle('active',store.ui.drawingsHidden);
-createMainChart();createOscChart();applyScaleMode();renderIndicatorList();renderAll();resizeCanvas();bootstrap();
+createMainChart();createOscChart();applyScaleMode();renderIndicatorList();renderAll();scanRadar();renderRadar();resizeCanvas();bootstrap();
 })();

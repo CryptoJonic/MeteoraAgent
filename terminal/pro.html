@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b0e13">
   <title>Galka Pro Terminal</title>
   <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
-  <link rel="stylesheet" href="pro.css?v=4">
+  <link rel="stylesheet" href="pro.css?v=5">
 </head>
 <body data-theme="dark">
 <div id="app">
@@ -35,6 +35,7 @@
       <button id="alertBtn">Алерт</button>
       <button id="replayBtn">Replay</button>
       <button id="snapshotBtn" title="Снимок">⌁</button>
+      <button class="icon-btn" id="radarBtn" title="Радар галок">◎</button>
       <button id="fullscreenBtn" title="На весь экран">⛶</button>
       <button class="icon-btn mobile-only" id="toggleSidebar" aria-label="Панели">⋮</button>
     </div>
@@ -96,6 +97,7 @@
           <div id="mainChart"></div>
           <canvas id="drawingCanvas"></canvas>
           <div class="watermark" id="watermark">BTCUSDT · 15m</div>
+          <div class="radar-legend hidden" id="radarLegend"></div>
           <div class="loading" id="loading">Загрузка данных…</div>
           <div class="toast hidden" id="toast"></div>
         </div>
@@ -250,6 +252,6 @@
   </div>
 </div>
 
-<script src="pro.js?v=4"></script>
+<script src="pro.js?v=5"></script>
 </body>
 </html>

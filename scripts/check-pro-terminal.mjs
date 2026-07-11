@@ -41,6 +41,10 @@ const checks=[
   ['clean chart chrome', /\.statusbar,\.chart-toolbar,\.bottom-strip\{display:none!important\}/.test(css) && /--status:0px/.test(css)],
   ['chart grid disabled', (js.match(/vertLines:\{visible:false\}/g)||[]).length>=2 && (js.match(/horzLines:\{visible:false\}/g)||[]).length>=2],
   ['paper storage preserved', /const STORAGE_KEY = 'galka-pro-v1'/.test(js) && /localStorage\.getItem\(STORAGE_KEY\)/.test(js)],
+  ['Galka radar toggle', /id="radarBtn"/.test(html) && /toggleRadar/.test(js) && /radarLegend/.test(js)],
+  ['explainable Galka radar', /scoreRadarPattern/.test(js) && /dropAtr/.test(js) && /recovery/.test(js) && /balance/.test(js)],
+  ['radar never trades', /highlights candidates only and never opens trades/.test(js)],
+  ['paper storage still preserved', /const STORAGE_KEY = 'galka-pro-v1'/.test(js)],
   ['no exchange keys', !/api[_-]?key|secret[_-]?key/i.test(js)],
 ];
 for(const [name,ok] of checks)if(!ok)throw new Error(`Galka Pro check failed: ${name}`);
