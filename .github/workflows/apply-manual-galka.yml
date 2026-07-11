@@ -1,0 +1,41 @@
+name: Apply Manual Galka v1
+on:
+  push:
+    branches: [feat/manual-galka-v1]
+    paths:
+      - scripts/patch_manual_1.py
+      - scripts/patch_manual_2.py
+      - scripts/patch_manual_3.py
+      - .github/workflows/apply-manual-galka.yml
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/manual-galka-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply patches
+        run: |
+          python scripts/patch_manual_1.py
+          python scripts/patch_manual_2.py
+          python scripts/patch_manual_3.py
+      - name: Validate terminal
+        run: npm run check
+      - name: Commit implementation
+        run: |
+          rm scripts/patch_manual_1.py scripts/patch_manual_2.py scripts/patch_manual_3.py
+          rm .github/workflows/apply-manual-galka.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Add manual Galka level trading workflow"
+          git push origin HEAD:feat/manual-galka-v1
