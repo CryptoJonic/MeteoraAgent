@@ -78,3 +78,10 @@ details{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}sum
   .mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:0;right:0;bottom:0;height:calc(50px + var(--safe));padding-bottom:var(--safe);background:var(--panel);border-top:1px solid var(--line);z-index:70}.mobile-nav button{border:0;background:transparent;font-size:11px}
   .watermark{font-size:20px;top:12px;left:12px}
 }
+
+.leftbar button[data-tool="manualGalka"]{font-weight:900;color:var(--orange);border:1px solid color-mix(in srgb,var(--orange) 45%,transparent)}
+.leftbar button[data-tool="manualGalka"].active{background:color-mix(in srgb,var(--orange) 18%,var(--panel))!important;color:var(--orange)!important;outline-color:var(--orange)}
+.manual-actions{display:grid;grid-template-columns:1fr auto;gap:6px;padding:8px;border-bottom:1px solid var(--line)}
+.manual-actions button{min-height:38px;border-radius:5px}
+.training-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;color:var(--muted);border-bottom:1px solid var(--line);font-size:11px}
+.training-row button{height:30px;border-radius:4px}
