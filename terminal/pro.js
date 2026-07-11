@@ -1131,7 +1131,7 @@ setInterval(()=>{els.clock.textContent=new Date().toLocaleTimeString('ru-RU',{ho
 document.body.dataset.theme=store.ui.theme;
 els.magnetBtn.classList.toggle('active',store.ui.magnet);els.lockBtn.classList.toggle('active',store.ui.drawingsLocked);els.hideDrawingsBtn.classList.toggle('active',store.ui.drawingsHidden);
 if(store.ui.sheet.snap==='low')els.sidebar.classList.add('snap-low');if(store.ui.sheet.snap==='high')els.sidebar.classList.add('snap-high');if(matchMedia('(min-width:1100px)').matches)els.sidebar.setAttribute('aria-hidden','false');
-createMainChart();createOscChart();applyScaleMode();renderIndicatorList();openPanel(matchMedia('(min-width:1100px)').matches?(store.ui.sheet.panel||'paper'):'paper');renderAll();scanRadar();renderRadar();resizeCanvas();bootstrap();
+createMainChart();createOscChart();applyScaleMode();renderIndicatorList();openPanel(matchMedia('(min-width:1100px)').matches?(store.ui.sheet.panel||'paper'):'paper');if(!matchMedia('(min-width:1100px)').matches)closeMobileOverlays();renderAll();scanRadar();renderRadar();resizeCanvas();bootstrap();
 if(!store.ui.onboarding.completed)setTimeout(startOnboarding,1400);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Service worker:',error)));
 })();

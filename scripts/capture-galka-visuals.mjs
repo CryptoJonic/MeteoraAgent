@@ -137,11 +137,12 @@ async function preparePage(browser, baseUrl, viewport) {
   }, { snapshot: seed });
   await context.route('https://fapi.binance.com/**', async (route) => {
     const symbol = new URL(route.request().url()).searchParams.get('symbol') || 'BTCUSDT';
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(marketRows(symbol)) });
+    await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'cache-control': 'no-store' }, body: JSON.stringify(marketRows(symbol)) });
   });
   const page = await context.newPage();
   await page.goto(`${baseUrl}/terminal/pro.html`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2200);
+  await page.waitForFunction(() => /"rows":\s*[1-9]/.test(document.querySelector('#diagnostics')?.textContent || ''), null, { timeout: 10_000 });
+  await page.waitForTimeout(500);
   return { context, page };
 }
 
@@ -176,4 +177,3 @@ try {
 }
 
 console.log(`Galka visual captures written to ${outputRoot}`);
-

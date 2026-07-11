@@ -2317,6 +2317,12 @@ pre {
   }
 }
 
+@media (max-width: 430px) {
+  .live-price {
+    display: none;
+  }
+}
+
 @media (max-width: 370px) {
   .brand-mark {
     width: 31px;
@@ -2326,10 +2332,6 @@ pre {
   .market-controls select {
     min-width: 52px;
     font-size: 11px;
-  }
-
-  .live-price {
-    display: none;
   }
 
   .feature-grid,
