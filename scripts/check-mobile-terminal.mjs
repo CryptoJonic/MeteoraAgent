@@ -21,7 +21,7 @@ const checks = [
   ['paged trade list', /PAGE_SIZE=40/.test(html)],
   ['windowed candle rendering', /WINDOW_BEFORE=160/.test(html) && /slice\(startIndex,endIndex\)/.test(html)],
   ['trade leg parsing', /JSON\.parse\(t\.legs_json/.test(html)],
-  ['old branch migration', /CURRENT_BRANCH.*main/s.test(start) && /git stash push -u/.test(start)],
+  ['branch-safe launcher', /CURRENT_BRANCH.*main/s.test(start) && /Galka запускается из ветки/.test(start) && !/reset --hard|git stash push -u/.test(start)],
   ['cache-busted Termux URL', /terminal\/(?:pro|live)?(?:\.html)?\?v=/.test(start)],
 ];
 

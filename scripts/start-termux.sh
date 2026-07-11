@@ -4,26 +4,12 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-# Compatibility bridge for old single-branch clones.
+# The launcher never switches branches, resets files, or touches browser data.
+# This keeps feature-branch testing safe and leaves updates to the explicit git pull command.
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   CURRENT_BRANCH="$(git branch --show-current || true)"
   if [[ -n "$CURRENT_BRANCH" && "$CURRENT_BRANCH" != "main" ]]; then
-    echo "Обнаружена старая ветка: $CURRENT_BRANCH. Переключаю проект на main..."
-    if [[ -n "$(git status --porcelain)" ]]; then
-      STASH_NAME="galka-auto-backup-$(date +%Y%m%d-%H%M%S)"
-      git stash push -u -m "$STASH_NAME" >/dev/null
-      echo "Локальные изменения сохранены в git stash: $STASH_NAME"
-    fi
-    git remote set-branches --add origin main
-    git fetch origin main:refs/remotes/origin/main
-    if git show-ref --verify --quiet refs/heads/main; then
-      git switch main
-      git reset --hard origin/main
-    else
-      git switch -c main --track origin/main
-    fi
-    git branch --set-upstream-to=origin/main main >/dev/null 2>&1 || true
-    exec bash "$ROOT_DIR/scripts/start-termux.sh" "${1:-}"
+    echo "Galka запускается из ветки: $CURRENT_BRANCH"
   fi
 fi
 

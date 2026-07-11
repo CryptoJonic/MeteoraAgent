@@ -1,59 +1,105 @@
-# Galka
+# Galka Pro
 
-Galka is a mobile-first research and live paper-trading terminal for a long-only V-reversal model.
+Galka Pro is a mobile-first, **paper-only** terminal for one long-only workflow: choose a GALKA
+level, build a limit ladder below it, observe fills, reclaim the level, and exit through a trailing
+stop. Radar is an explainable visual assistant and never opens trades.
 
-## Live paper mode
+The primary application is [`terminal/pro.html`](terminal/pro.html). It runs directly in a browser
+without a build step, exchange keys, or server infrastructure.
 
-The Termux launcher now opens `terminal/live.html` by default. The live page:
+## What is included
 
-- subscribes to public Binance USD-M Futures data for BTCUSDT, ETHUSDT and SOLUSDT;
-- never uses exchange keys and never sends real orders;
-- runs the long-only Galka paper bot while the browser tab is open;
-- starts from a shared paper balance of $1,000 and 10x leverage;
-- reserves $3,333.33 notional per symbol by default;
-- uses six limit levels from 0.25% to 3.50% below V-low;
-- saves paper trades, open campaigns, settings and drawings in browser local storage;
-- supports pinch zoom, mouse-wheel zoom, chart dragging, zoom buttons and return-to-latest;
-- provides trend line, horizontal level and rectangle drawing tools.
+- public Binance USD-M Futures data for BTCUSDT, ETHUSDT, and SOLUSDT;
+- simultaneous paper engines for all three instruments;
+- manual GALKA placement by chart tap, exact price, or drag before the first fill;
+- safe pre-trade preview with first/last limit, step count, notional, full-fill average, and an
+  estimated return-to-GALKA PnL;
+- compact ladder states (`WAIT`, `FILLED`, `CANCELLED`), average entry, reclaim, trailing stop,
+  expiry, and PnL;
+- explainable Radar score with strength filters, visible-range mode, clustering, candidate detail,
+  and positive/negative training labels;
+- touch-safe drawing tools with selection, move, handles, properties, duplicate, lock, undo/redo,
+  and delete;
+- Session Health, REST candle catch-up after reconnect, activity log, safe backup/restore,
+  onboarding, training Replay, and installable PWA shell;
+- responsive layouts for 360–430 px portrait, Android landscape, Samsung DeX, and desktop.
 
-The initial live mode is an execution experiment, not a validated production strategy. It includes configurable fee/slippage assumptions and an approximate paper-liquidation model.
+Galka Pro does **not** place real orders. The service worker caches interface files only and does not
+pretend to keep the paper engine alive when Android freezes the browser tab.
 
-## Historical terminal
+## Data safety
 
-The historical audit remains available at `terminal/index.html`. The bundled result is `results/BTCUSDT_15m_dual_failure_v5.galka.zip`.
+All user state stays in browser localStorage under the unchanged key:
 
-## First installation in Termux
-
-```bash
-pkg update -y && pkg install git python -y && git clone https://github.com/CryptoJonic/MeteoraAgent.git ~/Galka && cd ~/Galka && bash scripts/start-termux.sh
+```text
+galka-pro-v1
 ```
 
-## Existing installation
+Store migration is additive and tested. Existing BTC/ETH/SOL campaigns, pending and filled limits,
+open positions, trailing state, history, settings, drawings, templates, alerts, manual examples, and
+Radar labels are retained. Full snapshot import validates and previews the file, then creates a
+backup of current state before restore.
+
+See [`GALKA_CONSTITUTION.md`](GALKA_CONSTITUTION.md) for the safety contract and
+[`docs/GALKA_DESIGN_SYSTEM.md`](docs/GALKA_DESIGN_SYSTEM.md) for the UI system.
+
+## Start in Termux
+
+First installation:
 
 ```bash
-cd ~/Galka && git pull --ff-only origin main && bash scripts/start-termux.sh
+pkg update -y
+pkg install git python -y
+git clone https://github.com/CryptoJonic/MeteoraAgent.git ~/Galka
+cd ~/Galka
+bash scripts/start-termux.sh
 ```
 
-Early single-branch installations can use:
+Existing installation after changes reach `main`:
 
 ```bash
-cd ~/Galka && git remote set-branches --add origin main && git fetch origin main:refs/remotes/origin/main && git switch -C main origin/main && bash scripts/start-termux.sh
+cd ~/Galka
+git pull --ff-only origin main
+bash scripts/start-termux.sh
 ```
 
-The launcher selects a free local port from 8080 to 8089, opens a cache-busted live terminal URL, and stops when `Ctrl+C` is pressed in Termux.
+The launcher chooses a free port from 8080–8089 and opens a cache-busted `terminal/pro.html` URL.
+It never switches branches, resets files, or touches browser data.
 
-## Project structure
-
-- `terminal/live.html`, `live.css`, `live.js` — live paper terminal;
-- `terminal/index.html` — historical audit terminal;
-- `results/` — terminal-ready research packages;
-- `research/` — reproducible Binance historical replay;
-- `scripts/` — Termux launcher and regression checks.
-
-## Desktop/local launch
+## Desktop / DeX launch
 
 ```bash
 python -m http.server 8080
 ```
 
-Open `http://127.0.0.1:8080/terminal/live.html`.
+Open `http://127.0.0.1:8080/terminal/pro.html`.
+
+## Architecture
+
+- `terminal/pro.html` — semantic shell, sheets, modals, PWA metadata;
+- `terminal/pro.css` — design tokens and portrait/landscape/DeX/desktop layouts;
+- `terminal/pro.js` — market/chart adapter and UI orchestration;
+- `terminal/modules/store.js` — defaults, additive migrations, localStorage, activity;
+- `terminal/modules/paper-engine.js` — deterministic ladder and quote processing, independent of DOM;
+- `terminal/modules/radar-engine.js` — explainable scoring and filtering, independent of paper state;
+- `terminal/modules/backup.js` — full snapshot validation and summaries;
+- `terminal/sw.js`, `terminal/manifest.webmanifest`, `terminal/icons/` — installable PWA shell;
+- `scripts/start-termux.sh` — one-command Android launcher;
+- `scripts/check-pro-terminal.mjs` and `scripts/test-*.mjs` — architecture and invariant checks.
+
+Research and older audit terminals remain in `research/`, `results/`, `terminal/index.html`,
+`terminal/live.html`, and `terminal/backtest.html`.
+
+## Validation
+
+Requires Node.js 20+ for development checks only. Runtime use in Termux does not require Node or
+`npm install`.
+
+```bash
+npm run check
+```
+
+The suite covers syntax/static contracts, store migration and localStorage round-trip, preservation
+of active campaigns, three simultaneous instruments, fill idempotency, reclaim/trailing invariants,
+Radar visual-only behavior, positive/negative labels, PWA files, accessibility, and responsive
+contracts for 360×800, 390×844, 844×390, and 1440×900.
