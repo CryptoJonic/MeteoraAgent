@@ -9,7 +9,7 @@ import io,json,sys,time,zipfile
 from datetime import date,datetime,timedelta,timezone
 from pathlib import Path
 import numpy as np,pandas as pd,requests
-from research import run_candidate as rc
+import run_candidate as rc
 
 SYMBOLS=("BTCUSDT","ETHUSDT","SOLUSDT")
 DEPTHS=np.array([.25,.70,1.25,1.90,2.65,3.50])/100
