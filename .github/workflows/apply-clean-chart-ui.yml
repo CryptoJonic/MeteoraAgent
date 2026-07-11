@@ -1,0 +1,64 @@
+name: Apply Clean Chart UI
+on:
+  push:
+    branches: [feat/clean-chart-ui]
+    paths: [.github/workflows/apply-clean-chart-ui.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Simplify chart interface without touching paper state
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          js_path = Path('terminal/pro.js')
+          css_path = Path('terminal/pro.css')
+          html_path = Path('terminal/pro.html')
+          check_path = Path('scripts/check-pro-terminal.mjs')
+
+          js = js_path.read_text()
+          css = css_path.read_text()
+          html = html_path.read_text()
+          check = check_path.read_text()
+
+          js = js.replace("const VERSION = 'pro-v1.3.0-level-editor-mobile';", "const VERSION = 'pro-v1.4.0-clean-chart';")
+          js = re.sub(
+              r"grid:\{vertLines:\{color:c\.grid\},horzLines:\{color:c\.grid\}\}",
+              "grid:{vertLines:{visible:false},horzLines:{visible:false}}",
+              js,
+          )
+
+          clean_css = '''\n/* Clean chart mode: maximize candles while keeping DOM hooks for existing code. */\n:root{--status:0px}\n.statusbar,.chart-toolbar,.bottom-strip{display:none!important}\n'''
+          if 'Clean chart mode: maximize candles' not in css:
+              css += clean_css
+
+          html = re.sub(r'pro\.css\?v=\d+', 'pro.css?v=4', html)
+          html = re.sub(r'pro\.js\?v=\d+', 'pro.js?v=4', html)
+
+          anchor = "  ['no exchange keys', !/api[_-]?key|secret[_-]?key/i.test(js)],"
+          additions = "  ['clean chart chrome', /\\.statusbar,\\.chart-toolbar,\\.bottom-strip\\{display:none!important\\}/.test(css) && /--status:0px/.test(css)],\n  ['chart grid disabled', (js.match(/vertLines:\\{visible:false\\}/g)||[]).length>=2 && (js.match(/horzLines:\\{visible:false\\}/g)||[]).length>=2],\n  ['paper storage preserved', /const STORAGE_KEY = 'galka-pro-v1'/.test(js) && /localStorage\\.getItem\\(STORAGE_KEY\\)/.test(js)],\n"
+          if "['clean chart chrome'" not in check:
+              check = check.replace(anchor, additions + anchor)
+
+          js_path.write_text(js)
+          css_path.write_text(css)
+          html_path.write_text(html)
+          check_path.write_text(check)
+          PY
+      - name: Validate terminal
+        run: npm run check
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add terminal/pro.js terminal/pro.css terminal/pro.html scripts/check-pro-terminal.mjs
+          git commit -m "Simplify chart UI and preserve paper state"
+          git push
