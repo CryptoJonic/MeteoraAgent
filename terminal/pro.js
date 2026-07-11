@@ -612,7 +612,7 @@ function setManualGalka(p){
   const rows=chartRows(),idx=nearestIndex(rows,p.time),id='M-'+symbol+'-'+Date.now(),context=rows.slice(Math.max(0,idx-39),idx+1).map(c=>({time:c.time,open:c.open,high:c.high,low:c.low,close:c.close,volume:c.volume}));
   const pattern={patternId:id,source:'manual',trainingExampleId:id,vLow:p.price,vLowTime:p.time,confirmedTime:p.time,atr:atrValue(rows,idx,14)||Math.max(p.price*.001,1e-9),dropAtr:0,recovery:0,status:'trading',createdAt:nowIso()};
   store.training.manualExamples.push({id,symbol,interval:runtime.interval,level:p.price,selectedCandleTime:p.time,selectedAt:nowIso(),status:'active',context});
-  ss.pattern=pattern;ss.campaign=createCampaign(symbol,pattern);save();renderPaper();updateMarkers();setTool('cursor');openPanel('paper');els.sidebar.classList.add('open');
+  ss.pattern=pattern;ss.campaign=createCampaign(symbol,pattern);save();renderPaper();updateMarkers();setTool('cursor');showMobilePanel('paper');
   toast(`${symbol}: уровень галки ${price(p.price,symbol)}, лимитки выставлены`,'alert');
 }
 function cancelManualSelection(){
