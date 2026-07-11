@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08101d">
+  <title>Galka Live Paper</title>
+  <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
+  <link rel="stylesheet" href="live.css?v=1">
+</head>
+<body>
+<header class="top">
+  <div class="title-row">
+    <div><h1>Galka Live Paper</h1><p>BTC · ETH · SOL — только виртуальные сделки</p></div>
+    <span class="paper-badge">PAPER</span>
+  </div>
+  <nav class="symbol-tabs" id="symbolTabs">
+    <button data-symbol="BTCUSDT" class="active">BTC</button>
+    <button data-symbol="ETHUSDT">ETH</button>
+    <button data-symbol="SOLUSDT">SOL</button>
+  </nav>
+</header>
+
+<section class="connection" id="connection"><span class="dot"></span><span id="connectionText">Подключение…</span></section>
+
+<section class="metrics" id="metrics">
+  <article><small>Депозит</small><strong id="equity">$1 000.00</strong></article>
+  <article><small>Цена</small><strong id="lastPrice">—</strong></article>
+  <article><small>Открытый PnL</small><strong id="unrealized">$0.00</strong></article>
+  <article><small>Реализовано</small><strong id="realized">$0.00</strong></article>
+  <article><small>Номинал</small><strong id="openNotional">$0</strong></article>
+  <article><small>Сделок</small><strong id="tradeCount">0</strong></article>
+</section>
+
+<main>
+  <section class="panel chart-panel">
+    <div class="panel-head">
+      <div><b id="chartTitle">BTCUSDT · 15m</b><small id="chartSubtitle">Онлайн Binance Futures</small></div>
+      <div class="zoom-buttons">
+        <button id="zoomOut" aria-label="Отдалить">−</button>
+        <button id="zoomIn" aria-label="Приблизить">+</button>
+        <button id="fitChart">Fit</button>
+        <button id="goLatest">Сейчас</button>
+      </div>
+    </div>
+    <div class="draw-toolbar" id="drawToolbar">
+      <button data-tool="cursor" class="active">Курсор</button>
+      <button data-tool="trend">Линия</button>
+      <button data-tool="horizontal">Уровень</button>
+      <button data-tool="rect">Прямоугольник</button>
+      <button id="undoDrawing">Назад</button>
+      <button id="clearDrawings">Очистить</button>
+    </div>
+    <div class="chart-wrap" id="chartWrap">
+      <div id="chart"></div>
+      <canvas id="drawingCanvas"></canvas>
+      <div class="chart-loading" id="chartLoading">Загрузка свечей…</div>
+    </div>
+    <div class="legend"><span class="buy-dot"></span> покупка <span class="sell-dot"></span> фиксация <span class="galka-dot"></span> V-low</div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head"><b>Бот</b><span id="botState" class="state-pill">Ожидает галку</span></div>
+      <div id="campaign" class="content muted">Активной позиции нет.</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><b>Лимитки</b><span id="filledCount">0/6</span></div>
+      <div id="levels" class="levels"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><b>Последняя галка</b><span id="patternState">—</span></div>
+      <div id="pattern" class="content muted">Паттерн ещё не найден.</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><b>Сделки</b><button id="resetPaper" class="danger-ghost">Сбросить paper</button></div>
+      <div id="trades" class="trades"><div class="muted">Пока сделок нет.</div></div>
+    </section>
+
+    <section class="panel settings-panel">
+      <div class="panel-head"><b>Параметры paper</b><span>общий депозит $1 000</span></div>
+      <div class="settings-grid">
+        <label>Плечо<input id="leverage" type="number" value="10" min="1" max="20" step="1"></label>
+        <label>Номинал на монету<input id="symbolNotional" type="number" value="3333.33" min="100" max="10000" step="100"></label>
+        <label>Макс. удержание, ч<input id="maxHours" type="number" value="72" min="1" max="336" step="1"></label>
+        <button id="saveSettings">Сохранить</button>
+      </div>
+      <p class="warning">Это симуляция. Реальные ордера не отправляются. Бот работает, пока эта вкладка открыта.</p>
+    </section>
+  </div>
+</main>
+
+<footer><a href="index.html">Исторический терминал</a><span>·</span><span id="version">live v1</span></footer>
+<script src="live.js?v=1"></script>
+</body>
+</html>
