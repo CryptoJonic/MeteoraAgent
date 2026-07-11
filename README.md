@@ -1,12 +1,26 @@
 # Galka
 
-Galka is a research terminal for developing and visually auditing a V-reversal trading model.
+Galka is a mobile-first research and live paper-trading terminal for a long-only V-reversal model.
 
-## Current terminal
+## Live paper mode
 
-The bundled result is `results/BTCUSDT_15m_dual_failure_v5.galka.zip`. The mobile terminal opens it automatically and renders only the candle window around the selected trade, which keeps the phone responsive.
+The Termux launcher now opens `terminal/live.html` by default. The live page:
 
-The terminal is an audit and paper-research interface. It does not place exchange orders and does not use API keys.
+- subscribes to public Binance USD-M Futures data for BTCUSDT, ETHUSDT and SOLUSDT;
+- never uses exchange keys and never sends real orders;
+- runs the long-only Galka paper bot while the browser tab is open;
+- starts from a shared paper balance of $1,000 and 10x leverage;
+- reserves $3,333.33 notional per symbol by default;
+- uses six limit levels from 0.25% to 3.50% below V-low;
+- saves paper trades, open campaigns, settings and drawings in browser local storage;
+- supports pinch zoom, mouse-wheel zoom, chart dragging, zoom buttons and return-to-latest;
+- provides trend line, horizontal level and rectangle drawing tools.
+
+The initial live mode is an execution experiment, not a validated production strategy. It includes configurable fee/slippage assumptions and an approximate paper-liquidation model.
+
+## Historical terminal
+
+The historical audit remains available at `terminal/index.html`. The bundled result is `results/BTCUSDT_15m_dual_failure_v5.galka.zip`.
 
 ## First installation in Termux
 
@@ -16,42 +30,24 @@ pkg update -y && pkg install git python -y && git clone https://github.com/Crypt
 
 ## Existing installation
 
-Early installations were pinned to `feat/galka-terminal-mvp`. Use this safe migration command once:
-
-```bash
-cd ~/Galka && git stash push -u -m galka-phone-backup && git fetch origin main && git switch -C main origin/main && bash scripts/start-termux.sh
-```
-
-The command preserves uncommitted files in `git stash` before switching to `main`. On later launches use:
-
 ```bash
 cd ~/Galka && git pull --ff-only origin main && bash scripts/start-termux.sh
 ```
 
-The launcher:
+Early single-branch installations can use:
 
-- migrates obsolete branches to `main` when possible;
-- selects a free local port from `8080` to `8089`;
-- opens a cache-busted terminal URL;
-- automatically loads the bundled BTC history;
-- stops when `Ctrl+C` is pressed in Termux.
+```bash
+cd ~/Galka && git remote set-branches --add origin main && git fetch origin main:refs/remotes/origin/main && git switch -C main origin/main && bash scripts/start-termux.sh
+```
 
-## Mobile review flow
-
-1. Wait until the status shows that history is loaded.
-2. Review `final_oos` trades first; this filter is selected by default.
-3. Use `‹` and `›` below the chart to move through trades.
-4. Filter by result and by pure long versus long-to-short switch.
-5. Inspect each leg, entry, exit, V-low, break and reason in the details section.
-6. Use the trade list or search by trade ID/date.
+The launcher selects a free local port from 8080 to 8089, opens a cache-busted live terminal URL, and stops when `Ctrl+C` is pressed in Termux.
 
 ## Project structure
 
-- `terminal/` — phone-first browser terminal;
-- `results/` — verified terminal-ready research packages;
+- `terminal/live.html`, `live.css`, `live.js` — live paper terminal;
+- `terminal/index.html` — historical audit terminal;
+- `results/` — terminal-ready research packages;
 - `research/` — reproducible Binance historical replay;
-- `docs/GALKA_PACKAGE_SPEC.md` — result package contract;
-- `docs/MOBILE_LOOP_ENGINEERING_15.md` — the 15 mobile improvement iterations;
 - `scripts/` — Termux launcher and regression checks.
 
 ## Desktop/local launch
@@ -60,4 +56,4 @@ The launcher:
 python -m http.server 8080
 ```
 
-Open `http://127.0.0.1:8080/terminal/`.
+Open `http://127.0.0.1:8080/terminal/live.html`.
