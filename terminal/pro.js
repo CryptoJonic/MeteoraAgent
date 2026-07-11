@@ -263,6 +263,7 @@ function connectWs(){
         const k=d.k,interval=k.i,c={time:Math.floor(k.t/1000),open:num(k.o),high:num(k.h),low:num(k.l),close:num(k.c),volume:num(k.v)};
         updateCandleMap(s,interval,c);
         if(interval==='15m'&&k.x){detectLatestPattern(s);processBotQuote(s);}
+        if(k.x&&store.ui.radar?.enabled&&s===runtime.symbol&&interval===runtime.interval)updateMarkers();
       }
     }catch(err){console.error(err);}
   };
@@ -564,7 +565,9 @@ function scanRadar(){
   for(let i=14;i<rows.length-4;i++){const c=scoreRadarPattern(rows,i);if(c)raw.push(c);}
   const merged=[];
   for(const c of raw){const prev=merged.at(-1);if(prev&&c.index-prev.index<=3){if(c.score>prev.score)merged[merged.length-1]=c;}else merged.push(c);}
-  runtime.radarCandidates=merged;return merged;
+  runtime.radarCandidates=merged;
+  if(runtime.radarSelected&&!merged.some(x=>x.patternId===runtime.radarSelected.patternId))runtime.radarSelected=null;
+  return merged;
 }
 function renderRadar(){
   const on=!!store.ui.radar?.enabled,c=runtime.radarCandidates||[],strong=c.filter(x=>x.strength==='strong').length,medium=c.filter(x=>x.strength==='medium').length,weak=c.length-strong-medium;
@@ -824,11 +827,11 @@ function renderDiagnostics(){
 }
 function renderAll(){renderWatchlist();renderPaper();renderObjects();renderAlerts();renderTemplates();renderDiagnostics();renderTicker();}
 function changeSymbol(symbol){
-  runtime.selectedDrawing=null;runtime.symbol=symbol;store.ui.symbol=symbol;els.symbolSelect.value=symbol;els.watermark.textContent=symbol+' · '+runtime.interval;save();
+  runtime.selectedDrawing=null;runtime.radarSelected=null;runtime.symbol=symbol;store.ui.symbol=symbol;els.symbolSelect.value=symbol;els.watermark.textContent=symbol+' · '+runtime.interval;save();
   loadCurrent(false);renderAll();runtime.mainChart.timeScale().scrollToRealTime();
 }
 async function changeInterval(interval){
-  runtime.selectedDrawing=null;runtime.interval=interval;store.ui.interval=interval;els.intervalSelect.value=interval;save();connectWs();await loadCurrent();renderAll();
+  runtime.selectedDrawing=null;runtime.radarSelected=null;runtime.interval=interval;store.ui.interval=interval;els.intervalSelect.value=interval;save();connectWs();await loadCurrent();renderAll();
 }
 function changeChartType(type){runtime.chartType=type;store.ui.chartType=type;save();createPriceSeries();loadCurrent(false);}
 function openPanel(name){
