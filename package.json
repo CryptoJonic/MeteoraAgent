@@ -1,10 +1,10 @@
 {
   "name": "galka-research-terminal",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/check-terminal.mjs && node scripts/check-mobile-terminal.mjs && node scripts/check-live-terminal.mjs && node scripts/check-pro-terminal.mjs",
+    "check": "node scripts/check-terminal.mjs && node scripts/check-mobile-terminal.mjs && node scripts/check-live-terminal.mjs && node scripts/check-pro-terminal.mjs && node scripts/check-backtest-page.mjs",
     "test": "npm run check"
   },
   "engines": {

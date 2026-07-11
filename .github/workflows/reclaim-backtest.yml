@@ -1,0 +1,48 @@
+name: Galka Reclaim Backtest
+on:
+  push:
+    branches: [feat/reclaim-backtest]
+    paths:
+      - research/run_reclaim_backtest.py
+      - research/run_candidate.py
+      - research/requirements.txt
+      - .github/workflows/reclaim-backtest.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - research/run_reclaim_backtest.py
+      - research/run_candidate.py
+      - research/requirements.txt
+      - .github/workflows/reclaim-backtest.yml
+  workflow_dispatch:
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r research/requirements.txt
+      - name: Run BTC ETH SOL reclaim replay
+        run: python research/run_reclaim_backtest.py
+      - name: Validate outputs
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('results/reclaim_backtest/summary.json')
+          x=json.loads(p.read_text())
+          assert len(x['variants']) == 12
+          required={'target_3333','trail075_3333','trail075_1000','trail075_300','trail075_200'}
+          assert {v['variant'] for v in x['variants']} >= required
+          assert all(v.get('minimum_equity', 0) >= 0 for v in x['variants'])
+          assert all(v.get('max_drawdown_pct', 0) >= -100 for v in x['variants'])
+          print(json.dumps(x, indent=2)[:16000])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galka-reclaim-backtest
+          path: results/reclaim_backtest
+          retention-days: 30

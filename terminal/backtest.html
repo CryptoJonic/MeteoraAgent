@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0e13">
+  <title>Galka Backtest</title>
+  <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
+  <link rel="stylesheet" href="backtest.css?v=1">
+</head>
+<body>
+<header class="top">
+  <div><h1>Galka Backtest</h1><p>BTC · ETH · SOL · 15m · депозит $1 000</p></div>
+  <a href="pro.html">Galka Pro</a>
+</header>
+<section class="notice" id="notice">Загрузка проверенного результата…</section>
+<main>
+  <section class="panel controls">
+    <label>Вариант
+      <select id="variant"></select>
+    </label>
+    <label class="check"><input id="baseline" type="checkbox" checked> Сравнить с $1 000</label>
+  </section>
+  <section class="metrics" id="metrics"></section>
+  <section class="panel chart-panel">
+    <div class="head"><b>Кривая депозита</b><span id="period"></span></div>
+    <div id="chart"></div>
+  </section>
+  <section class="panel">
+    <div class="head"><b>Результат по монетам</b><span>изолированные доли по $333,33</span></div>
+    <div class="coin-grid" id="coins"></div>
+  </section>
+  <section class="panel">
+    <div class="head"><b>Последний период: 2026</b><span>сброс депозита до $1 000</span></div>
+    <div class="recent" id="recent"></div>
+  </section>
+  <section class="panel">
+    <div class="head"><b>Годы выбранного варианта</b><span>Trail 0,75% · $400/coin</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Год</th><th>PnL</th><th>Депозит</th></tr></thead><tbody id="annual"></tbody></table></div>
+  </section>
+  <section class="panel warning">
+    <b>Границы теста</b>
+    <p>История Binance USD-M Futures, 15-минутные свечи. Учтены комиссии и проскальзывание, но не funding, очередь ордеров, mark/index basis и реальные частичные исполнения. Размер позиции фиксированный, без компаундинга. Это исследовательский replay, а не обещание будущей доходности.</p>
+  </section>
+</main>
+<script src="backtest.js?v=1"></script>
+</body>
+</html>
