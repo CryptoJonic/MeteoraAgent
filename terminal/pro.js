@@ -2,7 +2,7 @@
 'use strict';
 
 const LWC = window.LightweightCharts;
-const VERSION = 'pro-v1.0.0';
+const VERSION = 'pro-v1.1.0-reclaim-trail';
 const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT'];
 const INTERVALS = ['1m','3m','5m','15m','30m','1h','4h','1d'];
 const REST = 'https://fapi.binance.com';
@@ -19,7 +19,7 @@ const els = Object.fromEntries([
   'mainChart','drawingCanvas','watermark','loading','toast','indicatorPane','paneTitle','oscChart','closePane',
   'replayPanel','replayBack','replayPlay','replayStep','replaySlider','replayLabel','replayExit',
   'watchlist','refreshBtn','compareSelect','equity','openPnl','realizedPnl','marginUsed','botTitle','botState',
-  'campaignCard','fillsCount','levelsList','startingBalance','leverage','symbolNotional','maxHours','savePaperSettings',
+  'campaignCard','fillsCount','levelsList','startingBalance','leverage','symbolNotional','maxHours','exitMode','reclaimBufferPct','trailDistancePct','savePaperSettings',
   'resetPaper','exportTrades','tradeHistory','objectsList','exportWorkspace','importWorkspace','templateName','saveTemplate',
   'templatesList','alertSymbol','alertDirection','alertPrice','alertNote','createAlert','alertsList',
   'dwTime','dwOpen','dwHigh','dwLow','dwClose','dwVolume','dwAtr','dwChange','diagnostics',
@@ -36,7 +36,7 @@ function defaultStore(){
       drawings:{},templates:{},alerts:[]
     },
     paper:{
-      settings:{startingBalance:1000,leverage:10,symbolNotional:3333.33,maxHours:72,makerFee:0.0002,takerFee:0.0005,slippage:0.0002,maintenanceMargin:0.0125},
+      settings:{startingBalance:1000,leverage:10,symbolNotional:3333.33,maxHours:72,exitMode:'trail',reclaimBufferPct:0.10,trailDistancePct:0.75,makerFee:0.0002,takerFee:0.0005,slippage:0.0002,maintenanceMargin:0.0125},
       realizedPnl:0,fees:0,trades:[],symbols:Object.fromEntries(SYMBOLS.map(s=>[s,{pattern:null,campaign:null}]))
     }
   };
@@ -82,7 +82,7 @@ function csvEscape(v){const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replac
 
 const runtime={
   symbol:store.ui.symbol,interval:store.ui.interval,chartType:store.ui.chartType,
-  mainChart:null,priceSeries:null,markerApi:null,compareSeries:null,
+  mainChart:null,priceSeries:null,markerApi:null,compareSeries:null,paperLines:[],
   indicatorSeries:[],volumeSeries:null,oscChart:null,oscSeries:[],
   candles:new Map(),botCandles:Object.fromEntries(SYMBOLS.map(s=>[s,[]])),
   quotes:Object.fromEntries(SYMBOLS.map(s=>[s,{bid:null,ask:null,last:null,open24:null,change24:null,updated:null}])),
@@ -544,6 +544,7 @@ function detectLatestPattern(symbol){
 function createCampaign(symbol,p){
   const st=store.paper.settings,maxNotional=st.symbolNotional;
   return{campaignId:`C-${symbol}-${Date.now()}`,symbol,patternId:p.patternId,status:'waiting',vLow:p.vLow,target:p.vLow,createdAt:nowIso(),expiresAt:Date.now()+st.maxHours*3600000,
+    exitMode:st.exitMode||'trail',reclaimPrice:p.vLow*(1+num(st.reclaimBufferPct,.10)/100),trailArmed:false,trailHigh:null,trailStop:null,trailActivatedAt:null,
     levels:DEPTHS.map((d,i)=>({index:i+1,depthPct:d,weight:WEIGHTS[i],price:p.vLow*(1-d/100),notional:maxNotional*WEIGHTS[i],status:'pending',fillPrice:null,fillTime:null,qty:0,fee:0})),
     qty:0,filledNotional:0,averageEntry:null,entryFees:0,unrealizedPnl:0};
 }
@@ -553,7 +554,7 @@ function recalcCampaign(c){
 function closeCampaign(symbol,rawExit,reason){
   const ss=store.paper.symbols[symbol],c=ss.campaign;if(!c?.qty)return;
   const st=store.paper.settings,exit=reason==='v_low_target'?rawExit:rawExit*(1-st.slippage),exitNotional=c.qty*exit,exitFee=exitNotional*(reason==='v_low_target'?st.makerFee:st.takerFee),gross=c.qty*(exit-c.averageEntry),net=gross-c.entryFees-exitFee;
-  const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime:nowIso(),averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow};
+  const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime:nowIso(),averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow,exitMode:c.exitMode||'target',trailActivatedAt:c.trailActivatedAt||null,trailHigh:c.trailHigh||null,trailStop:c.trailStop||null};
   store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=trade.fees;ss.campaign=null;if(ss.pattern?.patternId===c.patternId)ss.pattern.status=reason;
   save();renderPaper();updateMarkers();
 }
@@ -574,12 +575,31 @@ function processBotQuote(symbol){
     if(age<=336&&q.bid<p.vLow-.10*p.atr){ss.campaign=createCampaign(symbol,p);p.status='trading';changed=true;}
   }
   const c=ss.campaign;
-  if(c&&['waiting','open'].includes(c.status)){
-    for(const l of c.levels)if(l.status==='pending'&&q.ask<=l.price){
+  if(c&&['waiting','open','trailing'].includes(c.status)){
+    if(!c.trailArmed)for(const l of c.levels)if(l.status==='pending'&&q.ask<=l.price){
       l.status='filled';l.fillPrice=l.price;l.fillTime=nowIso();l.qty=l.notional/l.fillPrice;l.fee=l.notional*store.paper.settings.makerFee;c.status='open';changed=true;
     }
     recalcCampaign(c);
-    if(c.qty&&q.bid>=c.target){closeCampaign(symbol,c.target,'v_low_target');return;}
+    if(c.qty){
+      const st=store.paper.settings,mode=c.exitMode||st.exitMode||'trail';
+      if(mode==='target'){
+        if(q.bid>=c.target){closeCampaign(symbol,c.target,'v_low_target');return;}
+      }else{
+        const reclaimPrice=c.reclaimPrice||c.vLow*(1+num(st.reclaimBufferPct,.10)/100);
+        if(!c.trailArmed&&q.bid>=reclaimPrice){
+          c.trailArmed=true;c.status='trailing';c.trailHigh=q.bid;c.trailStop=c.vLow;c.trailActivatedAt=nowIso();
+          c.expiresAt=Date.now()+st.maxHours*3600000;changed=true;toast(`${symbol}: trailing активирован, стоп ${price(c.trailStop,symbol)}`,'alert');
+        }
+        if(c.trailArmed){
+          const oldHigh=num(c.trailHigh,q.bid),newHigh=Math.max(oldHigh,q.bid);
+          if(newHigh>oldHigh){c.trailHigh=newHigh;changed=true;}
+          const distance=clamp(num(st.trailDistancePct,.75),.05,10)/100;
+          const nextStop=Math.max(c.vLow,newHigh*(1-distance));
+          if(nextStop>num(c.trailStop,c.vLow)){c.trailStop=nextStop;changed=true;}
+          if(q.bid<=c.trailStop){closeCampaign(symbol,q.bid,'reclaim_trailing_stop');return;}
+        }
+      }
+    }
     if(Date.now()>=c.expiresAt){if(c.qty)closeCampaign(symbol,q.bid,'time_exit');else{ss.campaign=null;p.status='expired';changed=true;}}
   }
   if(changed){save();renderPaper();updateMarkers();}
@@ -590,9 +610,10 @@ function renderPaperHeader(){
 }
 function renderPaper(){
   renderPaperHeader();const symbol=runtime.symbol,ss=store.paper.symbols[symbol],p=ss.pattern,c=ss.campaign;
-  els.botTitle.textContent=`Galka bot · ${symbol.replace('USDT','')}`;els.botState.textContent=c?(c.status==='open'?'Позиция':'Лимитки'):p?'Галка найдена':'Ожидание';
+  els.botTitle.textContent=`Galka bot · ${symbol.replace('USDT','')}`;els.botState.textContent=c?(c.status==='trailing'?'Трейлинг':c.status==='open'?'Позиция':'Лимитки'):p?'Галка найдена':'Ожидание';
   if(c){
-    els.campaignCard.innerHTML=`<div><b>${esc(c.status.toUpperCase())}</b> · V-low ${price(c.vLow)}</div><div>Средний вход: <b>${price(c.averageEntry)}</b></div><div>Номинал: <b>${money(c.filledNotional)}</b> · PnL <b class="${c.unrealizedPnl>=0?'up':'down'}">${signedMoney(c.unrealizedPnl)}</b></div>`;
+    const trail=c.trailArmed?`<div>Максимум: <b>${price(c.trailHigh)}</b></div><div>Trailing-stop: <b class="up">${price(c.trailStop)}</b></div>`:`<div>Активация trail: <b>${price(c.reclaimPrice||c.vLow)}</b></div>`;
+    els.campaignCard.innerHTML=`<div><b>${esc(c.status.toUpperCase())}</b> · V-low ${price(c.vLow)}</div><div>Средний вход: <b>${price(c.averageEntry)}</b></div><div>Выход: <b>${c.exitMode==='target'?'V-low target':'Reclaim trail'}</b></div>${trail}<div>Номинал: <b>${money(c.filledNotional)}</b> · PnL <b class="${c.unrealizedPnl>=0?'up':'down'}">${signedMoney(c.unrealizedPnl)}</b></div>`;
     els.levelsList.innerHTML=c.levels.map(l=>`<div class="level-row ${l.status==='filled'?'filled':''}"><span class="level-index">${l.index}</span><span><b>${price(l.price)}</b><small>−${l.depthPct}% · ${money(l.notional)}</small></span><b>${l.status==='filled'?'FILLED':'WAIT'}</b></div>`).join('');
     els.fillsCount.textContent=c.levels.filter(x=>x.status==='filled').length+'/6';
   }else{
@@ -602,7 +623,12 @@ function renderPaper(){
   els.tradeHistory.innerHTML=store.paper.trades.length?store.paper.trades.slice().reverse().slice(0,100).map(t=>`<div class="trade-item"><div><b>${esc(t.symbol)}</b><b class="${t.netPnl>=0?'up':'down'}">${signedMoney(t.netPnl)}</b></div><small>${fmtTime(Math.floor(Date.parse(t.exitTime)/1000))} · ${esc(t.reason)} · ${t.levelsFilled}/6</small></div>`).join(''):'<div class="muted">Сделок пока нет.</div>';
 }
 function updateMarkers(){
-  if(!runtime.priceSeries)return;const markers=[],symbol=runtime.symbol,ss=store.paper.symbols[symbol],p=ss.pattern,c=ss.campaign;
+  if(!runtime.priceSeries)return;
+  for(const line of runtime.paperLines){try{runtime.priceSeries.removePriceLine(line);}catch(_){}}runtime.paperLines=[];
+  const addPaperLine=(value,color,title)=>{if(value>0)runtime.paperLines.push(runtime.priceSeries.createPriceLine({price:value,color,lineWidth:2,lineStyle:LWC.LineStyle.Dashed,axisLabelVisible:true,title}));};
+  const markers=[],symbol=runtime.symbol,ss=store.paper.symbols[symbol],p=ss.pattern,c=ss.campaign;
+  if(p)addPaperLine(p.vLow,COLORS.blue,'V-low');
+  if(c?.trailArmed&&c.trailStop)addPaperLine(c.trailStop,COLORS.red,'TRAIL STOP');
   if(p)markers.push({time:p.vLowTime,position:'belowBar',color:COLORS.blue,shape:'circle',text:'V-low'});
   for(const t of store.paper.trades.filter(x=>x.symbol===symbol).slice(-100)){
     const a=Math.floor(Date.parse(t.entryTime)/1000),b=Math.floor(Date.parse(t.exitTime)/1000);
@@ -688,7 +714,7 @@ function intervalSeconds(i){const n=parseInt(i,10);if(i.endsWith('m'))return n*6
 
 /* Events */
 els.symbolSelect.value=runtime.symbol;els.intervalSelect.value=runtime.interval;els.chartTypeSelect.value=runtime.chartType;els.compareSelect.value=store.ui.compare;els.scaleMode.value=store.ui.scaleMode;
-els.startingBalance.value=store.paper.settings.startingBalance;els.leverage.value=store.paper.settings.leverage;els.symbolNotional.value=store.paper.settings.symbolNotional;els.maxHours.value=store.paper.settings.maxHours;
+els.startingBalance.value=store.paper.settings.startingBalance;els.leverage.value=store.paper.settings.leverage;els.symbolNotional.value=store.paper.settings.symbolNotional;els.maxHours.value=store.paper.settings.maxHours;els.exitMode.value=store.paper.settings.exitMode;els.reclaimBufferPct.value=store.paper.settings.reclaimBufferPct;els.trailDistancePct.value=store.paper.settings.trailDistancePct;
 els.symbolSelect.onchange=e=>changeSymbol(e.target.value);
 els.intervalSelect.onchange=e=>changeInterval(e.target.value);
 els.chartTypeSelect.onchange=e=>changeChartType(e.target.value);
@@ -726,7 +752,7 @@ els.goDateBtn.onclick=()=>openModal(els.goDateModal);
 els.goDateApply.onclick=()=>{const t=Date.parse(els.goDateInput.value)/1000;if(!Number.isFinite(t))return;const span=intervalSeconds(runtime.interval)*100;runtime.mainChart.timeScale().setVisibleRange({from:t-span/2,to:t+span/2});closeModals();};
 document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModals);document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)closeModals();});
 document.querySelector('.side-tabs').onclick=e=>{const b=e.target.closest('[data-panel]');if(b)openPanel(b.dataset.panel);};
-els.savePaperSettings.onclick=()=>{const s=store.paper.settings;s.startingBalance=Math.max(100,num(els.startingBalance.value,1000));s.leverage=clamp(num(els.leverage.value,10),1,20);s.symbolNotional=clamp(num(els.symbolNotional.value,3333.33),100,10000);s.maxHours=clamp(num(els.maxHours.value,72),1,336);save();renderPaper();toast('Paper-настройки сохранены');};
+els.savePaperSettings.onclick=()=>{const s=store.paper.settings;s.startingBalance=Math.max(100,num(els.startingBalance.value,1000));s.leverage=clamp(num(els.leverage.value,10),1,20);s.symbolNotional=clamp(num(els.symbolNotional.value,3333.33),100,10000);s.maxHours=clamp(num(els.maxHours.value,72),1,336);s.exitMode=els.exitMode.value==='target'?'target':'trail';s.reclaimBufferPct=clamp(num(els.reclaimBufferPct.value,.10),0,5);s.trailDistancePct=clamp(num(els.trailDistancePct.value,.75),.05,10);save();renderPaper();toast('Paper-настройки сохранены');};
 els.resetPaper.onclick=()=>{if(!confirm('Удалить позиции, сделки и PnL paper-счёта?'))return;const settings=store.paper.settings;store.paper=defaultStore().paper;store.paper.settings=settings;save();renderPaper();updateMarkers();};
 els.exportTrades.onclick=exportTradesCsv;
 els.exportWorkspace.onclick=()=>download(`galka-workspace-${Date.now()}.json`,new Blob([JSON.stringify(workspacePayload(),null,2)],{type:'application/json'}));
