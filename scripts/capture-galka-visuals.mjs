@@ -140,9 +140,19 @@ async function preparePage(browser, baseUrl, viewport) {
     await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'cache-control': 'no-store' }, body: JSON.stringify(marketRows(symbol)) });
   });
   const page = await context.newPage();
+  page.on('console', (message) => {
+    if (['error', 'warning'].includes(message.type())) console.log(`[browser ${message.type()}] ${baseUrl}: ${message.text()}`);
+  });
+  page.on('pageerror', (error) => console.log(`[browser pageerror] ${baseUrl}: ${error.message}`));
   await page.goto(`${baseUrl}/terminal/pro.html`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => /"rows":\s*[1-9]/.test(document.querySelector('#diagnostics')?.textContent || ''), null, { timeout: 10_000 });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1_000);
+  const visualState = await page.evaluate(() => ({
+    diagnostics: document.querySelector('#diagnostics')?.textContent,
+    chartRect: document.querySelector('#mainChart')?.getBoundingClientRect().toJSON(),
+    canvases: [...document.querySelectorAll('#mainChart canvas')].map((canvas) => ({ width: canvas.width, height: canvas.height })),
+  }));
+  console.log(`[visual state] ${baseUrl}: ${JSON.stringify(visualState)}`);
   return { context, page };
 }
 
