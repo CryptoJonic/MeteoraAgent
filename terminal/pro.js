@@ -2,7 +2,7 @@
 'use strict';
 
 const LWC = window.LightweightCharts;
-const VERSION = 'pro-v1.3.0-level-editor-mobile';
+const VERSION = 'pro-v1.4.0-clean-chart';
 const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT'];
 const INTERVALS = ['1m','3m','5m','15m','30m','1h','4h','1d'];
 const REST = 'https://fapi.binance.com';
@@ -107,7 +107,7 @@ function createMainChart(){
   runtime.mainChart=LWC.createChart(els.mainChart,{
     autoSize:true,
     layout:{background:{type:'solid',color:c.background},textColor:c.text,fontFamily:'Inter,system-ui',attributionLogo:true},
-    grid:{vertLines:{color:c.grid},horzLines:{color:c.grid}},
+    grid:{vertLines:{visible:false},horzLines:{visible:false}},
     crosshair:{mode:LWC.CrosshairMode.Normal,vertLine:{labelBackgroundColor:'#2962ff'},horzLine:{labelBackgroundColor:'#2962ff'}},
     rightPriceScale:{visible:true,borderColor:c.border,autoScale:true,scaleMargins:{top:.08,bottom:.12}},
     leftPriceScale:{visible:false,borderColor:c.border},
@@ -128,7 +128,7 @@ function createOscChart(){
   const c=chartColors();
   runtime.oscChart=LWC.createChart(els.oscChart,{
     autoSize:true,layout:{background:{type:'solid',color:c.background},textColor:c.text,attributionLogo:false},
-    grid:{vertLines:{color:c.grid},horzLines:{color:c.grid}},
+    grid:{vertLines:{visible:false},horzLines:{visible:false}},
     rightPriceScale:{borderColor:c.border,scaleMargins:{top:.12,bottom:.12}},
     timeScale:{visible:false,borderColor:c.border,timeVisible:true},
     crosshair:{mode:LWC.CrosshairMode.Normal},
@@ -169,8 +169,8 @@ function createPriceSeries(){
 function applyTheme(){
   document.body.dataset.theme=store.ui.theme;
   const c=chartColors();
-  runtime.mainChart?.applyOptions({layout:{background:{type:'solid',color:c.background},textColor:c.text},grid:{vertLines:{color:c.grid},horzLines:{color:c.grid}},rightPriceScale:{borderColor:c.border},leftPriceScale:{borderColor:c.border},timeScale:{borderColor:c.border}});
-  runtime.oscChart?.applyOptions({layout:{background:{type:'solid',color:c.background},textColor:c.text},grid:{vertLines:{color:c.grid},horzLines:{color:c.grid}},rightPriceScale:{borderColor:c.border}});
+  runtime.mainChart?.applyOptions({layout:{background:{type:'solid',color:c.background},textColor:c.text},grid:{vertLines:{visible:false},horzLines:{visible:false}},rightPriceScale:{borderColor:c.border},leftPriceScale:{borderColor:c.border},timeScale:{borderColor:c.border}});
+  runtime.oscChart?.applyOptions({layout:{background:{type:'solid',color:c.background},textColor:c.text},grid:{vertLines:{visible:false},horzLines:{visible:false}},rightPriceScale:{borderColor:c.border}});
   drawAll();
 }
 function applyScaleMode(){
