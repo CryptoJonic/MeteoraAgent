@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - 'agent/**'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -33,4 +36,3 @@ jobs:
           name: galka-visuals
           path: artifacts/galka-visuals/*.png
           if-no-files-found: error
-
