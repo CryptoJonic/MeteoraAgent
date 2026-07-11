@@ -34,9 +34,12 @@ jobs:
           import json, pathlib
           p=pathlib.Path('results/reclaim_backtest/summary.json')
           x=json.loads(p.read_text())
-          assert len(x['variants']) == 8
-          assert {v['variant'] for v in x['variants']} >= {'target_3333','trail075_3333','trail075_1000'}
-          print(json.dumps(x, indent=2)[:12000])
+          assert len(x['variants']) == 12
+          required={'target_3333','trail075_3333','trail075_1000','trail075_300','trail075_200'}
+          assert {v['variant'] for v in x['variants']} >= required
+          assert all(v.get('minimum_equity', 0) >= 0 for v in x['variants'])
+          assert all(v.get('max_drawdown_pct', 0) >= -100 for v in x['variants'])
+          print(json.dumps(x, indent=2)[:16000])
           PY
       - uses: actions/upload-artifact@v4
         with:
