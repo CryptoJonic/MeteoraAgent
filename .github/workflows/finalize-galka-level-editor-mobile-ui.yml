@@ -1,0 +1,36 @@
+name: Finalize Galka Level Editor Mobile UI
+on:
+  push:
+    branches: [feat/galka-level-editor-mobile-ui]
+    paths:
+      - .github/workflows/finalize-galka-level-editor-mobile-ui.yml
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Fix mobile sheet transition
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('terminal/pro.js')
+          s=p.read_text()
+          old="ss.pattern=pattern;ss.campaign=createCampaign(symbol,pattern);save();renderPaper();updateMarkers();setTool('cursor');openPanel('paper');els.sidebar.classList.add('open');"
+          new="ss.pattern=pattern;ss.campaign=createCampaign(symbol,pattern);save();renderPaper();updateMarkers();setTool('cursor');showMobilePanel('paper');"
+          if s.count(old)!=1: raise SystemExit(f'expected one mobile transition, got {s.count(old)}')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Validate terminal
+        run: npm run check
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add terminal/pro.js
+          git diff --cached --quiet || git commit -m "Fix mobile Paper sheet transition"
+          git push
