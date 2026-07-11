@@ -472,7 +472,7 @@ function drawAll(){
 function setTool(tool){
   runtime.tool=tool;runtime.drawingStart=null;runtime.drawingPreview=null;
   els.leftbar.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));
-  els.drawingCanvas.classList.toggle('drawing',tool!=='cursor'&&tool!=='crosshair'&&!store.ui.drawingsLocked);
+  els.drawingCanvas.classList.toggle('drawing',tool==='manualGalka'||(tool!=='cursor'&&tool!=='crosshair'&&!store.ui.drawingsLocked));
   if(tool==='crosshair')runtime.mainChart.applyOptions({crosshair:{mode:LWC.CrosshairMode.Normal}});
   drawAll();
 }
@@ -480,7 +480,7 @@ function addDrawing(d){
   snapshotDrawings();d.id='D'+Date.now()+Math.random().toString(16).slice(2,6);drawingStore().push(d);save();renderObjects();drawAll();
 }
 function drawingDown(e){
-  if(['cursor','crosshair'].includes(runtime.tool)||store.ui.drawingsLocked)return;
+  if(['cursor','crosshair'].includes(runtime.tool)||(store.ui.drawingsLocked&&runtime.tool!=='manualGalka'))return;
   const p=eventPoint(e);if(!p)return;
   if(runtime.tool==='manualGalka'){setManualGalka(p);return;}
   if(runtime.tool==='horizontal'||runtime.tool==='vertical'){addDrawing({type:runtime.tool,p1:p,color:COLORS.blue});return;}
@@ -562,6 +562,8 @@ function createCampaign(symbol,p){
 function setManualGalka(p){
   const symbol=runtime.symbol,ss=store.paper.symbols[symbol],active=ss.campaign;
   if(active?.qty){toast('Сначала закрой открытую позицию по этой монете','error');setTool('cursor');return;}
+  const firstEntry=p.price*(1-clamp(num(store.paper.settings.ladderStepPct,.15),.05,2)/100),ask=runtime.quotes[symbol].ask;
+  if(ask&&ask<=firstEntry){toast('Поздно ставить уровень: цена уже ниже первой лимитки','error');setTool('cursor');return;}
   if(active?.trainingExampleId){const old=store.training.manualExamples.find(x=>x.id===active.trainingExampleId);if(old)old.status='superseded';}
   const rows=chartRows(),idx=nearestIndex(rows,p.time),id='M-'+symbol+'-'+Date.now(),context=rows.slice(Math.max(0,idx-39),idx+1).map(c=>({time:c.time,open:c.open,high:c.high,low:c.low,close:c.close,volume:c.volume}));
   const pattern={patternId:id,source:'manual',trainingExampleId:id,vLow:p.price,vLowTime:p.time,confirmedTime:p.time,atr:atrValue(rows,idx,14)||Math.max(p.price*.001,1e-9),dropAtr:0,recovery:0,status:'trading',createdAt:nowIso()};
