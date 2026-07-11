@@ -38,6 +38,9 @@ const checks=[
   ['screenshot', /takeScreenshot/.test(js)],
   ['mobile layout', /@media\(max-width:700px\)/.test(css)&&/mobile-nav/.test(css)],
   ['TradingView attribution', /TradingView/.test(html)&&/attributionLogo:true/.test(js)],
+  ['clean chart chrome', /\.statusbar,\.chart-toolbar,\.bottom-strip\{display:none!important\}/.test(css) && /--status:0px/.test(css)],
+  ['chart grid disabled', (js.match(/vertLines:\{visible:false\}/g)||[]).length>=2 && (js.match(/horzLines:\{visible:false\}/g)||[]).length>=2],
+  ['paper storage preserved', /const STORAGE_KEY = 'galka-pro-v1'/.test(js) && /localStorage\.getItem\(STORAGE_KEY\)/.test(js)],
   ['no exchange keys', !/api[_-]?key|secret[_-]?key/i.test(js)],
 ];
 for(const [name,ok] of checks)if(!ok)throw new Error(`Galka Pro check failed: ${name}`);

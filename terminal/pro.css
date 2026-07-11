@@ -94,3 +94,7 @@ details{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}sum
 #manualLevelHint{display:block;min-height:30px;padding:0 9px 8px;color:var(--muted);font-size:10px}
 .training-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;color:var(--muted);border-bottom:1px solid var(--line);font-size:11px}.training-row button{height:30px;border-radius:4px}
 .sheet-backdrop{display:none}
+
+/* Clean chart mode: maximize candles while keeping DOM hooks for existing code. */
+:root{--status:0px}
+.statusbar,.chart-toolbar,.bottom-strip{display:none!important}
