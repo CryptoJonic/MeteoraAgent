@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#0b0e13">
+  <title>Galka Pro Terminal</title>
+  <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
+  <link rel="stylesheet" href="pro.css?v=1">
+</head>
+<body data-theme="dark">
+<div id="app">
+  <header class="topbar">
+    <button class="icon-btn mobile-only" id="toggleTools" aria-label="Инструменты">☰</button>
+    <div class="brand"><strong>GALKA</strong><span>PRO · PAPER</span></div>
+    <div class="market-controls">
+      <select id="symbolSelect" aria-label="Инструмент">
+        <option value="BTCUSDT">BTCUSDT</option>
+        <option value="ETHUSDT">ETHUSDT</option>
+        <option value="SOLUSDT">SOLUSDT</option>
+      </select>
+      <select id="intervalSelect" aria-label="Таймфрейм">
+        <option value="1m">1m</option><option value="3m">3m</option><option value="5m">5m</option>
+        <option value="15m" selected>15m</option><option value="30m">30m</option>
+        <option value="1h">1h</option><option value="4h">4h</option><option value="1d">1D</option>
+      </select>
+      <select id="chartTypeSelect" aria-label="Тип графика">
+        <option value="candles">Свечи</option><option value="bars">Бары</option>
+        <option value="heikin">Heikin Ashi</option><option value="line">Линия</option>
+        <option value="area">Область</option><option value="baseline">Baseline</option>
+      </select>
+    </div>
+    <div class="top-actions">
+      <button id="indicatorBtn">Индикаторы</button>
+      <button id="alertBtn">Алерт</button>
+      <button id="replayBtn">Replay</button>
+      <button id="snapshotBtn" title="Снимок">⌁</button>
+      <button id="fullscreenBtn" title="На весь экран">⛶</button>
+      <button class="icon-btn mobile-only" id="toggleSidebar" aria-label="Панели">⋮</button>
+    </div>
+  </header>
+
+  <div class="statusbar">
+    <span id="connectionDot" class="dot warn"></span>
+    <span id="connectionText">Подключение…</span>
+    <span class="separator"></span>
+    <span id="tickerText">—</span>
+    <span class="grow"></span>
+    <button id="themeBtn">◐</button>
+    <span id="clock">—</span>
+  </div>
+
+  <main class="terminal-grid">
+    <aside class="leftbar" id="leftbar">
+      <button data-tool="cursor" class="active" title="Курсор">⌖</button>
+      <button data-tool="crosshair" title="Перекрестие">＋</button>
+      <button data-tool="trend" title="Трендовая линия">╱</button>
+      <button data-tool="ray" title="Луч">↗</button>
+      <button data-tool="horizontal" title="Горизонтальная линия">—</button>
+      <button data-tool="vertical" title="Вертикальная линия">│</button>
+      <button data-tool="rect" title="Прямоугольник">▭</button>
+      <button data-tool="channel" title="Параллельный канал">▥</button>
+      <button data-tool="fib" title="Фибоначчи">Fib</button>
+      <button data-tool="measure" title="Измерение">↔</button>
+      <button data-tool="longPosition" title="Long position">L</button>
+      <button data-tool="text" title="Текст">T</button>
+      <span class="tool-separator"></span>
+      <button id="magnetBtn" title="Магнит">🧲</button>
+      <button id="lockBtn" title="Заблокировать рисунки">🔒</button>
+      <button id="hideDrawingsBtn" title="Скрыть рисунки">◉</button>
+      <button id="undoBtn" title="Отменить">↶</button>
+      <button id="redoBtn" title="Повторить">↷</button>
+      <button id="deleteBtn" title="Удалить выбранное">⌫</button>
+      <button id="clearBtn" title="Удалить все">×</button>
+    </aside>
+
+    <section class="workspace">
+      <div class="chart-toolbar">
+        <div class="ohlc" id="ohlc">O — H — L — C —</div>
+        <div class="quick-buttons">
+          <button id="zoomOut">−</button><button id="zoomIn">＋</button>
+          <button id="autoScaleBtn" class="active">Auto</button>
+          <select id="scaleMode">
+            <option value="normal">Обычная</option><option value="log">Лог</option>
+            <option value="percent">%</option><option value="indexed">100</option>
+          </select>
+          <button id="goDateBtn">Дата</button>
+          <button id="fitBtn">Fit</button>
+          <button id="latestBtn">Сейчас</button>
+        </div>
+      </div>
+
+      <div class="chart-stack" id="chartStack">
+        <div class="chart-main-wrap" id="chartMainWrap">
+          <div id="mainChart"></div>
+          <canvas id="drawingCanvas"></canvas>
+          <div class="watermark" id="watermark">BTCUSDT · 15m</div>
+          <div class="loading" id="loading">Загрузка данных…</div>
+          <div class="toast hidden" id="toast"></div>
+        </div>
+        <div class="pane hidden" id="indicatorPane">
+          <div class="pane-head"><span id="paneTitle">RSI 14</span><button id="closePane">×</button></div>
+          <div id="oscChart"></div>
+        </div>
+      </div>
+
+      <div class="replay-panel hidden" id="replayPanel">
+        <button id="replayBack">◀</button><button id="replayPlay">▶</button><button id="replayStep">▶│</button>
+        <input id="replaySlider" type="range" min="50" max="999" value="700">
+        <span id="replayLabel">—</span><button id="replayExit">Выход</button>
+      </div>
+
+      <div class="bottom-strip">
+        <div class="range-buttons">
+          <button data-range="1D">1Д</button><button data-range="5D">5Д</button>
+          <button data-range="1M">1М</button><button data-range="3M">3М</button>
+          <button data-range="6M">6М</button><button data-range="YTD">YTD</button>
+          <button data-range="1Y">1Г</button><button data-range="ALL">Все</button>
+        </div>
+        <div class="attribution">Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> Lightweight Charts™</div>
+      </div>
+    </section>
+
+    <aside class="sidebar" id="sidebar">
+      <nav class="side-tabs">
+        <button data-panel="watchlist" class="active">Список</button>
+        <button data-panel="paper">Paper</button>
+        <button data-panel="objects">Объекты</button>
+        <button data-panel="alerts">Алерты</button>
+        <button data-panel="data">Данные</button>
+      </nav>
+
+      <section class="side-panel active" data-panel-id="watchlist">
+        <div class="panel-title"><b>Watchlist</b><button id="refreshBtn">↻</button></div>
+        <div id="watchlist" class="watchlist"></div>
+        <div class="panel-title"><b>Сравнение</b></div>
+        <label class="field">Добавить линию
+          <select id="compareSelect"><option value="">Нет</option><option value="BTCUSDT">BTC</option><option value="ETHUSDT">ETH</option><option value="SOLUSDT">SOL</option></select>
+        </label>
+      </section>
+
+      <section class="side-panel" data-panel-id="paper">
+        <div class="paper-summary">
+          <div><small>Equity</small><strong id="equity">$1,000.00</strong></div>
+          <div><small>Open PnL</small><strong id="openPnl">$0.00</strong></div>
+          <div><small>Realized</small><strong id="realizedPnl">$0.00</strong></div>
+          <div><small>Margin</small><strong id="marginUsed">$0.00</strong></div>
+        </div>
+        <div class="panel-title"><b id="botTitle">Galka bot · BTC</b><span id="botState">Ожидание</span></div>
+        <div id="campaignCard" class="card muted">Активной кампании нет.</div>
+        <div class="panel-title"><b>Лимитки</b><span id="fillsCount">0/6</span></div>
+        <div id="levelsList" class="levels-list"></div>
+        <details>
+          <summary>Настройки paper</summary>
+          <div class="form-grid">
+            <label>Депозит<input id="startingBalance" type="number" min="100" step="100"></label>
+            <label>Плечо<input id="leverage" type="number" min="1" max="20"></label>
+            <label>Номинал / монету<input id="symbolNotional" type="number" min="100" step="100"></label>
+            <label>Макс. часов<input id="maxHours" type="number" min="1" max="336"></label>
+            <button id="savePaperSettings">Сохранить</button>
+            <button id="resetPaper" class="danger">Сбросить paper</button>
+          </div>
+        </details>
+        <div class="panel-title"><b>История</b><button id="exportTrades">CSV</button></div>
+        <div id="tradeHistory" class="trade-history"></div>
+      </section>
+
+      <section class="side-panel" data-panel-id="objects">
+        <div class="panel-title"><b>Дерево объектов</b><button id="exportWorkspace">Экспорт</button></div>
+        <div id="objectsList" class="objects-list"></div>
+        <label class="import-label">Импорт workspace<input id="importWorkspace" type="file" accept=".json,application/json"></label>
+        <div class="panel-title"><b>Шаблоны</b></div>
+        <div class="template-row"><input id="templateName" placeholder="Название"><button id="saveTemplate">Сохранить</button></div>
+        <div id="templatesList"></div>
+      </section>
+
+      <section class="side-panel" data-panel-id="alerts">
+        <div class="alert-form">
+          <select id="alertSymbol"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option></select>
+          <select id="alertDirection"><option value="above">Цена выше</option><option value="below">Цена ниже</option></select>
+          <input id="alertPrice" type="number" step="any" placeholder="Цена">
+          <input id="alertNote" placeholder="Комментарий">
+          <button id="createAlert">Создать</button>
+        </div>
+        <div id="alertsList"></div>
+      </section>
+
+      <section class="side-panel" data-panel-id="data">
+        <div class="data-window" id="dataWindow">
+          <div><span>Время</span><b id="dwTime">—</b></div>
+          <div><span>Open</span><b id="dwOpen">—</b></div>
+          <div><span>High</span><b id="dwHigh">—</b></div>
+          <div><span>Low</span><b id="dwLow">—</b></div>
+          <div><span>Close</span><b id="dwClose">—</b></div>
+          <div><span>Volume</span><b id="dwVolume">—</b></div>
+          <div><span>ATR 14</span><b id="dwAtr">—</b></div>
+          <div><span>Change</span><b id="dwChange">—</b></div>
+        </div>
+        <div class="panel-title"><b>Состояние</b></div>
+        <pre id="diagnostics"></pre>
+      </section>
+    </aside>
+  </main>
+
+  <nav class="mobile-nav mobile-only">
+    <button data-mobile-panel="tools">Рисовать</button>
+    <button data-mobile-panel="chart">График</button>
+    <button data-mobile-panel="paper">Paper</button>
+    <button data-mobile-panel="watchlist">Список</button>
+    <button data-mobile-panel="more">Ещё</button>
+  </nav>
+</div>
+
+<div class="modal hidden" id="indicatorModal">
+  <div class="modal-card">
+    <div class="modal-head"><b>Индикаторы</b><button data-close-modal>×</button></div>
+    <input id="indicatorSearch" class="search" placeholder="Поиск индикатора">
+    <div class="indicator-list" id="indicatorList"></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="goDateModal">
+  <div class="modal-card small">
+    <div class="modal-head"><b>Перейти к дате</b><button data-close-modal>×</button></div>
+    <input id="goDateInput" type="datetime-local">
+    <button id="goDateApply" class="primary">Перейти</button>
+  </div>
+</div>
+
+<script src="pro.js?v=1"></script>
+</body>
+</html>
