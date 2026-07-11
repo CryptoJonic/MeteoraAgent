@@ -2,7 +2,7 @@
 'use strict';
 
 const LWC = window.LightweightCharts;
-const VERSION = 'pro-v1.1.0-reclaim-trail';
+const VERSION = 'pro-v1.2.0-manual-galka';
 const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT'];
 const INTERVALS = ['1m','3m','5m','15m','30m','1h','4h','1d'];
 const REST = 'https://fapi.binance.com';
@@ -19,7 +19,7 @@ const els = Object.fromEntries([
   'mainChart','drawingCanvas','watermark','loading','toast','indicatorPane','paneTitle','oscChart','closePane',
   'replayPanel','replayBack','replayPlay','replayStep','replaySlider','replayLabel','replayExit',
   'watchlist','refreshBtn','compareSelect','equity','openPnl','realizedPnl','marginUsed','botTitle','botState',
-  'campaignCard','fillsCount','levelsList','startingBalance','leverage','symbolNotional','maxHours','exitMode','reclaimBufferPct','trailDistancePct','savePaperSettings',
+  'campaignCard','fillsCount','levelsList','manualGalkaBtn','cancelManualGalka','exportManualExamples','manualExamplesCount','startingBalance','leverage','symbolNotional','maxHours','signalMode','ladderStepPct','manualDepthPct','exitMode','reclaimBufferPct','trailDistancePct','savePaperSettings',
   'resetPaper','exportTrades','tradeHistory','objectsList','exportWorkspace','importWorkspace','templateName','saveTemplate',
   'templatesList','alertSymbol','alertDirection','alertPrice','alertNote','createAlert','alertsList',
   'dwTime','dwOpen','dwHigh','dwLow','dwClose','dwVolume','dwAtr','dwChange','diagnostics',
@@ -36,9 +36,10 @@ function defaultStore(){
       drawings:{},templates:{},alerts:[]
     },
     paper:{
-      settings:{startingBalance:1000,leverage:10,symbolNotional:3333.33,maxHours:72,exitMode:'trail',reclaimBufferPct:0.10,trailDistancePct:0.75,makerFee:0.0002,takerFee:0.0005,slippage:0.0002,maintenanceMargin:0.0125},
+      settings:{startingBalance:1000,leverage:10,symbolNotional:400,maxHours:72,signalMode:'manual',ladderStepPct:0.15,manualDepthPct:1.50,exitMode:'trail',reclaimBufferPct:0.10,trailDistancePct:0.75,makerFee:0.0002,takerFee:0.0005,slippage:0.0002,maintenanceMargin:0.0125},
       realizedPnl:0,fees:0,trades:[],symbols:Object.fromEntries(SYMBOLS.map(s=>[s,{pattern:null,campaign:null}]))
-    }
+    },
+    training:{manualExamples:[]}
   };
 }
 function deepMerge(base, extra){
@@ -58,6 +59,7 @@ function loadStore(){
 }
 let store=loadStore();
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(store));}
+if(num(store.paper.settings.symbolNotional)===3333.33&&!store.paper.trades.length&&!SYMBOLS.some(x=>store.paper.symbols[x].campaign)){store.paper.settings.symbolNotional=400;save();}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function num(v,d=0){const n=Number(v);return Number.isFinite(n)?n:d;}
@@ -470,7 +472,7 @@ function drawAll(){
 function setTool(tool){
   runtime.tool=tool;runtime.drawingStart=null;runtime.drawingPreview=null;
   els.leftbar.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));
-  els.drawingCanvas.classList.toggle('drawing',tool!=='cursor'&&tool!=='crosshair'&&!store.ui.drawingsLocked);
+  els.drawingCanvas.classList.toggle('drawing',tool==='manualGalka'||(tool!=='cursor'&&tool!=='crosshair'&&!store.ui.drawingsLocked));
   if(tool==='crosshair')runtime.mainChart.applyOptions({crosshair:{mode:LWC.CrosshairMode.Normal}});
   drawAll();
 }
@@ -478,8 +480,9 @@ function addDrawing(d){
   snapshotDrawings();d.id='D'+Date.now()+Math.random().toString(16).slice(2,6);drawingStore().push(d);save();renderObjects();drawAll();
 }
 function drawingDown(e){
-  if(['cursor','crosshair'].includes(runtime.tool)||store.ui.drawingsLocked)return;
+  if(['cursor','crosshair'].includes(runtime.tool)||(store.ui.drawingsLocked&&runtime.tool!=='manualGalka'))return;
   const p=eventPoint(e);if(!p)return;
+  if(runtime.tool==='manualGalka'){setManualGalka(p);return;}
   if(runtime.tool==='horizontal'||runtime.tool==='vertical'){addDrawing({type:runtime.tool,p1:p,color:COLORS.blue});return;}
   if(runtime.tool==='text'){const text=prompt('Текст на графике:');if(text)addDrawing({type:'text',p1:p,text,color:COLORS.blue,fontSize:14});return;}
   runtime.drawingStart=p;runtime.drawingPreview={type:runtime.tool,p1:p,p2:p,color:COLORS.blue};els.drawingCanvas.setPointerCapture(e.pointerId);
@@ -531,22 +534,52 @@ function evaluatePattern(rows,index,symbol){
   return{patternId:`${symbol}-${cur.time}`,vLow:cur.low,vLowTime:cur.time,confirmedTime:rows[index+R].time,atr:a,dropAtr:drop/a,recovery,status:'watching',createdAt:nowIso()};
 }
 function scanRecentPatterns(){
+  if(store.paper.settings.signalMode!=='auto')return;
   for(const s of SYMBOLS){
     const rows=botRows(s);let found=null;
     for(let i=Math.max(14,rows.length-350);i<rows.length-4;i++){const p=evaluatePattern(rows,i,s);if(p)found=p;}
-    if(found&&(Date.now()/1000-found.confirmedTime)/3600<=336)store.paper.symbols[s].pattern=found;
+    if(found&&!store.paper.symbols[s].campaign&&(Date.now()/1000-found.confirmedTime)/3600<=336)store.paper.symbols[s].pattern=found;
   }save();renderPaper();
 }
 function detectLatestPattern(symbol){
+  if(store.paper.settings.signalMode!=='auto')return;
   const rows=botRows(symbol),i=rows.length-5,p=evaluatePattern(rows,i,symbol);if(!p)return;
-  const ss=store.paper.symbols[symbol];if(ss.pattern?.patternId!==p.patternId){ss.pattern=p;save();renderPaper();updateMarkers();}
+  const ss=store.paper.symbols[symbol];if(!ss.campaign&&ss.pattern?.patternId!==p.patternId){ss.pattern=p;save();renderPaper();updateMarkers();}
+}
+function campaignLadder(st,p){
+  if(p.source!=='manual')return{depths:DEPTHS.slice(),weights:WEIGHTS.slice()};
+  const step=clamp(num(st.ladderStepPct,.15),.05,2),depth=clamp(num(st.manualDepthPct,1.5),step,10);
+  const count=Math.max(1,Math.floor(depth/step+1e-9)),depths=Array.from({length:count},(_,i)=>Number(((i+1)*step).toFixed(4)));
+  return{depths,weights:depths.map(()=>1/depths.length)};
 }
 function createCampaign(symbol,p){
-  const st=store.paper.settings,maxNotional=st.symbolNotional;
-  return{campaignId:`C-${symbol}-${Date.now()}`,symbol,patternId:p.patternId,status:'waiting',vLow:p.vLow,target:p.vLow,createdAt:nowIso(),expiresAt:Date.now()+st.maxHours*3600000,
+  const st=store.paper.settings,maxNotional=st.symbolNotional,{depths,weights}=campaignLadder(st,p);
+  return{campaignId:`C-${symbol}-${Date.now()}`,symbol,patternId:p.patternId,source:p.source||'auto',trainingExampleId:p.trainingExampleId||null,status:'waiting',vLow:p.vLow,target:p.vLow,createdAt:nowIso(),expiresAt:Date.now()+st.maxHours*3600000,
     exitMode:st.exitMode||'trail',reclaimPrice:p.vLow*(1+num(st.reclaimBufferPct,.10)/100),trailArmed:false,trailHigh:null,trailStop:null,trailActivatedAt:null,
-    levels:DEPTHS.map((d,i)=>({index:i+1,depthPct:d,weight:WEIGHTS[i],price:p.vLow*(1-d/100),notional:maxNotional*WEIGHTS[i],status:'pending',fillPrice:null,fillTime:null,qty:0,fee:0})),
+    levels:depths.map((d,i)=>({index:i+1,depthPct:d,weight:weights[i],price:p.vLow*(1-d/100),notional:maxNotional*weights[i],status:'pending',fillPrice:null,fillTime:null,qty:0,fee:0})),
     qty:0,filledNotional:0,averageEntry:null,entryFees:0,unrealizedPnl:0};
+}
+function setManualGalka(p){
+  const symbol=runtime.symbol,ss=store.paper.symbols[symbol],active=ss.campaign;
+  if(active?.qty){toast('Сначала закрой открытую позицию по этой монете','error');setTool('cursor');return;}
+  const firstEntry=p.price*(1-clamp(num(store.paper.settings.ladderStepPct,.15),.05,2)/100),ask=runtime.quotes[symbol].ask;
+  if(ask&&ask<=firstEntry){toast('Поздно ставить уровень: цена уже ниже первой лимитки','error');setTool('cursor');return;}
+  if(active?.trainingExampleId){const old=store.training.manualExamples.find(x=>x.id===active.trainingExampleId);if(old)old.status='superseded';}
+  const rows=chartRows(),idx=nearestIndex(rows,p.time),id='M-'+symbol+'-'+Date.now(),context=rows.slice(Math.max(0,idx-39),idx+1).map(c=>({time:c.time,open:c.open,high:c.high,low:c.low,close:c.close,volume:c.volume}));
+  const pattern={patternId:id,source:'manual',trainingExampleId:id,vLow:p.price,vLowTime:p.time,confirmedTime:p.time,atr:atrValue(rows,idx,14)||Math.max(p.price*.001,1e-9),dropAtr:0,recovery:0,status:'trading',createdAt:nowIso()};
+  store.training.manualExamples.push({id,symbol,interval:runtime.interval,level:p.price,selectedCandleTime:p.time,selectedAt:nowIso(),status:'active',context});
+  ss.pattern=pattern;ss.campaign=createCampaign(symbol,pattern);save();renderPaper();updateMarkers();setTool('cursor');openPanel('paper');els.sidebar.classList.add('open');
+  toast(`${symbol}: уровень галки ${price(p.price,symbol)}, лимитки выставлены`,'alert');
+}
+function cancelManualSelection(){
+  const ss=store.paper.symbols[runtime.symbol],c=ss.campaign;
+  if(c?.qty)return toast('Нельзя снять уровень: уже есть покупки','error');
+  if(c?.trainingExampleId){const x=store.training.manualExamples.find(v=>v.id===c.trainingExampleId);if(x)x.status='cancelled';}
+  ss.campaign=null;if(ss.pattern?.source==='manual')ss.pattern.status='cancelled';save();renderPaper();updateMarkers();toast('Ручной уровень снят');
+}
+function exportManualExamples(){
+  const payload={version:VERSION,exportedAt:nowIso(),examples:store.training.manualExamples};
+  download(`galka-manual-examples-${Date.now()}.json`,new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
 }
 function recalcCampaign(c){
   const f=c.levels.filter(x=>x.status==='filled');c.qty=f.reduce((a,x)=>a+x.qty,0);c.filledNotional=f.reduce((a,x)=>a+x.fillPrice*x.qty,0);c.averageEntry=c.qty?c.filledNotional/c.qty:null;c.entryFees=f.reduce((a,x)=>a+x.fee,0);
@@ -554,7 +587,8 @@ function recalcCampaign(c){
 function closeCampaign(symbol,rawExit,reason){
   const ss=store.paper.symbols[symbol],c=ss.campaign;if(!c?.qty)return;
   const st=store.paper.settings,exit=reason==='v_low_target'?rawExit:rawExit*(1-st.slippage),exitNotional=c.qty*exit,exitFee=exitNotional*(reason==='v_low_target'?st.makerFee:st.takerFee),gross=c.qty*(exit-c.averageEntry),net=gross-c.entryFees-exitFee;
-  const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime:nowIso(),averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow,exitMode:c.exitMode||'target',trailActivatedAt:c.trailActivatedAt||null,trailHigh:c.trailHigh||null,trailStop:c.trailStop||null};
+  const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime:nowIso(),averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,levelsTotal:c.levels.length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow,exitMode:c.exitMode||'target',trailActivatedAt:c.trailActivatedAt||null,trailHigh:c.trailHigh||null,trailStop:c.trailStop||null};
+  if(c.trainingExampleId){const x=store.training.manualExamples.find(v=>v.id===c.trainingExampleId);if(x)Object.assign(x,{status:'closed',exitTime:trade.exitTime,exitPrice:trade.exitPrice,netPnl:trade.netPnl,reason:trade.reason,levelsFilled:trade.levelsFilled,levelsTotal:trade.levelsTotal,trailHigh:trade.trailHigh});}
   store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=trade.fees;ss.campaign=null;if(ss.pattern?.patternId===c.patternId)ss.pattern.status=reason;
   save();renderPaper();updateMarkers();
 }
@@ -570,7 +604,7 @@ function checkGlobalLiquidation(){
 function processBotQuote(symbol){
   const q=runtime.quotes[symbol];if(!q.bid||!q.ask)return;
   const ss=store.paper.symbols[symbol],p=ss.pattern;let changed=false;
-  if(!ss.campaign&&p&&p.status==='watching'){
+  if(store.paper.settings.signalMode==='auto'&&!ss.campaign&&p&&p.status==='watching'){
     const age=(Date.now()/1000-p.confirmedTime)/3600;
     if(age<=336&&q.bid<p.vLow-.10*p.atr){ss.campaign=createCampaign(symbol,p);p.status='trading';changed=true;}
   }
@@ -610,26 +644,29 @@ function renderPaperHeader(){
 }
 function renderPaper(){
   renderPaperHeader();const symbol=runtime.symbol,ss=store.paper.symbols[symbol],p=ss.pattern,c=ss.campaign;
-  els.botTitle.textContent=`Galka bot · ${symbol.replace('USDT','')}`;els.botState.textContent=c?(c.status==='trailing'?'Трейлинг':c.status==='open'?'Позиция':'Лимитки'):p?'Галка найдена':'Ожидание';
+  els.manualExamplesCount.textContent=store.training.manualExamples.length;
+  els.botTitle.textContent=`Galka ${store.paper.settings.signalMode==='manual'?'manual':'auto'} · ${symbol.replace('USDT','')}`;els.botState.textContent=c?(c.status==='trailing'?'Трейлинг':c.status==='open'?'Позиция':'Лимитки'):p?'Галка выбрана':'Ожидание';
   if(c){
     const trail=c.trailArmed?`<div>Максимум: <b>${price(c.trailHigh)}</b></div><div>Trailing-stop: <b class="up">${price(c.trailStop)}</b></div>`:`<div>Активация trail: <b>${price(c.reclaimPrice||c.vLow)}</b></div>`;
-    els.campaignCard.innerHTML=`<div><b>${esc(c.status.toUpperCase())}</b> · V-low ${price(c.vLow)}</div><div>Средний вход: <b>${price(c.averageEntry)}</b></div><div>Выход: <b>${c.exitMode==='target'?'V-low target':'Reclaim trail'}</b></div>${trail}<div>Номинал: <b>${money(c.filledNotional)}</b> · PnL <b class="${c.unrealizedPnl>=0?'up':'down'}">${signedMoney(c.unrealizedPnl)}</b></div>`;
+    els.campaignCard.innerHTML=`<div><b>${esc(c.status.toUpperCase())}</b> · уровень галки ${price(c.vLow)}</div><div>Источник: <b>${c.source==='manual'?'выбран вручную':'автопоиск'}</b></div><div>Средний вход: <b>${price(c.averageEntry)}</b></div><div>Выход: <b>${c.exitMode==='target'?'уровень галки':'Reclaim trail'}</b></div>${trail}<div>Номинал: <b>${money(c.filledNotional)}</b> · PnL <b class="${c.unrealizedPnl>=0?'up':'down'}">${signedMoney(c.unrealizedPnl)}</b></div>`;
     els.levelsList.innerHTML=c.levels.map(l=>`<div class="level-row ${l.status==='filled'?'filled':''}"><span class="level-index">${l.index}</span><span><b>${price(l.price)}</b><small>−${l.depthPct}% · ${money(l.notional)}</small></span><b>${l.status==='filled'?'FILLED':'WAIT'}</b></div>`).join('');
-    els.fillsCount.textContent=c.levels.filter(x=>x.status==='filled').length+'/6';
+    els.fillsCount.textContent=c.levels.filter(x=>x.status==='filled').length+'/'+c.levels.length;
   }else{
-    els.campaignCard.innerHTML=p?`Последняя галка: V-low <b>${price(p.vLow)}</b><br>Drop ${p.dropAtr.toFixed(2)} ATR · recovery ${(p.recovery*100).toFixed(0)}%<br><span class="muted">${esc(p.status)}</span>`:'Активной кампании нет.';
-    els.levelsList.innerHTML='';els.fillsCount.textContent='0/6';
+    const detail=p?(p.source==='manual'?'Выбран вручную':`Drop ${num(p.dropAtr).toFixed(2)} ATR · recovery ${(num(p.recovery)*100).toFixed(0)}%`):'';
+    els.campaignCard.innerHTML=p?`Последняя галка: <b>${price(p.vLow)}</b><br>${detail}<br><span class="muted">${esc(p.status)}</span>`:'Нажми «Указать галку на графике», затем коснись нужного уровня.';
+    els.levelsList.innerHTML='';els.fillsCount.textContent='0';
   }
-  els.tradeHistory.innerHTML=store.paper.trades.length?store.paper.trades.slice().reverse().slice(0,100).map(t=>`<div class="trade-item"><div><b>${esc(t.symbol)}</b><b class="${t.netPnl>=0?'up':'down'}">${signedMoney(t.netPnl)}</b></div><small>${fmtTime(Math.floor(Date.parse(t.exitTime)/1000))} · ${esc(t.reason)} · ${t.levelsFilled}/6</small></div>`).join(''):'<div class="muted">Сделок пока нет.</div>';
+  els.tradeHistory.innerHTML=store.paper.trades.length?store.paper.trades.slice().reverse().slice(0,100).map(t=>`<div class="trade-item"><div><b>${esc(t.symbol)}</b><b class="${t.netPnl>=0?'up':'down'}">${signedMoney(t.netPnl)}</b></div><small>${fmtTime(Math.floor(Date.parse(t.exitTime)/1000))} · ${esc(t.reason)} · ${t.levelsFilled}/${t.levelsTotal||6}</small></div>`).join(''):'<div class="muted">Сделок пока нет.</div>';
 }
 function updateMarkers(){
   if(!runtime.priceSeries)return;
   for(const line of runtime.paperLines){try{runtime.priceSeries.removePriceLine(line);}catch(_){}}runtime.paperLines=[];
   const addPaperLine=(value,color,title)=>{if(value>0)runtime.paperLines.push(runtime.priceSeries.createPriceLine({price:value,color,lineWidth:2,lineStyle:LWC.LineStyle.Dashed,axisLabelVisible:true,title}));};
   const markers=[],symbol=runtime.symbol,ss=store.paper.symbols[symbol],p=ss.pattern,c=ss.campaign;
-  if(p)addPaperLine(p.vLow,COLORS.blue,'V-low');
+  if(p)addPaperLine(p.vLow,p.source==='manual'?COLORS.orange:COLORS.blue,p.source==='manual'?'GALKA':'V-low');
+  if(c)for(const l of c.levels)addPaperLine(l.price,l.status==='filled'?COLORS.green:COLORS.gray,'L'+l.index);
   if(c?.trailArmed&&c.trailStop)addPaperLine(c.trailStop,COLORS.red,'TRAIL STOP');
-  if(p)markers.push({time:p.vLowTime,position:'belowBar',color:COLORS.blue,shape:'circle',text:'V-low'});
+  if(p)markers.push({time:p.vLowTime,position:'belowBar',color:p.source==='manual'?COLORS.orange:COLORS.blue,shape:'circle',text:p.source==='manual'?'GALKA':'V-low'});
   for(const t of store.paper.trades.filter(x=>x.symbol===symbol).slice(-100)){
     const a=Math.floor(Date.parse(t.entryTime)/1000),b=Math.floor(Date.parse(t.exitTime)/1000);
     if(a)markers.push({time:a,position:'belowBar',color:COLORS.green,shape:'arrowUp',text:'BUY'});
@@ -714,7 +751,7 @@ function intervalSeconds(i){const n=parseInt(i,10);if(i.endsWith('m'))return n*6
 
 /* Events */
 els.symbolSelect.value=runtime.symbol;els.intervalSelect.value=runtime.interval;els.chartTypeSelect.value=runtime.chartType;els.compareSelect.value=store.ui.compare;els.scaleMode.value=store.ui.scaleMode;
-els.startingBalance.value=store.paper.settings.startingBalance;els.leverage.value=store.paper.settings.leverage;els.symbolNotional.value=store.paper.settings.symbolNotional;els.maxHours.value=store.paper.settings.maxHours;els.exitMode.value=store.paper.settings.exitMode;els.reclaimBufferPct.value=store.paper.settings.reclaimBufferPct;els.trailDistancePct.value=store.paper.settings.trailDistancePct;
+els.startingBalance.value=store.paper.settings.startingBalance;els.leverage.value=store.paper.settings.leverage;els.symbolNotional.value=store.paper.settings.symbolNotional;els.maxHours.value=store.paper.settings.maxHours;els.signalMode.value=store.paper.settings.signalMode;els.ladderStepPct.value=store.paper.settings.ladderStepPct;els.manualDepthPct.value=store.paper.settings.manualDepthPct;els.exitMode.value=store.paper.settings.exitMode;els.reclaimBufferPct.value=store.paper.settings.reclaimBufferPct;els.trailDistancePct.value=store.paper.settings.trailDistancePct;
 els.symbolSelect.onchange=e=>changeSymbol(e.target.value);
 els.intervalSelect.onchange=e=>changeInterval(e.target.value);
 els.chartTypeSelect.onchange=e=>changeChartType(e.target.value);
@@ -735,6 +772,8 @@ els.alertsList.onclick=e=>{const tid=e.target.dataset.alertToggle,did=e.target.d
 els.watchlist.onclick=e=>{const r=e.target.closest('[data-symbol]');if(r)changeSymbol(r.dataset.symbol);};
 els.refreshBtn.onclick=()=>Promise.all(SYMBOLS.map(s=>ensureData(s,'15m',true))).then(()=>{scanRecentPatterns();renderAll();});
 els.leftbar.onclick=e=>{const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool);};
+els.manualGalkaBtn.onclick=()=>{setTool('manualGalka');els.sidebar.classList.remove('open');toast('Коснись уровня галки на графике');};
+els.cancelManualGalka.onclick=cancelManualSelection;els.exportManualExamples.onclick=exportManualExamples;
 els.magnetBtn.onclick=()=>{store.ui.magnet=!store.ui.magnet;els.magnetBtn.classList.toggle('active',store.ui.magnet);save();};
 els.lockBtn.onclick=()=>{store.ui.drawingsLocked=!store.ui.drawingsLocked;els.lockBtn.classList.toggle('active',store.ui.drawingsLocked);setTool(runtime.tool);save();};
 els.hideDrawingsBtn.onclick=()=>{store.ui.drawingsHidden=!store.ui.drawingsHidden;els.hideDrawingsBtn.classList.toggle('active',store.ui.drawingsHidden);save();drawAll();};
@@ -752,7 +791,7 @@ els.goDateBtn.onclick=()=>openModal(els.goDateModal);
 els.goDateApply.onclick=()=>{const t=Date.parse(els.goDateInput.value)/1000;if(!Number.isFinite(t))return;const span=intervalSeconds(runtime.interval)*100;runtime.mainChart.timeScale().setVisibleRange({from:t-span/2,to:t+span/2});closeModals();};
 document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModals);document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)closeModals();});
 document.querySelector('.side-tabs').onclick=e=>{const b=e.target.closest('[data-panel]');if(b)openPanel(b.dataset.panel);};
-els.savePaperSettings.onclick=()=>{const s=store.paper.settings;s.startingBalance=Math.max(100,num(els.startingBalance.value,1000));s.leverage=clamp(num(els.leverage.value,10),1,20);s.symbolNotional=clamp(num(els.symbolNotional.value,3333.33),100,10000);s.maxHours=clamp(num(els.maxHours.value,72),1,336);s.exitMode=els.exitMode.value==='target'?'target':'trail';s.reclaimBufferPct=clamp(num(els.reclaimBufferPct.value,.10),0,5);s.trailDistancePct=clamp(num(els.trailDistancePct.value,.75),.05,10);save();renderPaper();toast('Paper-настройки сохранены');};
+els.savePaperSettings.onclick=()=>{const s=store.paper.settings;s.startingBalance=Math.max(100,num(els.startingBalance.value,1000));s.leverage=clamp(num(els.leverage.value,10),1,20);s.symbolNotional=clamp(num(els.symbolNotional.value,400),50,10000);s.maxHours=clamp(num(els.maxHours.value,72),1,336);s.signalMode=els.signalMode.value==='auto'?'auto':'manual';s.ladderStepPct=clamp(num(els.ladderStepPct.value,.15),.05,2);s.manualDepthPct=clamp(num(els.manualDepthPct.value,1.5),s.ladderStepPct,10);s.exitMode=els.exitMode.value==='target'?'target':'trail';s.reclaimBufferPct=clamp(num(els.reclaimBufferPct.value,.10),0,5);s.trailDistancePct=clamp(num(els.trailDistancePct.value,.75),.05,10);save();renderPaper();updateMarkers();toast('Paper-настройки сохранены');};
 els.resetPaper.onclick=()=>{if(!confirm('Удалить позиции, сделки и PnL paper-счёта?'))return;const settings=store.paper.settings;store.paper=defaultStore().paper;store.paper.settings=settings;save();renderPaper();updateMarkers();};
 els.exportTrades.onclick=exportTradesCsv;
 els.exportWorkspace.onclick=()=>download(`galka-workspace-${Date.now()}.json`,new Blob([JSON.stringify(workspacePayload(),null,2)],{type:'application/json'}));

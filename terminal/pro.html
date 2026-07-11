@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b0e13">
   <title>Galka Pro Terminal</title>
   <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
-  <link rel="stylesheet" href="pro.css?v=1">
+  <link rel="stylesheet" href="pro.css?v=2">
 </head>
 <body data-theme="dark">
 <div id="app">
@@ -57,6 +57,7 @@
       <button data-tool="trend" title="Трендовая линия">╱</button>
       <button data-tool="ray" title="Луч">↗</button>
       <button data-tool="horizontal" title="Горизонтальная линия">—</button>
+      <button data-tool="manualGalka" title="Выбрать уровень галки">G</button>
       <button data-tool="vertical" title="Вертикальная линия">│</button>
       <button data-tool="rect" title="Прямоугольник">▭</button>
       <button data-tool="channel" title="Параллельный канал">▥</button>
@@ -147,6 +148,11 @@
           <div><small>Margin</small><strong id="marginUsed">$0.00</strong></div>
         </div>
         <div class="panel-title"><b id="botTitle">Galka bot · BTC</b><span id="botState">Ожидание</span></div>
+        <div class="manual-actions">
+          <button id="manualGalkaBtn" class="primary">Указать галку на графике</button>
+          <button id="cancelManualGalka">Снять уровень</button>
+        </div>
+        <div class="training-row"><span>Сохранено примеров: <b id="manualExamplesCount">0</b></span><button id="exportManualExamples">JSON</button></div>
         <div id="campaignCard" class="card muted">Активной кампании нет.</div>
         <div class="panel-title"><b>Лимитки</b><span id="fillsCount">0/6</span></div>
         <div id="levelsList" class="levels-list"></div>
@@ -157,6 +163,9 @@
             <label>Плечо<input id="leverage" type="number" min="1" max="20"></label>
             <label>Номинал / монету<input id="symbolNotional" type="number" min="100" step="100"></label>
             <label>Макс. часов<input id="maxHours" type="number" min="1" max="336"></label>
+            <label>Сигнал<select id="signalMode"><option value="manual">Выбираю галку сам</option><option value="auto">Автопоиск (эксперимент)</option></select></label>
+            <label>Шаг лимиток, %<input id="ladderStepPct" type="number" min="0.05" max="2" step="0.05"></label>
+            <label>Глубина лестницы, %<input id="manualDepthPct" type="number" min="0.15" max="10" step="0.15"></label>
             <label>Режим выхода<select id="exitMode"><option value="trail">Reclaim trail</option><option value="target">Фиксация на V-low</option></select></label>
             <label>Пробой V-low, %<input id="reclaimBufferPct" type="number" min="0" max="5" step="0.05"></label>
             <label>Трейлинг от максимума, %<input id="trailDistancePct" type="number" min="0.05" max="10" step="0.05"></label>
@@ -230,6 +239,6 @@
   </div>
 </div>
 
-<script src="pro.js?v=1"></script>
+<script src="pro.js?v=2"></script>
 </body>
 </html>
