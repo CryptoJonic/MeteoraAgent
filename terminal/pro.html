@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b0e13">
   <title>Galka Pro Terminal</title>
   <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
-  <link rel="stylesheet" href="pro.css?v=2">
+  <link rel="stylesheet" href="pro.css?v=3">
 </head>
 <body data-theme="dark">
 <div id="app">
@@ -123,6 +123,7 @@
     </section>
 
     <aside class="sidebar" id="sidebar">
+      <div class="mobile-sheet-head mobile-only"><span>Панель терминала</span><button id="closeSidebarSheet" aria-label="Закрыть">×</button></div>
       <nav class="side-tabs">
         <button data-panel="watchlist" class="active">Список</button>
         <button data-panel="paper">Paper</button>
@@ -148,9 +149,18 @@
           <div><small>Margin</small><strong id="marginUsed">$0.00</strong></div>
         </div>
         <div class="panel-title"><b id="botTitle">Galka bot · BTC</b><span id="botState">Ожидание</span></div>
-        <div class="manual-actions">
-          <button id="manualGalkaBtn" class="primary">Указать галку на графике</button>
-          <button id="cancelManualGalka">Снять уровень</button>
+        <div class="level-editor">
+          <div class="level-editor-head"><b>Уровень галки</b><span>до первого исполнения</span></div>
+          <div class="level-price-row">
+            <input id="manualGalkaPrice" type="number" step="any" inputmode="decimal" placeholder="Цена уровня">
+            <button id="applyManualGalkaPrice" class="primary">Установить</button>
+          </div>
+          <div class="manual-actions">
+            <button id="manualGalkaBtn">Выбрать на графике</button>
+            <button id="moveManualGalka">Двигать линию</button>
+            <button id="cancelManualGalka">Снять</button>
+          </div>
+          <small id="manualLevelHint">Укажи цену или выбери уровень на графике.</small>
         </div>
         <div class="training-row"><span>Сохранено примеров: <b id="manualExamplesCount">0</b></span><button id="exportManualExamples">JSON</button></div>
         <div id="campaignCard" class="card muted">Активной кампании нет.</div>
@@ -214,6 +224,7 @@
     </aside>
   </main>
 
+  <div id="sheetBackdrop" class="sheet-backdrop"></div>
   <nav class="mobile-nav mobile-only">
     <button data-mobile-panel="tools">Рисовать</button>
     <button data-mobile-panel="chart">График</button>
@@ -239,6 +250,6 @@
   </div>
 </div>
 
-<script src="pro.js?v=2"></script>
+<script src="pro.js?v=3"></script>
 </body>
 </html>
