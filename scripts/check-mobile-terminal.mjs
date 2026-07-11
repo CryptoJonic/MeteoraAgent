@@ -22,7 +22,7 @@ const checks = [
   ['windowed candle rendering', /WINDOW_BEFORE=160/.test(html) && /slice\(startIndex,endIndex\)/.test(html)],
   ['trade leg parsing', /JSON\.parse\(t\.legs_json/.test(html)],
   ['old branch migration', /CURRENT_BRANCH.*main/s.test(start) && /git stash push -u/.test(start)],
-  ['cache-busted Termux URL', /terminal\/\?v=/.test(start)],
+  ['cache-busted Termux URL', /terminal\/(?:pro|live)?(?:\.html)?\?v=/.test(start)],
 ];
 
 for (const [name, ok] of checks) {

@@ -22,7 +22,7 @@ const checks = [
   ['Binance REST bootstrap', js.includes('/fapi/v1/klines')],
   ['persistent paper state', js.includes("localStorage.setItem('galka-live-paper-v1'")],
   ['no exchange keys', !js.match(/api[_-]?key|secretKey|signature/i)],
-  ['Termux opens live page', launcher.includes('/terminal/live.html?v=')],
+  ['Termux opens current terminal', /\/terminal\/(?:pro|live)\.html\?v=/.test(launcher)],
   ['mobile canvas overlay', html.includes('id="drawingCanvas"') && css.includes('touch-action:none')],
 ];
 

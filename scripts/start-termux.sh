@@ -4,9 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-# Compatibility bridge: early installations were cloned with --single-branch
-# and pinned to a merged feature branch. Explicitly add/fetch main, preserve
-# local edits, migrate to main, then restart this script from the current code.
+# Compatibility bridge for old single-branch clones.
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   CURRENT_BRANCH="$(git branch --show-current || true)"
   if [[ -n "$CURRENT_BRANCH" && "$CURRENT_BRANCH" != "main" ]]; then
@@ -57,7 +55,7 @@ fi
 
 LOG_FILE="${TMPDIR:-/tmp}/galka-terminal-${PORT}.log"
 VERSION="$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
-URL="http://127.0.0.1:${PORT}/terminal/live.html?v=${VERSION}"
+URL="http://127.0.0.1:${PORT}/terminal/pro.html?v=${VERSION}"
 
 cleanup() {
   if [[ -n "${SERVER_PID:-}" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
@@ -76,9 +74,10 @@ if ! kill -0 "$SERVER_PID" 2>/dev/null; then
   exit 1
 fi
 
-echo "Galka Live Paper запущен: $URL"
-echo "BTC, ETH и SOL используют публичные данные Binance. Реальные ордера не отправляются."
-echo "Paper-бот работает, пока вкладка браузера открыта."
+echo "Galka Pro запущен: $URL"
+echo "BTC, ETH и SOL используют публичные данные Binance USD-M Futures."
+echo "Все сделки виртуальные. API-ключи и реальные ордера отсутствуют."
+echo "Paper-бот работает, пока браузерная вкладка открыта."
 echo "Чтобы остановить сервер, вернись в Termux и нажми Ctrl+C."
 
 if command -v termux-open-url >/dev/null 2>&1; then
