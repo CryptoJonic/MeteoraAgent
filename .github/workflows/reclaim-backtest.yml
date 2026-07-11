@@ -7,6 +7,13 @@ on:
       - research/run_candidate.py
       - research/requirements.txt
       - .github/workflows/reclaim-backtest.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - research/run_reclaim_backtest.py
+      - research/run_candidate.py
+      - research/requirements.txt
+      - .github/workflows/reclaim-backtest.yml
   workflow_dispatch:
 jobs:
   backtest:
