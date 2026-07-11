@@ -117,7 +117,7 @@ function marketRows(symbol) {
 }
 
 async function preparePage(browser, baseUrl, viewport) {
-  const context = await browser.newContext({ viewport, deviceScaleFactor: 1, colorScheme: 'dark' });
+  const context = await browser.newContext({ viewport, deviceScaleFactor: 1, colorScheme: 'dark', locale: 'ru-RU' });
   await context.addInitScript(({ snapshot }) => {
     localStorage.setItem('galka-pro-v1', JSON.stringify(snapshot));
     class VisualWebSocket {
