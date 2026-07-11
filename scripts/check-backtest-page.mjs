@@ -8,12 +8,12 @@ const curves=JSON.parse(fs.readFileSync('results/reclaim_backtest/curves-annual.
 new vm.Script(js,{filename:'terminal/backtest.js'});
 const checks=[
  ['mobile viewport',html.includes('viewport-fit=cover')],
- ['equity chart',html.includes('id="chart"')&&js.includes('LineSeries')),
+ ['equity chart',html.includes('id="chart"')&&js.includes('LineSeries')],
  ['variant selector',html.includes('id="variant"')],
  ['deposit metrics',html.includes('id="metrics"')],
  ['coin sleeves',html.includes('id="coins"')],
  ['recent OOS',html.includes('id="recent"')],
- ['risk disclosure',html.includes('funding')&&html.includes('проскальзывание')),
+ ['risk disclosure',html.includes('funding')&&html.includes('проскальзывание')],
  ['selected safe candidate',summary.meta.selected_variant==='trail075_400'],
  ['all variants',Object.keys(summary.summaries).length===12],
  ['zero liquidations candidate',summary.summaries.trail075_400.liquidations===0],
