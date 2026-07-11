@@ -46,11 +46,11 @@ def simulate(d,ev,symbol,mode,trail_pct,notional):
   for i in range(e.break_index,min(len(d),expiry+1)):
    qty=qtys.sum();avg=(qtys*levels).sum()/qty if qty else None;filled_not=(qtys*levels).sum()
    if qty and bal+qty*(lo[i]-avg)<=filled_not*MAINT:
-    exitpx=lo[i]*(1-SLIP);fee=qty*exitpx*TAKER;bal+=qty*(exitpx-avg)-fee;reason='liquidation';ex=i;liq+=1;break
+    exitpx=lo[i]*(1-SLIP);fee=qty*exitpx*TAKER;bal=max(0.0,bal+qty*(exitpx-avg)-fee);reason='liquidation';ex=i;liq+=1;break
    if qty and armed and lo[i]<=stop:
-    exitpx=stop*(1-SLIP);fee=qty*exitpx*TAKER;bal+=qty*(exitpx-avg)-fee;reason='trail_stop';ex=i;break
+    exitpx=stop*(1-SLIP);fee=qty*exitpx*TAKER;bal=max(0.0,bal+qty*(exitpx-avg)-fee);reason='trail_stop';ex=i;break
    if qty and mode=='target' and i>first and hi[i]>=e.v_low_price:
-    exitpx=e.v_low_price;fee=qty*exitpx*MAKER;bal+=qty*(exitpx-avg)-fee;reason='target';ex=i;break
+    exitpx=e.v_low_price;fee=qty*exitpx*MAKER;bal=max(0.0,bal+qty*(exitpx-avg)-fee);reason='target';ex=i;break
    if not armed:
     for k,p in enumerate(levels):
      if not filled[k] and lo[i]<=p:
@@ -62,14 +62,16 @@ def simulate(d,ev,symbol,mode,trail_pct,notional):
     if not armed and hi[i]>=e.v_low_price*(1+BUFFER):armed=True;highwater=hi[i];stop=e.v_low_price;expiry=i+MAXB
     elif armed:highwater=max(highwater,hi[i]);stop=max(stop,e.v_low_price,highwater*(1-trail_pct/100))
    if i>=expiry:
-    if qty:exitpx=cl[i]*(1-SLIP);fee=qty*exitpx*TAKER;bal+=qty*(exitpx-avg)-fee;reason='time_exit'
+    if qty:exitpx=cl[i]*(1-SLIP);fee=qty*exitpx*TAKER;bal=max(0.0,bal+qty*(exitpx-avg)-fee);reason='time_exit'
     ex=i;break
-  if ex is None:ex=min(len(d)-1,expiry)
+  if ex is None:
+   ex=len(d)-1;qty=qtys.sum();avg=(qtys*levels).sum()/qty if qty else None
+   if qty:exitpx=cl[ex]*(1-SLIP);fee=qty*exitpx*TAKER;bal=max(0.0,bal+qty*(exitpx-avg)-fee);reason='data_end'
   last_exit=ex
   if qtys.sum():
    avg=(qtys*levels).sum()/qtys.sum();prev=trades[-1]['balance'] if trades else SLEEVE;pnl=bal-prev
    trades.append({'symbol':symbol,'pattern_id':e.pattern_id,'entry_time':iso(times[first]),'exit_time':iso(times[ex]),'levels':int(filled.sum()),'average_entry':avg,'exit_price':exitpx,'net_pnl':pnl,'balance':bal,'reason':reason,'trail_high':highwater,'trail_stop':stop})
-  if bal<=0:bal=0;break
+  if bal<=0:break
  return trades,{'ending':bal,'return_pct':(bal/SLEEVE-1)*100,'trades':len(trades),'liquidations':liq}
 
 def metrics(trades,end):
@@ -90,7 +92,7 @@ def main():
  start=date(2020,1,1);end=datetime.now(timezone.utc).date()-timedelta(days=1);cache=Path('.cache/binance');out=Path('results/reclaim_backtest');out.mkdir(parents=True,exist_ok=True);frames={};events={}
  for sym in SYMBOLS:
   print('LOAD',sym,flush=True);d=rc.features(history(sym,start,end,cache));e=rc.detect(d);e['pattern_id']=sym+'-'+e.pattern_id.astype(str);frames[sym]=d;events[sym]=e;print(sym,len(d),len(e),flush=True)
- variants=[('target_3333','target',0,3333.33),('trail075_3333','trail',.75,3333.33),('trail050_3333','trail',.5,3333.33),('trail100_3333','trail',1,3333.33),('trail150_3333','trail',1.5,3333.33),('trail075_2000','trail',.75,2000),('trail075_1000','trail',.75,1000),('trail075_500','trail',.75,500)]
+ variants=[('target_3333','target',0,3333.33),('trail075_3333','trail',.75,3333.33),('trail050_3333','trail',.5,3333.33),('trail100_3333','trail',1,3333.33),('trail150_3333','trail',1.5,3333.33),('trail075_2000','trail',.75,2000),('trail075_1000','trail',.75,1000),('trail075_500','trail',.75,500),('trail075_400','trail',.75,400),('trail075_300','trail',.75,300),('trail075_250','trail',.75,250),('trail075_200','trail',.75,200)]
  summaries=[];curves={};alltr=[]
  for v in variants:
   print('RUN',v[0],flush=True);m,tr,c=run(frames,events,*v);summaries.append(m);curves[v[0]]=c
