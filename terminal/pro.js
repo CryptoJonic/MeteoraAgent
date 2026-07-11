@@ -14,7 +14,7 @@ const COLORS = {green:'#089981',red:'#f23645',blue:'#2962ff',orange:'#ff9800',pu
 const $ = id => document.getElementById(id);
 const els = Object.fromEntries([
   'symbolSelect','intervalSelect','chartTypeSelect','indicatorBtn','alertBtn','replayBtn','snapshotBtn','fullscreenBtn',
-  'toggleTools','toggleSidebar','leftbar','sidebar','connectionDot','connectionText','tickerText','themeBtn','clock','radarBtn','radarLegend',
+  'toggleTools','toggleSidebar','leftbar','sidebar','connectionDot','connectionText','tickerText','themeBtn','clock','radarBtn','radarLegend','radarBtn','radarLegend',
   'ohlc','zoomOut','zoomIn','autoScaleBtn','scaleMode','goDateBtn','fitBtn','latestBtn','chartStack','chartMainWrap',
   'mainChart','drawingCanvas','watermark','loading','toast','indicatorPane','paneTitle','oscChart','closePane',
   'replayPanel','replayBack','replayPlay','replayStep','replaySlider','replayLabel','replayExit',
@@ -33,7 +33,7 @@ function defaultStore(){
       theme:'dark',symbol:'BTCUSDT',interval:'15m',chartType:'candles',compare:'',scaleMode:'normal',
       indicators:{sma20:false,ema20:false,ema50:false,bollinger:false,vwap:false,volume:true},
       lowerIndicator:'rsi',magnet:true,drawingsLocked:false,drawingsHidden:false,
-      drawings:{},templates:{},alerts:[],radar:{enabled:false,minScore:45}
+      drawings:{},templates:{},alerts:[],radar:{enabled:false,minScore:45},radar:{enabled:false,minScore:45}
     },
     paper:{
       settings:{startingBalance:1000,leverage:10,symbolNotional:400,maxHours:72,signalMode:'manual',ladderStepPct:0.15,manualDepthPct:1.50,exitMode:'trail',reclaimBufferPct:0.10,trailDistancePct:0.75,makerFee:0.0002,takerFee:0.0005,slippage:0.0002,maintenanceMargin:0.0125},
@@ -92,7 +92,7 @@ const runtime={
   tool:'cursor',drawingStart:null,drawingPreview:null,selectedDrawing:null,undo:[],redo:[],
   dpr:window.devicePixelRatio||1,toastTimer:null,lastCrosshair:null,
   replay:{active:false,index:0,playing:false,timer:null,source:null},
-  hiddenLiveUpdates:false,manualDrag:false,manualDragOriginal:null,radarCandidates:[],radarSelected:null
+  hiddenLiveUpdates:false,manualDrag:false,manualDragOriginal:null,radarCandidates:[],radarSelected:null,radarCandidates:[],radarSelected:null
 };
 
 function chartColors(){
@@ -116,6 +116,7 @@ function createMainChart(){
     handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}
   });
   runtime.mainChart.subscribeCrosshairMove(onCrosshair);
+  runtime.mainChart.subscribeClick(onRadarChartClick);
   runtime.mainChart.subscribeClick(onRadarChartClick);
   runtime.mainChart.timeScale().subscribeVisibleTimeRangeChange(()=>drawAll());
   runtime.mainChart.timeScale().subscribeVisibleLogicalRangeChange(range=>{
@@ -869,6 +870,7 @@ els.intervalSelect.onchange=e=>changeInterval(e.target.value);
 els.chartTypeSelect.onchange=e=>changeChartType(e.target.value);
 els.compareSelect.onchange=async e=>{store.ui.compare=e.target.value;save();await updateCompare();};
 els.themeBtn.onclick=()=>{store.ui.theme=store.ui.theme==='dark'?'light':'dark';save();applyTheme();};
+els.radarBtn.onclick=toggleRadar;
 els.radarBtn.onclick=toggleRadar;
 els.zoomIn.onclick=()=>zoom(.72);els.zoomOut.onclick=()=>zoom(1.38);
 els.fitBtn.onclick=()=>runtime.mainChart.timeScale().fitContent();els.latestBtn.onclick=()=>runtime.mainChart.timeScale().scrollToRealTime();
