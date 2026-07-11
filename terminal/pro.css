@@ -79,7 +79,7 @@ details{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}sum
   .chart-toolbar{height:32px;padding:2px 5px}.ohlc{font-size:9px}.quick-buttons select,.quick-buttons #autoScaleBtn,.quick-buttons #goDateBtn{display:none}.quick-buttons button{height:26px;padding:0 6px}
   .bottom-strip{min-height:29px}.range-buttons button{padding:0 6px}.attribution{display:none}.pane{height:30%}
   .mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:0;right:0;bottom:0;height:calc(50px + var(--safe));padding-bottom:var(--safe);background:var(--panel);border-top:1px solid var(--line);z-index:90}.mobile-nav button{border:0;background:transparent;font-size:11px}
-  .sheet-backdrop{display:block;position:fixed;inset:calc(var(--top) + var(--status)) 0 calc(50px + var(--safe));z-index:80;background:#0008;opacity:0;pointer-events:none;transition:.18s}.sheet-backdrop.open{opacity:1;pointer-events:auto}
+  .sheet-backdrop{display:block!important;position:fixed;inset:calc(var(--top) + var(--status)) 0 calc(50px + var(--safe));z-index:80;background:#0008;opacity:0;pointer-events:none;transition:.18s}.sheet-backdrop.open{opacity:1;pointer-events:auto}
   .watermark{font-size:18px;top:9px;left:9px}.toast{bottom:10px;max-width:90%;text-align:center}
   .form-grid{grid-template-columns:1fr 1fr}.paper-summary{grid-template-columns:repeat(4,1fr)}.paper-summary>div{padding:7px 5px}.paper-summary strong{font-size:12px}
 }
