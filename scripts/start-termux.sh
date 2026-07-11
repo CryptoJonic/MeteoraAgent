@@ -16,11 +16,8 @@ if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/n
       git stash push -u -m "$STASH_NAME" >/dev/null
       echo "Локальные изменения сохранены в git stash: $STASH_NAME"
     fi
-
-    # A --single-branch clone may not have an origin/main refspec.
     git remote set-branches --add origin main
     git fetch origin main:refs/remotes/origin/main
-
     if git show-ref --verify --quiet refs/heads/main; then
       git switch main
       git reset --hard origin/main
@@ -60,7 +57,7 @@ fi
 
 LOG_FILE="${TMPDIR:-/tmp}/galka-terminal-${PORT}.log"
 VERSION="$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
-URL="http://127.0.0.1:${PORT}/terminal/?v=${VERSION}"
+URL="http://127.0.0.1:${PORT}/terminal/live.html?v=${VERSION}"
 
 cleanup() {
   if [[ -n "${SERVER_PID:-}" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
@@ -79,8 +76,9 @@ if ! kill -0 "$SERVER_PID" 2>/dev/null; then
   exit 1
 fi
 
-echo "Galka Terminal v2 запущен: $URL"
-echo "История BTC загружается автоматически."
+echo "Galka Live Paper запущен: $URL"
+echo "BTC, ETH и SOL используют публичные данные Binance. Реальные ордера не отправляются."
+echo "Paper-бот работает, пока вкладка браузера открыта."
 echo "Чтобы остановить сервер, вернись в Termux и нажми Ctrl+C."
 
 if command -v termux-open-url >/dev/null 2>&1; then
