@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080b10">
+  <title>Manual Galka Auto Paper</title>
+  <style>
+    html,body{height:100%;margin:0;background:#080b10;color:#a5adbd;font-family:system-ui,sans-serif}
+    body{display:grid;place-items:center}.box{text-align:center}.spinner{width:42px;height:42px;margin:0 auto 18px;border:3px solid #27303d;border-top-color:#ff9800;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div class="box"><div class="spinner"></div><div id="status">Подготовка Manual Galka…</div></div>
+  <script>
+    (async()=>{
+      const status=document.getElementById('status');
+      const build=new URLSearchParams(location.search).get('v')||Date.now();
+      const target=`./pro.html?v=${encodeURIComponent(build)}&mode=manual-auto&target=galka`;
+      if(!('serviceWorker' in navigator)){location.replace(target);return;}
+      try{
+        status.textContent='Обновление торгового режима…';
+        const registration=await navigator.serviceWorker.register(`./sw.js?v=${encodeURIComponent(build)}`,{scope:'./',updateViaCache:'none'});
+        await registration.update();
+        await navigator.serviceWorker.ready;
+        if(!navigator.serviceWorker.controller){
+          await Promise.race([
+            new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true})),
+            new Promise(resolve=>setTimeout(resolve,3500)),
+          ]);
+        }
+        location.replace(target);
+      }catch(error){
+        console.error(error);
+        status.textContent='Не удалось обновить режим. Открываю терминал…';
+        setTimeout(()=>location.replace(target),1200);
+      }
+    })();
+  </script>
+</body>
+</html>
