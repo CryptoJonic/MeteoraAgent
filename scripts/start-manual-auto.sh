@@ -27,7 +27,7 @@ PY
 
 LOG_FILE="${TMPDIR:-/tmp}/galka-manual-auto-${PORT}.log"
 VERSION="$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
-URL="http://127.0.0.1:${PORT}/terminal/pro.html?v=${VERSION}&mode=manual-auto"
+URL="http://127.0.0.1:${PORT}/terminal/manual-auto-bootstrap.html?v=${VERSION}"
 
 cleanup() {
   if [[ -n "${SERVER_PID:-}" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
@@ -47,6 +47,8 @@ if ! kill -0 "$SERVER_PID" 2>/dev/null; then
 fi
 
 echo "Manual Galka Auto Paper запущен отдельно: $URL"
+echo "Режим: лимитки ниже GALKA, полный выход при возврате ровно к GALKA."
+echo "RECLAIM и trailing в этой исследовательской версии отключены."
 echo "Используется отдельный origin и отдельное хранилище galka-manual-auto-v1."
 echo "Основной Galka Pro и его позиции не изменяются."
 echo "Чтобы остановить сервер, вернись в Termux и нажми Ctrl+C."
