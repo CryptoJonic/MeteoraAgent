@@ -1,4 +1,4 @@
-export const STORAGE_KEY = 'galka-pro-v1';
+export const STORAGE_KEY = 'galka-manual-auto-v1';
 export const STORE_SCHEMA_VERSION = 3;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
 export const PAPER_RECOVERY_POLICY = 'closed-1m-directional-v1';
