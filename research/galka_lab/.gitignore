@@ -1,0 +1,5 @@
+__pycache__/
+cache/
+output/work/
+output/all_candidates.csv.gz
+output/events.csv.gz

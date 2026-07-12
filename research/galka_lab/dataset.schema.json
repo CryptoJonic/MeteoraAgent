@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/CryptoJonic/MeteoraAgent/research/galka_lab/dataset.schema.json",
+  "title": "Galka Lab candidate and outcome row",
+  "type": "object",
+  "required": [
+    "candidate_id",
+    "event_family_id",
+    "symbol",
+    "interval",
+    "pivot_time_iso",
+    "confirmation_time_iso",
+    "feature_cutoff_time",
+    "level",
+    "drop_atr",
+    "recovery_ratio",
+    "activated",
+    "split"
+  ],
+  "properties": {
+    "candidate_id": { "type": "string" },
+    "event_family_id": { "type": "string" },
+    "symbol": { "enum": ["BTCUSDT", "ETHUSDT", "SOLUSDT"] },
+    "interval": { "enum": ["5m", "15m", "30m", "1h"] },
+    "feature_cutoff_time": { "type": ["string", "object"] },
+    "level": { "type": "number", "exclusiveMinimum": 0 },
+    "activated": { "type": "boolean" },
+    "outcome_censored": { "type": ["boolean", "null"] },
+    "mae_pct": { "type": ["number", "null"], "minimum": 0 },
+    "return_minutes": { "type": ["number", "null"], "minimum": 0 },
+    "split": { "enum": ["train", "validation", "final_oos"] },
+    "galka_type": { "type": "string" },
+    "model_hash": { "type": "string" }
+  },
+  "additionalProperties": true
+}

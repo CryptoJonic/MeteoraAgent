@@ -1,0 +1,131 @@
+name: Galka Lab full dataset
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_date:
+        description: Earliest date or auto
+        required: true
+        default: auto
+      to_date:
+        description: Last complete UTC day or latest
+        required: true
+        default: latest
+      commit_results:
+        description: Commit verified compact outputs to the dispatched branch
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: galka-lab-full-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dataset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: research/requirements.txt
+
+      - name: Install research dependencies
+        run: python -m pip install -r research/requirements.txt
+
+      - uses: actions/cache@v4
+        with:
+          path: research/galka_lab/cache
+          key: galka-lab-binance-v1-${{ inputs.to_date }}-${{ hashFiles('research/galka_lab/data.py') }}
+          restore-keys: |
+            galka-lab-binance-v1-
+
+      - name: Unit and no-lookahead gates
+        run: npm run research:test
+
+      - name: Synthetic end-to-end gate
+        run: |
+          python research/galka_lab.py \
+            --synthetic \
+            --synthetic-days 30 \
+            --output /tmp/galka-lab-smoke \
+            --build-dataset \
+            --classify \
+            --report \
+            --export-terminal-pack
+
+      - name: Build full BTC ETH SOL dataset and interim report
+        run: |
+          python research/galka_lab.py \
+            --symbols BTCUSDT ETHUSDT SOLUSDT \
+            --intervals 5m 15m 30m 1h \
+            --from "${{ inputs.from_date }}" \
+            --to "${{ inputs.to_date }}" \
+            --workers 8 \
+            --build-dataset \
+            --classify \
+            --report \
+            --export-terminal-pack
+
+      - name: Verify dataset, OOS and compact pack
+        run: |
+          PYTHONPATH=research python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          from galka_lab.pack import verify_terminal_pack
+
+          root = Path('research/galka_lab/output')
+          events = pd.read_csv(root / 'events.csv.gz')
+          candidates = pd.read_csv(root / 'all_candidates.csv.gz')
+          metadata = json.loads((root / 'run_metadata.json').read_text())
+          manifest = json.loads((root / 'data_manifest.json').read_text())
+          pack = json.loads((root / 'galka-stats-v1.json').read_text())
+          assert set(candidates.symbol) == {'BTCUSDT','ETHUSDT','SOLUSDT'}
+          assert set(candidates.interval) == {'5m','15m','30m','1h'}
+          assert 4 <= events.galka_type.nunique() <= 7
+          assert set(events.split) == {'train','validation','final_oos'}
+          assert metadata['final_oos_used_for_fit'] is False
+          assert metadata['walk_forward_folds'] >= 3
+          assert manifest['manifest_hash'] == metadata['manifest_hash']
+          assert verify_terminal_pack(pack)
+          assert (root / 'INTERIM_STATISTICAL_REPORT.md').stat().st_size > 1000
+          assert (root / 'DECISION_REPORT.md').stat().st_size > 1000
+          assert (root / 'galka-stats-v1.json.gz').stat().st_size < 2_000_000
+          print({'candidates':len(candidates),'events':len(events),'types':events.galka_type.nunique(),'pack_gzip':(root/'galka-stats-v1.json.gz').stat().st_size})
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galka-lab-full-${{ github.run_id }}
+          path: |
+            research/galka_lab/output/*.csv.gz
+            research/galka_lab/output/*.json
+            research/galka_lab/output/*.json.gz
+            research/galka_lab/output/*.md
+            research/galka_lab/output/dataset/*.csv.gz
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit verified research outputs
+        if: ${{ inputs.commit_results }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/galka_lab/output
+          if git diff --cached --quiet; then
+            echo "Research outputs unchanged"
+          else
+            git commit -m "Add Galka Lab interim statistics [skip ci]"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
