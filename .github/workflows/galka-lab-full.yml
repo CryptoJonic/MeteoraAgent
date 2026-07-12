@@ -1,6 +1,11 @@
 name: Galka Lab full dataset
 
 on:
+  push:
+    branches:
+      - agent/galka-statistics-engine
+    paths:
+      - ".github/GALKA_LAB_FULL"
   workflow_dispatch:
     inputs:
       from_date:
@@ -69,8 +74,8 @@ jobs:
           python research/galka_lab.py \
             --symbols BTCUSDT ETHUSDT SOLUSDT \
             --intervals 5m 15m 30m 1h \
-            --from "${{ inputs.from_date }}" \
-            --to "${{ inputs.to_date }}" \
+            --from "${{ inputs.from_date || 'auto' }}" \
+            --to "${{ inputs.to_date || 'latest' }}" \
             --workers 8 \
             --build-dataset \
             --classify \
@@ -118,7 +123,7 @@ jobs:
           retention-days: 30
 
       - name: Commit verified research outputs
-        if: ${{ inputs.commit_results }}
+        if: ${{ github.event_name == 'push' || inputs.commit_results }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
