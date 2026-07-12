@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galka-pro-shell-v3';
+const CACHE_NAME = 'galka-manual-auto-shell-v1';
 const APP_SHELL = [
   './pro.html',
   './pro.css?v=6',
@@ -23,7 +23,13 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith('galka-manual-auto-') && key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
+        ),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -45,6 +51,25 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => caches.match('./pro.html')),
+    );
+    return;
+  }
+
+  const isLocalAppAsset =
+    url.origin === self.location.origin &&
+    ['script', 'style', 'worker'].includes(request.destination);
+
+  if (isLocalAppAsset) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request)),
     );
     return;
   }
