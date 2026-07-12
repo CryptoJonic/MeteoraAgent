@@ -1,0 +1,105 @@
+import assert from 'node:assert/strict';
+import {
+  RECOVERY_PATH_POLICY,
+  createCampaign,
+  recoveryCandlePath,
+  replayCampaignCandles,
+} from '../terminal/modules/paper-engine.js';
+
+const settings = {
+  symbolNotional: 400,
+  maxHours: 72,
+  ladderStepPct: 0.15,
+  manualDepthPct: 1.5,
+  exitMode: 'trail',
+  reclaimBufferPct: 0.1,
+  trailDistancePct: 0.75,
+  makerFee: 0.0002,
+};
+const pattern = {
+  patternId: 'M-recovery',
+  source: 'manual',
+  trainingExampleId: 'M-recovery',
+  vLow: 100,
+};
+const BASE = 1_800_000_000_000;
+const minute = (index, { open, high, low, close }) => ({
+  openTime: BASE + index * 60_000,
+  closeTime: BASE + (index + 1) * 60_000 - 1,
+  open,
+  high,
+  low,
+  close,
+});
+
+assert.deepEqual(
+  recoveryCandlePath(minute(1, { open: 100, high: 102, low: 99, close: 101 })).map(
+    (point) => point.phase,
+  ),
+  ['open', 'low', 'high', 'close'],
+  'a bullish missed candle has one deterministic path',
+);
+assert.deepEqual(
+  recoveryCandlePath(minute(1, { open: 101, high: 102, low: 99, close: 100 })).map(
+    (point) => point.phase,
+  ),
+  ['open', 'high', 'low', 'close'],
+  'a bearish missed candle has one deterministic path',
+);
+assert.deepEqual(
+  recoveryCandlePath(
+    minute(0, { open: 100, high: 105, low: 95, close: 100.1 }),
+    BASE + 30_000,
+  ).map((point) => point.phase),
+  ['boundary_close'],
+  'the overlapping boundary minute must not speculate about pre-gap high/low order',
+);
+
+const campaign = createCampaign('BTCUSDT', pattern, settings, BASE - 1_000);
+const candles = [
+  minute(0, { open: 100, high: 105, low: 95, close: 100.1 }),
+  minute(1, { open: 100.1, high: 100.2, low: 99.4, close: 99.6 }),
+  minute(2, { open: 99.6, high: 100.4, low: 99.5, close: 100.3 }),
+  minute(3, { open: 101.5, high: 102, low: 100.5, close: 100.8 }),
+];
+const replay = replayCampaignCandles(campaign, candles, settings, { afterMs: BASE + 30_000 });
+
+assert.equal(replay.policy, RECOVERY_PATH_POLICY);
+assert.equal(replay.candlesReplayed, 4);
+assert.equal(replay.boundaryCandles, 1);
+assert.equal(
+  replay.events.filter((event) => event.type === 'level_filled').length,
+  4,
+  'only fully missed candles may use their extrema for restored fills',
+);
+assert.ok(replay.events.every((event) => event.recovered));
+assert.ok(replay.events.some((event) => event.type === 'trailing_armed'));
+assert.ok(replay.events.some((event) => event.type === 'trailing_raised'));
+assert.equal(replay.close.reason, 'reclaim_trailing_stop');
+assert.equal(replay.close.price, campaign.trailStop, 'recovered stop exits at the stop, not the 1m low');
+assert.ok(replay.close.atMs > candles[3].openTime && replay.close.atMs < candles[3].closeTime);
+
+const quantityAfterReplay = campaign.qty;
+const duplicate = replayCampaignCandles(campaign, candles, settings, {
+  afterMs: candles.at(-1).closeTime,
+});
+assert.equal(duplicate.candlesReplayed, 0);
+assert.equal(duplicate.events.length, 0);
+assert.equal(campaign.qty, quantityAfterReplay, 'a durable close-time cursor prevents duplicate replay');
+
+const expiring = createCampaign(
+  'ETHUSDT',
+  { ...pattern, patternId: 'M-expiring' },
+  { ...settings, maxHours: 1 },
+  BASE,
+);
+const expiryReplay = replayCampaignCandles(
+  expiring,
+  [minute(61, { open: 101, high: 101.2, low: 100.8, close: 101.1 })],
+  { ...settings, maxHours: 1 },
+  { afterMs: BASE + 60 * 60_000 },
+);
+assert.equal(expiryReplay.expiredWithoutFill, true);
+assert.equal(expiring.qty, 0);
+
+console.log('Paper recovery: boundary safety, deterministic 1m replay, stop and cursor checks passed');

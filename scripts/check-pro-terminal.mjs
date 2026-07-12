@@ -1,51 +1,81 @@
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import vm from 'node:vm';
+import { execFileSync } from 'node:child_process';
 
-const htmlPath='terminal/pro.html';
-const cssPath='terminal/pro.css';
-const jsPath='terminal/pro.js';
-for(const p of [htmlPath,cssPath,jsPath])if(!fs.existsSync(p))throw new Error(`Missing ${p}`);
-const html=fs.readFileSync(htmlPath,'utf8');
-const css=fs.readFileSync(cssPath,'utf8');
-const js=fs.readFileSync(jsPath,'utf8');
+const paths = {
+  html: 'terminal/pro.html',
+  css: 'terminal/pro.css',
+  app: 'terminal/pro.js',
+  store: 'terminal/modules/store.js',
+  paper: 'terminal/modules/paper-engine.js',
+  radar: 'terminal/modules/radar-engine.js',
+  backup: 'terminal/modules/backup.js',
+  sw: 'terminal/sw.js',
+  manifest: 'terminal/manifest.webmanifest',
+};
 
-new vm.Script(js,{filename:jsPath});
+for (const path of Object.values(paths)) assert.ok(fs.existsSync(path), `Missing ${path}`);
+for (const path of [paths.app, paths.store, paths.paper, paths.radar, paths.backup, paths.sw]) {
+  execFileSync(process.execPath, ['--check', path], { stdio: 'pipe' });
+}
 
-const checks=[
-  ['three symbols', /const SYMBOLS = \['BTCUSDT','ETHUSDT','SOLUSDT'\]/.test(js)],
-  ['multiple timeframes', /'1m','3m','5m','15m','30m','1h','4h','1d'/.test(js)],
-  ['six chart types', ['candles','bars','heikin','line','area','baseline'].every(x=>html.includes(`value="${x}"`))],
-  ['paper long only', /side:'long'/.test(js) && !/side:'short'/.test(js)],
-  ['six averaging levels', /const DEPTHS = \[0\.25,0\.70,1\.25,1\.90,2\.65,3\.50\]/.test(js)],
-  ['paper account', /startingBalance:1000/.test(js) && /symbolNotional:400/.test(js)],
-  ['reclaim trailing exit', /id="exitMode"/.test(html) && /trailDistancePct:0\.75/.test(js) && /reclaim_trailing_stop/.test(js)],
-  ['manual Galka selector', /data-tool="manualGalka"/.test(html) && /setManualGalka/.test(js) && /id="manualGalkaBtn"/.test(html)],
-  ['exact Galka price editor', /id="manualGalkaPrice"/.test(html) && /applyManualPrice/.test(js) && /updateManualLevel/.test(js)],
-  ['movable Galka ladder', /id="moveManualGalka"/.test(html) && /manualMove/.test(js) && /beginManualMove/.test(js)],
-  ['mobile bottom sheets', /mobile-sheet-head/.test(html) && /sheet-backdrop/.test(html) && /translateY/.test(css) && /showMobilePanel/.test(js)],
-  ['0.15 percent ladder', /ladderStepPct:0\.15/.test(js) && /id="manualDepthPct"/.test(html) && /campaignLadder/.test(js)],
-  ['manual training examples', /manualExamples/.test(js) && /exportManualExamples/.test(js) && /id="manualExamplesCount"/.test(html)],
-  ['trail never below V-low', /Math\.max\(c\.vLow,newHigh\*\(1-distance\)\)/.test(js)],
-  ['visible trailing stop', /TRAIL STOP/.test(js) && /trailStop/.test(js)],
-  ['drawing tools', ['trend','ray','horizontal','vertical','rect','channel','fib','measure','longPosition','text'].every(x=>html.includes(`data-tool="${x}"`))],
-  ['undo redo', /id="undoBtn"/.test(html)&&/id="redoBtn"/.test(html)],
-  ['indicators', ['sma20','ema20','ema50','bollinger','vwap','volume','rsi','macd','atr'].every(x=>js.includes(`'${x}'`))],
-  ['compare symbol', /id="compareSelect"/.test(html)&&/updateCompare/.test(js)],
-  ['alerts', /id="createAlert"/.test(html)&&/processAlerts/.test(js)],
-  ['bar replay', /id="replayPanel"/.test(html)&&/startReplay/.test(js)],
-  ['templates', /id="saveTemplate"/.test(html)&&/templates/.test(js)],
-  ['workspace import export', /id="exportWorkspace"/.test(html)&&/id="importWorkspace"/.test(html)],
-  ['screenshot', /takeScreenshot/.test(js)],
-  ['mobile layout', /@media\(max-width:700px\)/.test(css)&&/mobile-nav/.test(css)],
-  ['TradingView attribution', /TradingView/.test(html)&&/attributionLogo:true/.test(js)],
-  ['clean chart chrome', /\.statusbar,\.chart-toolbar,\.bottom-strip\{display:none!important\}/.test(css) && /--status:0px/.test(css)],
-  ['chart grid disabled', (js.match(/vertLines:\{visible:false\}/g)||[]).length>=2 && (js.match(/horzLines:\{visible:false\}/g)||[]).length>=2],
-  ['paper storage preserved', /const STORAGE_KEY = 'galka-pro-v1'/.test(js) && /localStorage\.getItem\(STORAGE_KEY\)/.test(js)],
-  ['Galka radar toggle', /id="radarBtn"/.test(html) && /toggleRadar/.test(js) && /radarLegend/.test(js)],
-  ['explainable Galka radar', /scoreRadarPattern/.test(js) && /dropAtr/.test(js) && /recovery/.test(js) && /balance/.test(js)],
-  ['radar never trades', /highlights candidates only and never opens trades/.test(js)],
-  ['paper storage still preserved', /const STORAGE_KEY = 'galka-pro-v1'/.test(js)],
-  ['no exchange keys', !/api[_-]?key|secret[_-]?key/i.test(js)],
+const html = fs.readFileSync(paths.html, 'utf8');
+const css = fs.readFileSync(paths.css, 'utf8');
+const app = fs.readFileSync(paths.app, 'utf8');
+const store = fs.readFileSync(paths.store, 'utf8');
+const paper = fs.readFileSync(paths.paper, 'utf8');
+const radar = fs.readFileSync(paths.radar, 'utf8');
+const backup = fs.readFileSync(paths.backup, 'utf8');
+const sw = fs.readFileSync(paths.sw, 'utf8');
+const manifest = JSON.parse(fs.readFileSync(paths.manifest, 'utf8'));
+const clientSource = [html, app, store, paper, radar, backup, sw].join('\n');
+
+const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
+assert.equal(new Set(ids).size, ids.length, 'HTML IDs must be unique');
+
+const requiredIds = [
+  'mainChart', 'drawingCanvas', 'symbolSelect', 'intervalSelect', 'radarBtn', 'radarLegend',
+  'paperPortfolioCards', 'manualGalkaPrice', 'pretradeModal', 'confirmPretrade',
+  'radarCandidatesList', 'radarPositive', 'radarNegative', 'sessionStatus',
+  'exportSnapshot', 'importSnapshot', 'onboardingModal', 'activityLog', 'mobile-nav',
 ];
-for(const [name,ok] of checks)if(!ok)throw new Error(`Galka Pro check failed: ${name}`);
-console.log(`Galka Pro: ${checks.length} checks passed; JS ${(js.length/1024).toFixed(1)} KiB`);
+for (const id of requiredIds) {
+  if (id === 'mobile-nav') assert.ok(html.includes('class="mobile-nav"'));
+  else assert.ok(ids.includes(id), `Missing #${id}`);
+}
+
+const checks = [
+  ['module entrypoint', /<script type="module" src="pro\.js\?v=7"><\/script>/.test(html)],
+  ['three paper symbols', /export const SYMBOLS = \['BTCUSDT', 'ETHUSDT', 'SOLUSDT'\]/.test(store)],
+  ['storage key unchanged', /export const STORAGE_KEY = 'galka-pro-v1'/.test(store)],
+  ['additive migration', /migrateStore/.test(store) && /deepMerge\(createDefaultStore\(\), source\)/.test(store)],
+  ['paper long only', /side:'long'/.test(app) && !/side:'short'/.test(clientSource)],
+  ['manual 0.15 ladder', /ladderStepPct: 0\.15/.test(store) && /manualDepthPct: 1\.5/.test(store)],
+  ['legacy auto ladder', /LEGACY_DEPTHS = \[0\.25, 0\.7, 1\.25, 1\.9, 2\.65, 3\.5\]/.test(paper)],
+  ['deterministic paper engine', /processCampaignQuote/.test(paper) && /nowMs = Date\.now\(\)/.test(paper)],
+  ['trailing floor', /Math\.max\(campaign\.vLow, nextHigh \* \(1 - distance\)\)/.test(paper)],
+  ['idempotent fills', /level\.status !== 'pending'/.test(paper)],
+  ['safe pre-trade preview', /previewCampaign/.test(app) && /PAPER PREVIEW/.test(html)],
+  ['Radar visual only', !/createCampaign|paper\.symbols/.test(radar) && /EXPLAINABLE SCORE/.test(html)],
+  ['positive and negative labels', /labelRadarCandidate\('positive'\)/.test(app) && /labelRadarCandidate\('negative'\)/.test(app)],
+  ['Radar filters', ['all', 'strong', 'medium'].every((value) => html.includes(`data-radar-filter="${value}"`))],
+  ['drawing tool set', ['cursor','crosshair','trend','ray','horizontal','vertical','rect','channel','fib','measure','longPosition','text'].every((tool) => html.includes(`data-tool="${tool}"`))],
+  ['drawing selection and handles', /drawingHitAt/.test(app) && /openSelectedDrawingProperties/.test(app) && /editing-object/.test(css)],
+  ['session health and paper replay', /catchUpAfterReconnect/.test(app) && /fetchClosedMinuteRange/.test(app) && /replayCampaignCandles/.test(app) && /sessionQuoteAge/.test(html)],
+  ['full backup restore', /createBackupSnapshot/.test(app) && /validateBackupSnapshot/.test(app) && /PRE_RESTORE_BACKUP_KEY/.test(app)],
+  ['installable PWA', manifest.display === 'standalone' && manifest.icons.length >= 2 && /serviceWorker\.register/.test(app)],
+  ['service worker is shell-only', /service worker never runs the paper engine/i.test(sw) && !/processCampaignQuote|createCampaign/.test(sw)],
+  ['onboarding', /onboardingSteps/.test(app) && /ШАГ 1 ИЗ 5/.test(html)],
+  ['training replay', /markReplayGalka/.test(app) && /replayExamples/.test(store) && /future=replay\.source/.test(app)],
+  ['mobile navigation', ['chart','paper','radar','watchlist','more'].every((panel) => html.includes(`data-mobile-panel="${panel}"`))],
+  ['bottom sheet snaps', /\.sidebar\.snap-low/.test(css) && /\.sidebar\.snap-high/.test(css) && /beginSheetGesture/.test(app)],
+  ['chart-first shell', /\.chart-main-wrap[\s\S]*height: 100%/.test(css) && /translateY\(calc\(100% \+ 12px\)\)/.test(css)],
+  ['no chart grid', /vertLines:\{visible:false\}/.test(app) && /horzLines:\{visible:false\}/.test(app)],
+  ['TradingView attribution', /TradingView/.test(html) && /attributionLogo:true/.test(app)],
+  ['Termux direct launch remains', /terminal\/pro\.html/.test(fs.readFileSync('scripts/start-termux.sh', 'utf8'))],
+  ['no exchange credentials', !/(?:api|secret)[_-]?key\s*[:=]/i.test(clientSource)],
+];
+
+for (const [name, ok] of checks) assert.ok(ok, `Galka Pro check failed: ${name}`);
+
+console.log(`Galka Pro: ${checks.length} architecture checks passed; app ${(app.length / 1024).toFixed(1)} KiB; ${ids.length} unique IDs`);

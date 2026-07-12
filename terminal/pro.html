@@ -3,257 +3,431 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#0b0e13">
-  <title>Galka Pro Terminal</title>
+  <meta name="theme-color" content="#080b10">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="Galka Pro — mobile-first paper terminal for manual GALKA levels, ladder fills, reclaim trailing and explainable Radar.">
+  <title>Galka Pro · Paper Terminal</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/galka-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="pro.css?v=6">
   <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
-  <link rel="stylesheet" href="pro.css?v=5">
 </head>
 <body data-theme="dark">
 <div id="app">
   <header class="topbar">
-    <button class="icon-btn mobile-only" id="toggleTools" aria-label="Инструменты">☰</button>
-    <div class="brand"><strong>GALKA</strong><span>PRO · PAPER</span></div>
-    <div class="market-controls">
-      <select id="symbolSelect" aria-label="Инструмент">
-        <option value="BTCUSDT">BTCUSDT</option>
-        <option value="ETHUSDT">ETHUSDT</option>
-        <option value="SOLUSDT">SOLUSDT</option>
-      </select>
-      <select id="intervalSelect" aria-label="Таймфрейм">
-        <option value="1m">1m</option><option value="3m">3m</option><option value="5m">5m</option>
-        <option value="15m" selected>15m</option><option value="30m">30m</option>
-        <option value="1h">1h</option><option value="4h">4h</option><option value="1d">1D</option>
-      </select>
-      <select id="chartTypeSelect" aria-label="Тип графика">
-        <option value="candles">Свечи</option><option value="bars">Бары</option>
-        <option value="heikin">Heikin Ashi</option><option value="line">Линия</option>
-        <option value="area">Область</option><option value="baseline">Baseline</option>
-      </select>
+    <a class="brand" href="#chart" aria-label="Galka Pro, график">
+      <span class="brand-mark" aria-hidden="true">G</span>
+      <span class="brand-copy"><strong>GALKA</strong><small>PAPER</small></span>
+    </a>
+
+    <div class="market-controls" aria-label="Рынок и таймфрейм">
+      <label class="compact-select">
+        <span class="sr-only">Инструмент</span>
+        <select id="symbolSelect" aria-label="Инструмент">
+          <option value="BTCUSDT">BTC</option>
+          <option value="ETHUSDT">ETH</option>
+          <option value="SOLUSDT">SOL</option>
+        </select>
+      </label>
+      <label class="compact-select timeframe-select">
+        <span class="sr-only">Таймфрейм</span>
+        <select id="intervalSelect" aria-label="Таймфрейм">
+          <option value="1m">1m</option><option value="3m">3m</option><option value="5m">5m</option>
+          <option value="15m" selected>15m</option><option value="30m">30m</option>
+          <option value="1h">1h</option><option value="4h">4h</option><option value="1d">1D</option>
+        </select>
+      </label>
     </div>
+
+    <div class="live-price" id="tickerText" aria-live="polite">—</div>
     <div class="top-actions">
-      <button id="indicatorBtn">Индикаторы</button>
-      <button id="alertBtn">Алерт</button>
-      <button id="replayBtn">Replay</button>
-      <button id="snapshotBtn" title="Снимок">⌁</button>
-      <button class="icon-btn" id="radarBtn" title="Радар галок">◎</button>
-      <button class="icon-btn" id="radarBtn" title="Радар галок">◎</button>
-      <button id="fullscreenBtn" title="На весь экран">⛶</button>
-      <button class="icon-btn mobile-only" id="toggleSidebar" aria-label="Панели">⋮</button>
+      <button class="connection-button" id="connectionButton" type="button" aria-label="Состояние сессии">
+        <span id="connectionDot" class="dot warn"></span>
+        <span id="connectionText">Подключение…</span>
+      </button>
+      <button class="icon-btn" id="radarBtn" type="button" aria-label="Открыть Radar" aria-pressed="false">
+        <span aria-hidden="true">⌁</span><span class="desktop-label">Radar</span>
+      </button>
+      <button class="icon-btn desktop-only" id="fullscreenBtn" type="button" aria-label="На весь экран">⛶</button>
+      <button class="icon-btn" id="toggleSidebar" type="button" aria-label="Открыть меню">•••</button>
     </div>
   </header>
 
-  <div class="statusbar">
-    <span id="connectionDot" class="dot warn"></span>
-    <span id="connectionText">Подключение…</span>
-    <span class="separator"></span>
-    <span id="tickerText">—</span>
-    <span class="grow"></span>
-    <button id="themeBtn">◐</button>
-    <span id="clock">—</span>
-  </div>
-
   <main class="terminal-grid">
-    <aside class="leftbar" id="leftbar">
-      <button data-tool="cursor" class="active" title="Курсор">⌖</button>
-      <button data-tool="crosshair" title="Перекрестие">＋</button>
-      <button data-tool="trend" title="Трендовая линия">╱</button>
-      <button data-tool="ray" title="Луч">↗</button>
-      <button data-tool="horizontal" title="Горизонтальная линия">—</button>
-      <button data-tool="manualGalka" title="Выбрать уровень галки">G</button>
-      <button data-tool="vertical" title="Вертикальная линия">│</button>
-      <button data-tool="rect" title="Прямоугольник">▭</button>
-      <button data-tool="channel" title="Параллельный канал">▥</button>
-      <button data-tool="fib" title="Фибоначчи">Fib</button>
-      <button data-tool="measure" title="Измерение">↔</button>
-      <button data-tool="longPosition" title="Long position">L</button>
-      <button data-tool="text" title="Текст">T</button>
+    <aside class="leftbar" id="leftbar" aria-label="Инструменты рисования">
+      <div class="tool-rail-head">
+        <span>DRAW</span>
+        <button id="closeTools" class="mobile-only" type="button" aria-label="Закрыть инструменты">×</button>
+      </div>
+      <button data-tool="cursor" class="active" title="Курсор" aria-label="Курсор"><span>⌖</span></button>
+      <button data-tool="crosshair" title="Перекрестие" aria-label="Перекрестие"><span>＋</span></button>
+      <button data-tool="trend" title="Трендовая линия" aria-label="Трендовая линия"><span>╱</span></button>
+      <button data-tool="ray" title="Луч" aria-label="Луч"><span>↗</span></button>
+      <button data-tool="horizontal" title="Горизонтальная линия" aria-label="Горизонтальная линия"><span>—</span></button>
+      <button data-tool="manualGalka" class="galka-tool" title="Поставить GALKA" aria-label="Поставить GALKA"><span>G</span></button>
+      <button data-tool="vertical" title="Вертикальная линия" aria-label="Вертикальная линия"><span>│</span></button>
+      <button data-tool="rect" title="Прямоугольник" aria-label="Прямоугольник"><span>▭</span></button>
+      <button data-tool="channel" title="Канал" aria-label="Параллельный канал"><span>▥</span></button>
+      <button data-tool="fib" title="Fibonacci" aria-label="Fibonacci"><span>Fib</span></button>
+      <button data-tool="measure" title="Измерение" aria-label="Измерение"><span>↔</span></button>
+      <button data-tool="longPosition" title="Long position" aria-label="Измерение long position"><span>L</span></button>
+      <button data-tool="text" title="Текст" aria-label="Текст"><span>T</span></button>
       <span class="tool-separator"></span>
-      <button id="magnetBtn" title="Магнит">🧲</button>
-      <button id="lockBtn" title="Заблокировать рисунки">🔒</button>
-      <button id="hideDrawingsBtn" title="Скрыть рисунки">◉</button>
-      <button id="undoBtn" title="Отменить">↶</button>
-      <button id="redoBtn" title="Повторить">↷</button>
-      <button id="deleteBtn" title="Удалить выбранное">⌫</button>
-      <button id="clearBtn" title="Удалить все">×</button>
+      <button id="magnetBtn" title="Магнит" aria-label="Магнит"><span>⌁</span></button>
+      <button id="lockBtn" title="Заблокировать рисунки" aria-label="Заблокировать рисунки"><span>▣</span></button>
+      <button id="hideDrawingsBtn" title="Скрыть рисунки" aria-label="Скрыть рисунки"><span>◉</span></button>
+      <button id="undoBtn" title="Отменить" aria-label="Отменить"><span>↶</span></button>
+      <button id="redoBtn" title="Повторить" aria-label="Повторить"><span>↷</span></button>
+      <button id="deleteBtn" title="Удалить выбранное" aria-label="Удалить выбранное"><span>⌫</span></button>
+      <button id="clearBtn" class="danger-ghost" title="Удалить все" aria-label="Удалить все рисунки"><span>×</span></button>
     </aside>
 
-    <section class="workspace">
-      <div class="chart-toolbar">
-        <div class="ohlc" id="ohlc">O — H — L — C —</div>
-        <div class="quick-buttons">
-          <button id="zoomOut">−</button><button id="zoomIn">＋</button>
-          <button id="autoScaleBtn" class="active">Auto</button>
-          <select id="scaleMode">
-            <option value="normal">Обычная</option><option value="log">Лог</option>
-            <option value="percent">%</option><option value="indexed">100</option>
-          </select>
-          <button id="goDateBtn">Дата</button>
-          <button id="fitBtn">Fit</button>
-          <button id="latestBtn">Сейчас</button>
-        </div>
-      </div>
-
+    <section class="workspace" id="chart" aria-label="График">
       <div class="chart-stack" id="chartStack">
         <div class="chart-main-wrap" id="chartMainWrap">
           <div id="mainChart"></div>
-          <canvas id="drawingCanvas"></canvas>
-          <div class="watermark" id="watermark">BTCUSDT · 15m</div>
+          <canvas id="drawingCanvas" aria-label="Слой рисования"></canvas>
+
+          <div class="chart-identity" aria-hidden="true">
+            <div class="watermark" id="watermark">BTC · 15m</div>
+            <span>USD-M PERP · PAPER</span>
+          </div>
+
+          <button class="chart-health" id="chartHealth" type="button" aria-label="Состояние потока котировок">
+            <span class="health-pulse"></span><span id="chartHealthText">Поток запускается</span>
+          </button>
+
+          <div class="ohlc" id="ohlc" aria-live="polite">O — H — L — C —</div>
           <div class="radar-legend hidden" id="radarLegend"></div>
-          <div class="radar-legend hidden" id="radarLegend"></div>
-          <div class="loading" id="loading">Загрузка данных…</div>
-          <div class="toast hidden" id="toast"></div>
+          <div class="level-cluster hidden" id="levelCluster" aria-live="polite"></div>
+
+          <div class="chart-actions">
+            <div class="chart-action-menu hidden" id="chartActionMenu" role="menu">
+              <button id="quickSetGalka" type="button" role="menuitem"><span class="action-icon galka">G</span><span><b>Поставить GALKA</b><small>Коснуться уровня</small></span></button>
+              <button id="quickExactGalka" type="button" role="menuitem"><span class="action-icon">#</span><span><b>Точная цена</b><small>Ввести вручную</small></span></button>
+              <button id="quickMoveGalka" type="button" role="menuitem"><span class="action-icon">↕</span><span><b>Двигать GALKA</b><small>До первого fill</small></span></button>
+              <button id="quickRadar" type="button" role="menuitem"><span class="action-icon">⌁</span><span><b>Radar</b><small>Кандидаты на графике</small></span></button>
+              <button id="quickLevels" type="button" role="menuitem"><span class="action-icon">≡</span><span><b>Торговые уровни</b><small>Скрыть или показать</small></span></button>
+              <div class="menu-grid">
+                <button id="fitBtn" type="button">Fit</button>
+                <button id="latestBtn" type="button">Сейчас</button>
+              </div>
+            </div>
+            <button class="chart-action-fab" id="chartActionBtn" type="button" aria-label="Быстрые действия" aria-expanded="false">＋</button>
+          </div>
+
+          <button class="drawing-pill" id="toggleTools" type="button" aria-label="Инструменты рисования"><span>╱</span><span>Рисовать</span></button>
+
+          <div class="loading" id="loading"><span class="loader"></span><span>Загрузка рынка…</span></div>
+          <div class="toast hidden" id="toast" role="status"></div>
         </div>
+
         <div class="pane hidden" id="indicatorPane">
-          <div class="pane-head"><span id="paneTitle">RSI 14</span><button id="closePane">×</button></div>
+          <div class="pane-head"><span id="paneTitle">RSI 14</span><button id="closePane" type="button" aria-label="Закрыть индикатор">×</button></div>
           <div id="oscChart"></div>
         </div>
       </div>
 
-      <div class="replay-panel hidden" id="replayPanel">
-        <button id="replayBack">◀</button><button id="replayPlay">▶</button><button id="replayStep">▶│</button>
-        <input id="replaySlider" type="range" min="50" max="999" value="700">
-        <span id="replayLabel">—</span><button id="replayExit">Выход</button>
+      <div class="replay-panel hidden" id="replayPanel" aria-label="Replay">
+        <div class="replay-title"><span class="paper-chip">REPLAY</span><span id="replayLabel">—</span></div>
+        <button id="replayBack" type="button" aria-label="Предыдущая свеча">◀</button>
+        <button id="replayPlay" type="button" aria-label="Воспроизвести">▶</button>
+        <button id="replayStep" type="button" aria-label="Следующая свеча">▶│</button>
+        <input id="replaySlider" type="range" min="50" max="999" value="700" aria-label="Позиция Replay">
+        <button id="replayMarkGalka" class="accent-button" type="button">Отметить галку</button>
+        <button id="replayReveal" type="button">Показать результат</button>
+        <button id="replayExit" type="button" aria-label="Закрыть Replay">×</button>
       </div>
 
-      <div class="bottom-strip">
-        <div class="range-buttons">
-          <button data-range="1D">1Д</button><button data-range="5D">5Д</button>
-          <button data-range="1M">1М</button><button data-range="3M">3М</button>
-          <button data-range="6M">6М</button><button data-range="YTD">YTD</button>
-          <button data-range="1Y">1Г</button><button data-range="ALL">Все</button>
-        </div>
-        <div class="attribution">Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> Lightweight Charts™</div>
-      </div>
+      <div class="chart-attribution">Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a></div>
     </section>
 
-    <aside class="sidebar" id="sidebar">
-      <div class="mobile-sheet-head mobile-only"><span>Панель терминала</span><button id="closeSidebarSheet" aria-label="Закрыть">×</button></div>
-      <nav class="side-tabs">
-        <button data-panel="watchlist" class="active">Список</button>
-        <button data-panel="paper">Paper</button>
-        <button data-panel="objects">Объекты</button>
-        <button data-panel="alerts">Алерты</button>
-        <button data-panel="data">Данные</button>
+    <aside class="sidebar" id="sidebar" aria-label="Панель терминала" aria-hidden="true">
+      <div class="sheet-head" id="sheetHandle">
+        <span class="sheet-grabber" aria-hidden="true"></span>
+        <div><b id="sheetTitle">Paper</b><small id="sheetSubtitle">Все три инструмента</small></div>
+        <button id="closeSidebarSheet" type="button" aria-label="Закрыть панель">×</button>
+      </div>
+
+      <nav class="side-tabs" aria-label="Разделы терминала">
+        <button data-panel="paper" class="active" type="button">Paper</button>
+        <button data-panel="radar" type="button">Radar</button>
+        <button data-panel="watchlist" type="button">Watchlist</button>
+        <button data-panel="objects" type="button">Draw</button>
+        <button data-panel="more" type="button">More</button>
       </nav>
 
-      <section class="side-panel active" data-panel-id="watchlist">
-        <div class="panel-title"><b>Watchlist</b><button id="refreshBtn">↻</button></div>
-        <div id="watchlist" class="watchlist"></div>
-        <div class="panel-title"><b>Сравнение</b></div>
-        <label class="field">Добавить линию
-          <select id="compareSelect"><option value="">Нет</option><option value="BTCUSDT">BTC</option><option value="ETHUSDT">ETH</option><option value="SOLUSDT">SOL</option></select>
-        </label>
-      </section>
-
-      <section class="side-panel" data-panel-id="paper">
-        <div class="paper-summary">
-          <div><small>Equity</small><strong id="equity">$1,000.00</strong></div>
-          <div><small>Open PnL</small><strong id="openPnl">$0.00</strong></div>
-          <div><small>Realized</small><strong id="realizedPnl">$0.00</strong></div>
-          <div><small>Margin</small><strong id="marginUsed">$0.00</strong></div>
-        </div>
-        <div class="panel-title"><b id="botTitle">Galka bot · BTC</b><span id="botState">Ожидание</span></div>
-        <div class="level-editor">
-          <div class="level-editor-head"><b>Уровень галки</b><span>до первого исполнения</span></div>
-          <div class="level-price-row">
-            <input id="manualGalkaPrice" type="number" step="any" inputmode="decimal" placeholder="Цена уровня">
-            <button id="applyManualGalkaPrice" class="primary">Установить</button>
+      <div class="sheet-scroll">
+        <section class="side-panel active" data-panel-id="paper">
+          <div class="paper-hero">
+            <div><small>Paper equity</small><strong id="equity">$1,000.00</strong><span class="paper-only">VIRTUAL</span></div>
+            <div class="paper-hero-stats">
+              <span><small>Open PnL</small><b id="openPnl">$0.00</b></span>
+              <span><small>Realized</small><b id="realizedPnl">$0.00</b></span>
+              <span><small>Margin</small><b id="marginUsed">$0.00</b></span>
+            </div>
           </div>
-          <div class="manual-actions">
-            <button id="manualGalkaBtn">Выбрать на графике</button>
-            <button id="moveManualGalka">Двигать линию</button>
-            <button id="cancelManualGalka">Снять</button>
+
+          <div class="section-head">
+            <div><span class="eyebrow">LIVE PAPER ENGINE</span><h2>Три инструмента</h2></div>
+            <span class="stream-badge" id="paperStreamBadge">Поток…</span>
           </div>
-          <small id="manualLevelHint">Укажи цену или выбери уровень на графике.</small>
-        </div>
-        <div class="training-row"><span>Сохранено примеров: <b id="manualExamplesCount">0</b></span><button id="exportManualExamples">JSON</button></div>
-        <div id="campaignCard" class="card muted">Активной кампании нет.</div>
-        <div class="panel-title"><b>Лимитки</b><span id="fillsCount">0/6</span></div>
-        <div id="levelsList" class="levels-list"></div>
-        <details>
-          <summary>Настройки paper</summary>
-          <div class="form-grid">
-            <label>Депозит<input id="startingBalance" type="number" min="100" step="100"></label>
-            <label>Плечо<input id="leverage" type="number" min="1" max="20"></label>
-            <label>Номинал / монету<input id="symbolNotional" type="number" min="100" step="100"></label>
-            <label>Макс. часов<input id="maxHours" type="number" min="1" max="336"></label>
-            <label>Сигнал<select id="signalMode"><option value="manual">Выбираю галку сам</option><option value="auto">Автопоиск (эксперимент)</option></select></label>
-            <label>Шаг лимиток, %<input id="ladderStepPct" type="number" min="0.05" max="2" step="0.05"></label>
-            <label>Глубина лестницы, %<input id="manualDepthPct" type="number" min="0.15" max="10" step="0.15"></label>
-            <label>Режим выхода<select id="exitMode"><option value="trail">Reclaim trail</option><option value="target">Фиксация на V-low</option></select></label>
-            <label>Пробой V-low, %<input id="reclaimBufferPct" type="number" min="0" max="5" step="0.05"></label>
-            <label>Трейлинг от максимума, %<input id="trailDistancePct" type="number" min="0.05" max="10" step="0.05"></label>
-            <button id="savePaperSettings">Сохранить</button>
-            <button id="resetPaper" class="danger">Сбросить paper</button>
+          <div id="paperPortfolioCards" class="portfolio-cards"></div>
+
+          <div class="section-head compact">
+            <div><h2 id="botTitle">Galka manual · BTC</h2><small id="botState">Ожидание</small></div>
           </div>
-        </details>
-        <div class="panel-title"><b>История</b><button id="exportTrades">CSV</button></div>
-        <div id="tradeHistory" class="trade-history"></div>
-      </section>
 
-      <section class="side-panel" data-panel-id="objects">
-        <div class="panel-title"><b>Дерево объектов</b><button id="exportWorkspace">Экспорт</button></div>
-        <div id="objectsList" class="objects-list"></div>
-        <label class="import-label">Импорт workspace<input id="importWorkspace" type="file" accept=".json,application/json"></label>
-        <div class="panel-title"><b>Шаблоны</b></div>
-        <div class="template-row"><input id="templateName" placeholder="Название"><button id="saveTemplate">Сохранить</button></div>
-        <div id="templatesList"></div>
-      </section>
+          <div class="level-editor">
+            <div class="level-editor-head">
+              <span><b>Уровень GALKA</b><small id="manualLevelHint">Укажи цену или выбери уровень на графике.</small></span>
+              <span class="editable-chip">до fill</span>
+            </div>
+            <div class="level-price-row">
+              <label><span class="sr-only">Цена GALKA</span><input id="manualGalkaPrice" type="number" step="any" inputmode="decimal" placeholder="Точная цена"></label>
+              <button id="applyManualGalkaPrice" class="primary" type="button">Проверить</button>
+            </div>
+            <div class="manual-actions">
+              <button id="manualGalkaBtn" type="button">На графике</button>
+              <button id="moveManualGalka" type="button">Двигать</button>
+              <button id="cancelManualGalka" class="danger-ghost" type="button">Снять</button>
+            </div>
+          </div>
 
-      <section class="side-panel" data-panel-id="alerts">
-        <div class="alert-form">
-          <select id="alertSymbol"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option></select>
-          <select id="alertDirection"><option value="above">Цена выше</option><option value="below">Цена ниже</option></select>
-          <input id="alertPrice" type="number" step="any" placeholder="Цена">
-          <input id="alertNote" placeholder="Комментарий">
-          <button id="createAlert">Создать</button>
-        </div>
-        <div id="alertsList"></div>
-      </section>
+          <div id="campaignCard" class="campaign-card muted">Активной кампании нет.</div>
 
-      <section class="side-panel" data-panel-id="data">
-        <div class="data-window" id="dataWindow">
-          <div><span>Время</span><b id="dwTime">—</b></div>
-          <div><span>Open</span><b id="dwOpen">—</b></div>
-          <div><span>High</span><b id="dwHigh">—</b></div>
-          <div><span>Low</span><b id="dwLow">—</b></div>
-          <div><span>Close</span><b id="dwClose">—</b></div>
-          <div><span>Volume</span><b id="dwVolume">—</b></div>
-          <div><span>ATR 14</span><b id="dwAtr">—</b></div>
-          <div><span>Change</span><b id="dwChange">—</b></div>
-        </div>
-        <div class="panel-title"><b>Состояние</b></div>
-        <pre id="diagnostics"></pre>
-      </section>
+          <details class="levels-details" open>
+            <summary>
+              <span><b>Лимитная лестница</b><small id="ladderSummary">Ожидает GALKA</small></span>
+              <span id="fillsCount" class="count-chip">0</span>
+            </summary>
+            <div id="levelsList" class="levels-list"></div>
+          </details>
+
+          <div class="training-row"><span>Ручных примеров <b id="manualExamplesCount">0</b></span><button id="exportManualExamples" type="button">JSON</button></div>
+
+          <details class="settings-details">
+            <summary><span><b>Paper-настройки</b><small>Методика и номинал</small></span><span>›</span></summary>
+            <div class="form-grid">
+              <label>Депозит<input id="startingBalance" type="number" min="100" step="100"></label>
+              <label>Плечо<input id="leverage" type="number" min="1" max="20"></label>
+              <label>Номинал / монету<input id="symbolNotional" type="number" min="50" step="50"></label>
+              <label>Макс. часов<input id="maxHours" type="number" min="1" max="336"></label>
+              <label>Сигнал<select id="signalMode"><option value="manual">Выбираю сам</option><option value="auto">Автопоиск · эксперимент</option></select></label>
+              <label>Шаг лимиток, %<input id="ladderStepPct" type="number" min="0.05" max="2" step="0.05"></label>
+              <label>Глубина, %<input id="manualDepthPct" type="number" min="0.15" max="10" step="0.15"></label>
+              <label>Выход<select id="exitMode"><option value="trail">Reclaim trail</option><option value="target">Фиксация на GALKA</option></select></label>
+              <label>Reclaim выше GALKA, %<input id="reclaimBufferPct" type="number" min="0" max="5" step="0.05"></label>
+              <label>Trail от максимума, %<input id="trailDistancePct" type="number" min="0.05" max="10" step="0.05"></label>
+              <button id="savePaperSettings" class="primary span-2" type="button">Сохранить настройки</button>
+              <button id="resetPaper" class="danger span-2" type="button">Сбросить paper…</button>
+            </div>
+          </details>
+
+          <div class="section-head compact"><div><h2>История</h2><small>Последние paper-сделки</small></div><button id="exportTrades" type="button">CSV</button></div>
+          <div id="tradeHistory" class="trade-history"></div>
+        </section>
+
+        <section class="side-panel" data-panel-id="radar">
+          <div class="radar-hero">
+            <div><span class="eyebrow">EXPLAINABLE SCORE</span><h2>Radar · <span id="radarContext">BTC · 15m</span></h2><p>Показывает кандидатов, но никогда не торгует.</p></div>
+            <label class="switch"><input id="radarPanelToggle" type="checkbox"><span></span><span class="sr-only">Включить Radar</span></label>
+          </div>
+
+          <div class="radar-controls">
+            <div class="segmented" id="radarFilters" aria-label="Сила кандидатов">
+              <button data-radar-filter="all" class="active" type="button">Все</button>
+              <button data-radar-filter="strong" type="button">Сильные</button>
+              <button data-radar-filter="medium" type="button">Средние+</button>
+            </div>
+            <label class="range-field"><span>Минимальный score <b id="radarMinScoreValue">45</b></span><input id="radarMinScore" type="range" min="25" max="90" step="1" value="45"></label>
+            <label class="check-row"><input id="radarVisibleOnly" type="checkbox"><span>Только видимый участок</span></label>
+          </div>
+
+          <div class="section-head compact"><div><h2>Найдено <span id="radarCount">0</span></h2><small>Текущий инструмент и таймфрейм</small></div><div class="candidate-nav"><button id="radarPrev" type="button" aria-label="Предыдущая галка">←</button><button id="radarNext" type="button" aria-label="Следующая галка">→</button></div></div>
+          <div id="radarCandidatesList" class="radar-list"></div>
+
+          <article id="radarDetail" class="radar-detail empty">
+            <div class="radar-detail-head"><span class="score-ring" id="radarScore">—</span><span><b id="radarStrength">Выбери кандидата</b><small id="radarCandidateTime">Коснись метки на графике или списка</small></span></div>
+            <div class="feature-grid">
+              <span><small>Drop</small><b id="radarDropAtr">—</b></span>
+              <span><small>Recovery</small><b id="radarRecovery">—</b></span>
+              <span><small>Плечи</small><b id="radarBalance">—</b></span>
+              <span><small>Sharpness</small><b id="radarSharpness">—</b></span>
+              <span><small>Close lift</small><b id="radarCloseLift">—</b></span>
+              <span><small>Совпадение</small><b id="radarManualMatch">—</b></span>
+            </div>
+            <p id="radarExplanation">Radar использует только свечи вокруг V-образной точки и показывает вклад понятных признаков.</p>
+            <div class="label-actions"><button id="radarPositive" class="positive" type="button">Это галка</button><button id="radarNegative" class="negative" type="button">Не галка</button></div>
+          </article>
+        </section>
+
+        <section class="side-panel" data-panel-id="watchlist">
+          <div class="section-head"><div><span class="eyebrow">MARKET</span><h2>Watchlist</h2></div><button id="refreshBtn" type="button" aria-label="Обновить">↻</button></div>
+          <div id="watchlist" class="watchlist"></div>
+          <div class="settings-card">
+            <label>Сравнить на графике<select id="compareSelect"><option value="">Без сравнения</option><option value="BTCUSDT">BTC</option><option value="ETHUSDT">ETH</option><option value="SOLUSDT">SOL</option></select></label>
+          </div>
+        </section>
+
+        <section class="side-panel" data-panel-id="objects">
+          <div class="section-head"><div><span class="eyebrow">DRAWINGS</span><h2>Объекты</h2></div><button id="exportWorkspace" type="button">Экспорт</button></div>
+          <div class="drawing-stylebar">
+            <label>Цвет<input id="drawingColor" type="color" value="#64d8ff"></label>
+            <label>Толщина<select id="drawingWidth"><option value="1">1 px</option><option value="2" selected>2 px</option><option value="3">3 px</option><option value="4">4 px</option></select></label>
+            <label>Стиль<select id="drawingDash"><option value="solid">Сплошная</option><option value="dashed">Штрих</option><option value="dotted">Точки</option></select></label>
+          </div>
+          <div class="object-actions"><button id="duplicateDrawing" type="button">Дублировать</button><button id="lockSelectedDrawing" type="button">Lock</button><button id="openDrawingProperties" type="button">Свойства</button></div>
+          <div id="objectsList" class="objects-list"></div>
+          <label class="import-label">Импорт старого workspace<input id="importWorkspace" type="file" accept=".json,application/json"></label>
+          <div class="section-head compact"><div><h2>Шаблоны</h2></div></div>
+          <div class="template-row"><input id="templateName" placeholder="Название"><button id="saveTemplate" type="button">Сохранить</button></div>
+          <div id="templatesList"></div>
+        </section>
+
+        <section class="side-panel" data-panel-id="more">
+          <div class="section-head"><div><span class="eyebrow">SESSION HEALTH</span><h2 id="sessionStatus">Проверка потока…</h2></div><span id="sessionStatusDot" class="dot warn"></span></div>
+          <div class="health-grid">
+            <span><small>WebSocket</small><b id="sessionWs">Подключение</b></span>
+            <span><small>Последняя котировка</small><b id="sessionQuoteAge">—</b></span>
+            <span><small>Вкладка</small><b id="sessionTab">Активна</b></span>
+            <span><small>Paper без данных</small><b id="sessionEngineGap">—</b></span>
+          </div>
+          <div id="sessionRecovery" class="recovery-note">После background/reconnect пропущенные закрытые 1m свечи детерминированно восстанавливают fills, reclaim и trailing. Первая неполная свеча обрабатывается только по close.</div>
+
+          <div class="section-head compact"><div><h2>Backup / Restore</h2><small>Полный snapshot localStorage</small></div></div>
+          <div class="backup-actions">
+            <button id="exportSnapshot" class="primary" type="button">Экспорт snapshot</button>
+            <label class="button-label">Импортировать<input id="importSnapshot" type="file" accept=".json,application/json"></label>
+          </div>
+          <small id="lastBackupText" class="muted">Snapshot включает paper, настройки, рисунки и обучение.</small>
+
+          <div class="menu-list">
+            <button id="startOnboarding" type="button"><span><b>Короткое обучение</b><small>5 шагов по Galka Pro</small></span><span>›</span></button>
+            <button id="indicatorBtn" type="button"><span><b>Индикаторы</b><small>Цена, объём и осцилляторы</small></span><span>›</span></button>
+            <button id="alertBtn" type="button"><span><b>Алерты</b><small>Локальные уведомления цены</small></span><span>›</span></button>
+            <button id="replayBtn" type="button"><span><b>Replay для обучения</b><small>Будущее скрыто до проверки</small></span><span>›</span></button>
+            <button id="snapshotBtn" type="button"><span><b>Снимок графика</b><small>PNG со свечами и рисунками</small></span><span>›</span></button>
+          </div>
+
+          <details class="settings-details">
+            <summary><span><b>Настройки графика</b><small>Тип, масштаб, тема</small></span><span>›</span></summary>
+            <div class="form-grid">
+              <label>Тип графика<select id="chartTypeSelect"><option value="candles">Свечи</option><option value="bars">Бары</option><option value="heikin">Heikin Ashi</option><option value="line">Линия</option><option value="area">Область</option><option value="baseline">Baseline</option></select></label>
+              <label>Шкала<select id="scaleMode"><option value="normal">Обычная</option><option value="log">Логарифм</option><option value="percent">Проценты</option><option value="indexed">100</option></select></label>
+              <button id="zoomOut" type="button">− Масштаб</button><button id="zoomIn" type="button">＋ Масштаб</button>
+              <button id="autoScaleBtn" class="active" type="button">Auto scale</button><button id="goDateBtn" type="button">Перейти к дате</button>
+              <button id="themeBtn" type="button">Сменить тему</button><span id="clock" class="clock">—</span>
+            </div>
+          </details>
+
+          <div class="section-head compact"><div><h2>Activity log</h2><small>Последние события сессии</small></div><button id="clearActivity" type="button">Очистить</button></div>
+          <div id="activityLog" class="activity-log"></div>
+
+          <details class="settings-details">
+            <summary><span><b>Диагностика</b><small>Техническое состояние</small></span><span>›</span></summary>
+            <pre id="diagnostics"></pre>
+          </details>
+        </section>
+
+        <section class="side-panel" data-panel-id="alerts">
+          <div class="section-head"><div><span class="eyebrow">LOCAL ALERTS</span><h2>Ценовые алерты</h2></div><button data-back-panel="more" type="button">Назад</button></div>
+          <div class="alert-form">
+            <select id="alertSymbol"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option></select>
+            <select id="alertDirection"><option value="above">Цена выше</option><option value="below">Цена ниже</option></select>
+            <input id="alertPrice" type="number" step="any" inputmode="decimal" placeholder="Цена">
+            <input id="alertNote" placeholder="Комментарий">
+            <button id="createAlert" class="primary" type="button">Создать</button>
+          </div>
+          <div id="alertsList"></div>
+        </section>
+
+        <section class="side-panel" data-panel-id="data">
+          <div class="data-window" id="dataWindow">
+            <div><span>Время</span><b id="dwTime">—</b></div><div><span>Open</span><b id="dwOpen">—</b></div>
+            <div><span>High</span><b id="dwHigh">—</b></div><div><span>Low</span><b id="dwLow">—</b></div>
+            <div><span>Close</span><b id="dwClose">—</b></div><div><span>Volume</span><b id="dwVolume">—</b></div>
+            <div><span>ATR 14</span><b id="dwAtr">—</b></div><div><span>Change</span><b id="dwChange">—</b></div>
+          </div>
+        </section>
+      </div>
     </aside>
   </main>
 
   <div id="sheetBackdrop" class="sheet-backdrop"></div>
-  <nav class="mobile-nav mobile-only">
-    <button data-mobile-panel="tools">Рисовать</button>
-    <button data-mobile-panel="chart">График</button>
-    <button data-mobile-panel="paper">Paper</button>
-    <button data-mobile-panel="watchlist">Список</button>
-    <button data-mobile-panel="more">Ещё</button>
+  <nav class="mobile-nav" aria-label="Основная навигация">
+    <button data-mobile-panel="chart" class="active" type="button"><span>⌁</span><small>Chart</small></button>
+    <button data-mobile-panel="paper" type="button"><span>▤</span><small>Paper</small><i id="paperNavBadge"></i></button>
+    <button data-mobile-panel="radar" type="button"><span>⌖</span><small>Radar</small></button>
+    <button data-mobile-panel="watchlist" type="button"><span>≡</span><small>Watchlist</small></button>
+    <button data-mobile-panel="more" type="button"><span>•••</span><small>More</small></button>
   </nav>
 </div>
 
-<div class="modal hidden" id="indicatorModal">
+<div class="modal hidden" id="indicatorModal" role="dialog" aria-modal="true" aria-labelledby="indicatorTitle">
   <div class="modal-card">
-    <div class="modal-head"><b>Индикаторы</b><button data-close-modal>×</button></div>
-    <input id="indicatorSearch" class="search" placeholder="Поиск индикатора">
+    <div class="modal-head"><div><span class="eyebrow">CHART</span><b id="indicatorTitle">Индикаторы</b></div><button data-close-modal type="button" aria-label="Закрыть">×</button></div>
+    <input id="indicatorSearch" class="search" placeholder="Поиск индикатора" aria-label="Поиск индикатора">
     <div class="indicator-list" id="indicatorList"></div>
   </div>
 </div>
 
-<div class="modal hidden" id="goDateModal">
+<div class="modal hidden" id="goDateModal" role="dialog" aria-modal="true" aria-labelledby="goDateTitle">
   <div class="modal-card small">
-    <div class="modal-head"><b>Перейти к дате</b><button data-close-modal>×</button></div>
+    <div class="modal-head"><b id="goDateTitle">Перейти к дате</b><button data-close-modal type="button" aria-label="Закрыть">×</button></div>
     <input id="goDateInput" type="datetime-local">
-    <button id="goDateApply" class="primary">Перейти</button>
+    <button id="goDateApply" class="primary" type="button">Перейти</button>
   </div>
 </div>
 
-<script src="pro.js?v=5"></script>
+<div class="modal hidden" id="pretradeModal" role="dialog" aria-modal="true" aria-labelledby="pretradeTitle">
+  <div class="modal-card trade-preview-card">
+    <div class="modal-head"><div><span class="paper-chip">PAPER PREVIEW</span><b id="pretradeTitle">Проверка GALKA</b></div><button data-close-pretrade type="button" aria-label="Закрыть">×</button></div>
+    <div class="preview-level"><span><small>Уровень GALKA</small><strong id="previewGalka">—</strong></span><span id="previewSymbol">BTC · 15m</span></div>
+    <div class="preview-grid">
+      <span><small>Первая лимитка</small><b id="previewFirst">—</b></span>
+      <span><small>Последняя лимитка</small><b id="previewLast">—</b></span>
+      <span><small>Ступеней</small><b id="previewCount">—</b></span>
+      <span><small>Общий номинал</small><b id="previewNotional">—</b></span>
+      <span><small>Средняя при полном fill</small><b id="previewAverage">—</b></span>
+      <span><small>PnL при возврате</small><b id="previewPnl">—</b></span>
+    </div>
+    <p class="paper-warning"><b>Только paper.</b> Реальный ордер не отправляется. После первой покупки GALKA двигать нельзя.</p>
+    <div class="modal-actions"><button data-close-pretrade type="button">Отмена</button><button id="confirmPretrade" class="primary" type="button">Создать paper-лестницу</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="restoreModal" role="dialog" aria-modal="true" aria-labelledby="restoreTitle">
+  <div class="modal-card">
+    <div class="modal-head"><div><span class="eyebrow">SAFE RESTORE</span><b id="restoreTitle">Что будет восстановлено</b></div><button data-close-restore type="button" aria-label="Закрыть">×</button></div>
+    <div id="restoreSummary" class="restore-summary"></div>
+    <p class="recovery-note">Перед импортом текущий store будет автоматически сохранён отдельным backup-файлом.</p>
+    <div class="modal-actions"><button data-close-restore type="button">Отмена</button><button id="confirmRestore" class="primary" type="button">Создать backup и восстановить</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="drawingPropertiesModal" role="dialog" aria-modal="true" aria-labelledby="drawingPropertiesTitle">
+  <div class="modal-card small">
+    <div class="modal-head"><b id="drawingPropertiesTitle">Свойства объекта</b><button data-close-modal type="button" aria-label="Закрыть">×</button></div>
+    <label>Цвет<input id="propertyColor" type="color" value="#64d8ff"></label>
+    <label>Толщина<select id="propertyWidth"><option value="1">1 px</option><option value="2">2 px</option><option value="3">3 px</option><option value="4">4 px</option></select></label>
+    <label>Стиль<select id="propertyDash"><option value="solid">Сплошная</option><option value="dashed">Штрих</option><option value="dotted">Точки</option></select></label>
+    <div class="modal-actions"><button id="propertyDuplicate" type="button">Duplicate</button><button id="propertyLock" type="button">Lock</button><button id="propertyDelete" class="danger" type="button">Delete</button></div>
+  </div>
+</div>
+
+<div class="modal hidden onboarding-modal" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+  <div class="modal-card onboarding-card">
+    <div class="onboarding-progress" id="onboardingProgress"><span class="active"></span><span></span><span></span><span></span><span></span></div>
+    <div class="onboarding-visual" id="onboardingVisual">G</div>
+    <span class="eyebrow" id="onboardingStep">ШАГ 1 ИЗ 5</span>
+    <h2 id="onboardingTitle">Выбери рынок</h2>
+    <p id="onboardingText">BTC, ETH и SOL обслуживаются paper-движком одновременно. На графике открыт один рынок.</p>
+    <div class="modal-actions"><button id="skipOnboarding" type="button">Пропустить</button><button id="nextOnboarding" class="primary" type="button">Дальше</button></div>
+  </div>
+</div>
+
+<script type="module" src="pro.js?v=7"></script>
 </body>
 </html>
