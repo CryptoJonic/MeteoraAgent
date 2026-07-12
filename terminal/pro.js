@@ -29,12 +29,28 @@ import {
   summarizeBackupSnapshot,
   validateBackupSnapshot,
 } from './modules/backup.js';
+import {
+  aggregateFinalOos,
+  blockSummary,
+  classifyGalka,
+  galkaInsight,
+  loadGalkaStatsPack,
+  probabilityCliff,
+  researchFeaturesAt,
+} from './modules/galka-stats.js';
+import {
+  processShadowBook,
+  labelShadowCandidate,
+  registerShadowCandidate,
+  setShadowEnabled,
+  summarizeShadow,
+} from './modules/shadow-engine.js';
 
 (()=>{
 'use strict';
 
 const LWC = window.LightweightCharts;
-const VERSION = 'pro-v2.0.1-paper-recovery';
+const VERSION = 'pro-v2.1.0-galka-lab';
 const INTERVALS = ['1m','3m','5m','15m','30m','1h','4h','1d'];
 const REST = 'https://fapi.binance.com';
 const WS_BASE = 'wss://fstream.binance.com/stream?streams=';
@@ -43,6 +59,8 @@ const RECOVERY_CANDLE_MS = 60_000;
 const RECOVERY_CHECKPOINT_MS = 5_000;
 const RECOVERY_MAX_BUFFER = 50_000;
 const COLORS = {green:'#089981',red:'#f23645',blue:'#2962ff',orange:'#ff9800',purple:'#9c6ade',cyan:'#26c6da',gray:'#8b93a4'};
+const GALKA_TYPE_COLORS={'Deep capitulation':'#ef5da8','Fast V':'#16c7a3','Multi-test':'#7c6cff','Rounded recovery':'#f2a93b'};
+const SHADOW_SETTINGS={makerFee:.0002,takerFee:.0005,slippage:.0002,reclaimBufferPct:.1,trailDistancePct:.75};
 const $ = id => document.getElementById(id);
 const els = Object.fromEntries([
   'symbolSelect','intervalSelect','chartTypeSelect','indicatorBtn','alertBtn','replayBtn','snapshotBtn','fullscreenBtn',
@@ -58,6 +76,7 @@ const els = Object.fromEntries([
   'indicatorModal','indicatorSearch','indicatorList','goDateModal','goDateInput','goDateApply','chartActionBtn','chartActionMenu','quickSetGalka','quickExactGalka','quickMoveGalka','quickRadar','quickLevels',
   'magnetBtn','lockBtn','hideDrawingsBtn','undoBtn','redoBtn','deleteBtn','clearBtn','drawingColor','drawingWidth','drawingDash','duplicateDrawing','lockSelectedDrawing','openDrawingProperties',
   'radarPanelToggle','radarFilters','radarMinScore','radarMinScoreValue','radarVisibleOnly','radarContext','radarCount','radarCandidatesList','radarDetail','radarScore','radarStrength','radarCandidateTime','radarDropAtr','radarRecovery','radarBalance','radarSharpness','radarCloseLift','radarManualMatch','radarExplanation','radarPositive','radarNegative','radarPrev','radarNext',
+  'radarStatsEvidence','labPackStatus','labSymbol','labInterval','labType','labWindow','labProfile','labRegime','labSafetyBanner','labDataMeta','labOosMetrics','labDepthMetrics','labHistogramCaption','labDepthHistogram','labDepthCurve','labSurvival','labTypeFrequency','labTypePerformance','labHeatmap','labProfileLevels','labGridCards','labStopCards','labExitCards','labDrift','labCliff','labRegimes','labPortability','shadowToggle','shadowStatus','shadowMetrics','shadowRecords','exportShadow','openWatchlist',
   'sessionStatus','sessionStatusDot','sessionWs','sessionQuoteAge','sessionTab','sessionEngineGap','sessionRecovery','exportSnapshot','importSnapshot','lastBackupText','activityLog','clearActivity','startOnboarding',
   'pretradeModal','previewGalka','previewSymbol','previewFirst','previewLast','previewCount','previewNotional','previewAverage','previewPnl','confirmPretrade',
   'restoreModal','restoreSummary','confirmRestore','drawingPropertiesModal','propertyColor','propertyWidth','propertyDash','propertyDuplicate','propertyLock','propertyDelete',
@@ -90,6 +109,11 @@ function download(name,blob){
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
 }
 function csvEscape(v){const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replaceAll('"','""')+'"':s;}
+function displayNumber(v){return v!==null&&v!==''&&Number.isFinite(Number(v));}
+function pct(v,d=1){return displayNumber(v)?`${(Number(v)*100).toFixed(d)}%`:'—';}
+function pctPoint(v,d=2){return displayNumber(v)?`${Number(v).toFixed(d)}%`:'—';}
+function signedPctPoint(v,d=3){return displayNumber(v)?`${Number(v)>=0?'+':''}${Number(v).toFixed(d)}%`:'—';}
+function compactNumber(v){return displayNumber(v)?Number(v).toLocaleString('ru-RU'):'—';}
 
 const runtime={
   symbol:store.ui.symbol,interval:store.ui.interval,chartType:store.ui.chartType,
@@ -101,7 +125,8 @@ const runtime={
   tool:'cursor',drawingStart:null,drawingPreview:null,selectedDrawing:null,drawingEdit:null,longPressTimer:null,undo:[],redo:[],
   dpr:window.devicePixelRatio||1,toastTimer:null,lastCrosshair:null,
   replay:{active:false,index:0,playing:false,timer:null,source:null,pendingLabel:null,revealed:false},
-  hiddenLiveUpdates:false,manualDrag:false,manualDragOriginal:null,pendingManual:null,pendingRestore:null,radarCandidates:[],radarSelected:null,radarRangeTimer:null,onboardingIndex:0,sheetGesture:null
+  hiddenLiveUpdates:false,manualDrag:false,manualDragOriginal:null,pendingManual:null,pendingRestore:null,radarCandidates:[],radarSelected:null,radarRangeTimer:null,onboardingIndex:0,sheetGesture:null,
+  galkaStats:null,galkaStatsPromise:null,galkaStatsError:null,lastShadowPersistAt:0,shadowDirty:false
 };
 
 function chartColors(){
@@ -422,7 +447,7 @@ function connectWs(){
         const k=d.k,interval=k.i,c={time:Math.floor(k.t/1000),open:num(k.o),high:num(k.h),low:num(k.l),close:num(k.c),volume:num(k.v)};
         updateCandleMap(s,interval,c);
         if(interval==='15m'&&k.x){detectLatestPattern(s);if(!runtime.recovering)processBotQuote(s,{nowMs:eventTime,source:'kline'});}
-        if(k.x&&store.ui.radar?.enabled&&s===runtime.symbol&&interval===runtime.interval)updateMarkers();
+        if(k.x&&(store.ui.radar?.enabled||store.shadow.enabled)&&s===runtime.symbol&&interval===runtime.interval)updateMarkers();
       }
     }catch(err){console.error(err);}
   };
@@ -433,6 +458,18 @@ function setConnection(text,type){
   els.connectionButton?.setAttribute('title',text);els.radarBtn?.setAttribute('aria-pressed',String(!!store.ui.radar?.enabled));
   if(changed&&type==='ok'){logActivity('connection','WebSocket online');save();}
   renderSessionHealth();
+}
+function processLiveShadow(symbol,bid,ask,eventTime){
+  const result=processShadowBook(store.shadow,symbol,{bid,ask},SHADOW_SETTINGS,eventTime);
+  if(!result.changed)return;
+  runtime.shadowDirty=true;
+  const important=result.events.filter(event=>['shadow_fill','shadow_return','shadow_closed'].includes(event.type));
+  if(important.length){
+    const closed=important.filter(event=>event.type==='shadow_closed').length,fills=important.filter(event=>event.type==='shadow_fill').length;
+    logActivity('shadow',`${symbol.replace('USDT','')}: shadow ${fills?`fills ${fills}`:closed?`closed ${closed}`:'return observed'}`,{events:important,paperBalanceImpact:0},new Date(eventTime).toISOString());
+  }
+  if(important.length||Date.now()-runtime.lastShadowPersistAt>=5000){save();runtime.lastShadowPersistAt=Date.now();runtime.shadowDirty=false;}
+  if(document.querySelector('[data-panel-id="lab"]')?.classList.contains('active'))renderShadow();
 }
 function processQuote(symbol,bid,ask,{eventTime=Date.now(),updateId=null,source='live',silent=false}={}){
   const q=runtime.quotes[symbol],prev=q.last,eventAt=Number(eventTime)>0?Number(eventTime):Date.now();
@@ -448,6 +485,7 @@ function processQuote(symbol,bid,ask,{eventTime=Date.now(),updateId=null,source=
   markMarketProcessed(symbol,eventAt);
   if(source==='live')processAlerts(symbol,q.last,prev);
   processBotQuote(symbol,{quote:{bid,ask},nowMs:eventAt,source,suppressRender:silent});
+  if(source==='live')processLiveShadow(symbol,bid,ask,eventAt);
   runtime.lastEngineAt=Date.now();
   maybePersistRecoveryCursor();
   if(!silent){renderWatchlist();renderPaperHeader();renderTicker();}
@@ -780,41 +818,103 @@ function beep(){
 
 
 /* Explainable Radar is isolated from the paper engine and never creates campaigns. */
+function decorateRadarCandidates(candidates){
+  const pack=runtime.galkaStats,rows=chartRows();
+  if(!pack||!pack.data.intervals.includes(runtime.interval))return candidates;
+  const seconds=intervalSeconds(runtime.interval);
+  return candidates.map(candidate=>{
+    const features=researchFeaturesAt(rows,candidate.index,runtime.interval);
+    const confirmation=rows[candidate.index+6];
+    const confirmationAt=confirmation?(confirmation.time+seconds)*1000:NaN;
+    if(!features||!Number.isFinite(confirmationAt)||confirmationAt>Date.now())return candidate;
+    try{
+      const classified=classifyGalka(pack,features);
+      return {...candidate,symbol:runtime.symbol,interval:runtime.interval,galkaType:classified.type,typeDistance:classified.distance,featureCoverage:classified.featureCoverage,modelHash:classified.modelHash,confirmationAt};
+    }catch(error){console.warn('Galka classifier:',error);return candidate;}
+  });
+}
+function syncShadowCandidates(candidates){
+  const pack=runtime.galkaStats;
+  if(!pack||!store.shadow.enabled)return 0;
+  let registered=0;
+  for(const candidate of candidates){
+    if(!candidate.galkaType||!candidate.confirmationAt)continue;
+    const profile=pack.profiles?.[candidate.galkaType]?.[store.shadow.profile];
+    const result=registerShadowCandidate(store.shadow,{...candidate,candidateId:candidate.patternId,type:candidate.galkaType,profile:store.shadow.profile,manualLabel:radarLabel(candidate)?.label||null},profile,{modelVersion:pack.modelVersion,modelHash:pack.model.model_hash});
+    if(result.registered)registered++;
+  }
+  if(registered){
+    logActivity('shadow',`Shadow: добавлено новых Radar-кандидатов ${registered}`,{registered,profile:store.shadow.profile,paperBalanceImpact:0});
+    save();renderActivity();renderShadow();
+  }
+  return registered;
+}
+async function ensureGalkaStats(){
+  if(runtime.galkaStats)return runtime.galkaStats;
+  if(runtime.galkaStatsPromise)return runtime.galkaStatsPromise;
+  runtime.galkaStatsError=null;els.labPackStatus.textContent='Проверка…';els.labPackStatus.className='stream-badge';
+  runtime.galkaStatsPromise=loadGalkaStatsPack().then(pack=>{
+    runtime.galkaStats=pack;runtime.galkaStatsError=null;els.labPackStatus.textContent='Verified';els.labPackStatus.className='stream-badge ok';
+    const types=Object.values(pack.model.type_names);if(!types.includes(store.ui.lab.type))store.ui.lab.type=types[0];
+    scanRadar();renderRadar();renderLab();save();return pack;
+  }).catch(error=>{
+    runtime.galkaStatsError=error;els.labPackStatus.textContent='Ошибка';els.labPackStatus.className='stream-badge error';renderLab();throw error;
+  }).finally(()=>{runtime.galkaStatsPromise=null;});
+  return runtime.galkaStatsPromise;
+}
 function scanRadar(){
-  if(!store.ui.radar?.enabled){runtime.radarCandidates=[];return[];}
+  if(!store.ui.radar?.enabled&&!store.shadow.enabled){runtime.radarCandidates=[];return[];}
   const rows=chartRows(),visible=runtime.mainChart?.timeScale().getVisibleLogicalRange?.();let fromIndex=14,toIndex=rows.length-4;
   if(store.ui.radar.visibleOnly&&visible){fromIndex=Math.max(14,Math.floor(visible.from)-6);toIndex=Math.min(rows.length-4,Math.ceil(visible.to)+6);}
-  const candidates=computeRadarCandidates({rows,symbol:runtime.symbol,interval:runtime.interval,minScore:store.ui.radar.minScore,manualExamples:store.training.manualExamples,intervalSeconds:intervalSeconds(runtime.interval),fromIndex,toIndex});
+  const candidates=decorateRadarCandidates(computeRadarCandidates({rows,symbol:runtime.symbol,interval:runtime.interval,minScore:store.ui.radar.minScore,manualExamples:store.training.manualExamples,intervalSeconds:intervalSeconds(runtime.interval),fromIndex,toIndex}));
   runtime.radarCandidates=candidates;
-  if(runtime.radarSelected&&!candidates.some(x=>x.patternId===runtime.radarSelected.patternId))runtime.radarSelected=null;
+  if(runtime.radarSelected)runtime.radarSelected=candidates.find(x=>x.patternId===runtime.radarSelected.patternId)||null;
+  syncShadowCandidates(candidates);
   return candidates;
 }
-function visibleRadarCandidates(){return filterRadarCandidates(runtime.radarCandidates||[],store.ui.radar?.filter||'all');}
+function visibleRadarCandidates(){
+  const filter=store.ui.radar?.filter||'all',candidates=runtime.radarCandidates||[];
+  if(filter==='strong')return filterRadarCandidates(candidates,'strong');
+  if(filter==='mine')return candidates.filter(candidate=>candidate.manualMatch||radarLabel(candidate)?.label==='positive');
+  if(filter==='profitable'||filter==='losing')return candidates.filter(candidate=>{
+    const ev=candidate.galkaType&&runtime.galkaStats?aggregateFinalOos(runtime.galkaStats,candidate.galkaType)?.balanced_net_return_pct_mean:null;
+    return displayNumber(ev)&&(filter==='profitable'?Number(ev)>=0:Number(ev)<0);
+  });
+  return candidates;
+}
 function radarLabel(candidate){return store.training.radarLabels.filter(x=>x.patternId===candidate?.patternId&&x.symbol===runtime.symbol&&x.interval===runtime.interval).at(-1)||null;}
 function selectRadarCandidate(candidate,openSheet=false){
   runtime.radarSelected=candidate||null;renderRadar();updateMarkers();
   if(candidate){try{runtime.mainChart.timeScale().scrollToPosition(candidate.index-chartRows().length+12,false);}catch(_){}if(openSheet)showMobilePanel('radar');}
 }
 function renderRadar(){
-  const on=!!store.ui.radar?.enabled,c=visibleRadarCandidates(),all=runtime.radarCandidates||[],strong=all.filter(x=>x.strength==='strong').length,medium=all.filter(x=>x.strength==='medium').length,weak=all.length-strong-medium;
+  const on=!!store.ui.radar?.enabled,c=on?visibleRadarCandidates():[],all=on?(runtime.radarCandidates||[]):[],strong=all.filter(x=>x.strength==='strong').length,medium=all.filter(x=>x.strength==='medium').length,weak=all.length-strong-medium;
   els.radarBtn.classList.toggle('active',on);els.radarBtn.setAttribute('aria-pressed',String(on));els.radarLegend.classList.toggle('hidden',!on);
   if(on)els.radarLegend.innerHTML=`<b>Radar ${c.length}</b><span><i class="radar-dot strong"></i>${strong}</span><span><i class="radar-dot medium"></i>${medium}</span><span><i class="radar-dot weak"></i>${weak}</span>`;
   els.radarPanelToggle.checked=on;els.radarMinScore.value=store.ui.radar.minScore;els.radarMinScoreValue.textContent=store.ui.radar.minScore;els.radarVisibleOnly.checked=!!store.ui.radar.visibleOnly;
   els.radarContext.textContent=`${runtime.symbol.replace('USDT','')} · ${runtime.interval}`;els.radarCount.textContent=c.length;
   els.radarFilters.querySelectorAll('[data-radar-filter]').forEach(button=>button.classList.toggle('active',button.dataset.radarFilter===(store.ui.radar.filter||'all')));
-  els.radarCandidatesList.innerHTML=c.map(candidate=>{const label=radarLabel(candidate);return `<button class="radar-candidate ${runtime.radarSelected?.patternId===candidate.patternId?'active':''}" data-radar-id="${esc(candidate.patternId)}" type="button"><span><b>${Math.round(candidate.score)}/100</b><i class="radar-dot ${candidate.strength}"></i></span><small>${fmtTime(candidate.time)}</small><small>${candidate.manualMatch?'★ ручное совпадение':label?label.label==='positive'?'✓ это галка':'× не галка':candidate.strength}</small></button>`;}).join('');
+  els.radarCandidatesList.innerHTML=c.map(candidate=>{const label=radarLabel(candidate);return `<button class="radar-candidate ${runtime.radarSelected?.patternId===candidate.patternId?'active':''}" data-radar-id="${esc(candidate.patternId)}" type="button"><span><b>${Math.round(candidate.score)}/100</b><i class="radar-dot ${candidate.strength}"></i></span><small>${fmtTime(candidate.time)}</small><small>${candidate.galkaType?esc(candidate.galkaType):candidate.manualMatch?'★ ручное совпадение':label?label.label==='positive'?'✓ это галка':'× не галка':candidate.strength}</small></button>`;}).join('');
   const selected=runtime.radarSelected,label=radarLabel(selected);els.radarDetail.classList.toggle('empty',!selected);
   els.radarScore.textContent=selected?Math.round(selected.score):'—';els.radarStrength.textContent=selected?(selected.strength==='strong'?'Сильный кандидат':selected.strength==='medium'?'Средний кандидат':'Слабый кандидат'):'Выбери кандидата';els.radarCandidateTime.textContent=selected?fmtTime(selected.time):'Коснись метки на графике или списка';
   els.radarDropAtr.textContent=selected?selected.dropAtr.toFixed(2)+' ATR':'—';els.radarRecovery.textContent=selected?(selected.recovery*100).toFixed(0)+'%':'—';els.radarBalance.textContent=selected?(selected.balance*100).toFixed(0)+'%':'—';els.radarSharpness.textContent=selected?selected.sharpness.toFixed(2):'—';els.radarCloseLift.textContent=selected?selected.closeLift.toFixed(2):'—';els.radarManualMatch.textContent=selected?(selected.manualMatch?'Да':'Нет'):'—';
   els.radarExplanation.textContent=selected?`Score ${selected.score}: падение ${selected.dropAtr.toFixed(2)} ATR, восстановление ${(selected.recovery*100).toFixed(0)}%, баланс плеч ${(selected.balance*100).toFixed(0)}%, sharpness ${selected.sharpness.toFixed(2)}, close lift ${selected.closeLift.toFixed(2)}.${label?` Твоя оценка: ${label.label==='positive'?'это галка':'не галка'}.`:''}`:'Radar использует только свечи вокруг V-образной точки и показывает вклад понятных признаков.';
+  if(selected?.galkaType&&runtime.galkaStats){
+    const pack=runtime.galkaStats,block=blockSummary(pack,{type:selected.galkaType}),aggregate=aggregateFinalOos(pack,selected.galkaType),recent=pack.statistics.recent.find(row=>row.galka_type===selected.galkaType&&row.window==='90d'),profile=pack.profiles[selected.galkaType]?.Balanced,cliff=probabilityCliff(pack,{symbol:runtime.symbol,interval:runtime.interval,type:selected.galkaType,window:'all'}),grid=profile?.depths_pct||[],invalidation=pack.stops.probability[selected.galkaType];
+    const warning=cliff&&!cliff.insufficient_data?`Ниже ${pctPoint(cliff.cliff_depth_pct)} вероятность падает ${pct(cliff.probability_before)} → ${pct(cliff.probability_after)}.`:`Probability stop research: ${pctPoint(invalidation)}; устойчивый local cliff не подтверждён.`;
+    els.radarStatsEvidence.classList.remove('muted');els.radarStatsEvidence.innerHTML=`<span class="type-chip" style="--lab-accent:${GALKA_TYPE_COLORS[selected.galkaType]||COLORS.purple}">${esc(selected.galkaType)}</span><b>Final OOS · n=${compactNumber(block?.event_count)} · Return 6h ${pct(block?.return_6h_probability)} [${pct(block?.return_6h_block_ci_low)}, ${pct(block?.return_6h_block_ci_high)}]</b><small>Return 24h ${pct(block?.return_24h_probability)} · depth p50/p75/p90 ${pctPoint(block?.depth_success_p50)} / ${pctPoint(block?.depth_success_p75)} / ${pctPoint(block?.depth_success_p90)}</small><small>Recent 90d p75 ${pctPoint(recent?.depth_p75)} (${signedPctPoint(recent?.depth_p75_delta)}) · grid ${pctPoint(grid[0])}–${pctPoint(grid.at(-1))} · Balanced EV ${signedPctPoint(aggregate?.balanced_net_return_pct_mean)}</small><small>Model features ${pct(selected.featureCoverage,0)} · cross-market feature imputed from train median</small><small class="down">${esc(warning)}</small>`;
+  }else{
+    els.radarStatsEvidence.classList.add('muted');els.radarStatsEvidence.textContent=selected?(runtime.galkaStatsError?'Galka Lab недоступен: '+runtime.galkaStatsError.message:'Тип появится после полной research-confirmation (+6 свечей) на 5m–1h.'):'Galka Lab загрузит тип и историческую статистику без изменения Radar score.';
+  }
   els.radarPositive.disabled=!selected;els.radarNegative.disabled=!selected;
 }
 function toggleRadar(){
   store.ui.radar.enabled=!store.ui.radar.enabled;runtime.radarSelected=null;save();scanRadar();renderRadar();updateMarkers();
+  if(store.ui.radar.enabled)ensureGalkaStats().catch(()=>{});
   logActivity('radar',store.ui.radar.enabled?'Radar включён':'Radar выключен',{count:runtime.radarCandidates.length});save();renderActivity();
   toast(store.ui.radar.enabled?`Radar включён: ${runtime.radarCandidates.length} кандидатов`:'Radar выключен');
 }
-function radarCandidateColor(c){return c.manualMatch?COLORS.cyan:c.strength==='strong'?COLORS.green:c.strength==='medium'?COLORS.orange:COLORS.gray;}
+function radarCandidateColor(c){return c.manualMatch?COLORS.cyan:(GALKA_TYPE_COLORS[c.galkaType]||(c.strength==='strong'?COLORS.green:c.strength==='medium'?COLORS.orange:COLORS.gray));}
 function onRadarChartClick(param){
   if(!store.ui.radar?.enabled||runtime.tool!=='cursor'||!param?.time||!runtime.radarCandidates.length)return;
   const t=typeof param.time==='number'?param.time:Math.floor(Date.UTC(param.time.year,param.time.month-1,param.time.day)/1000),maxGap=intervalSeconds(runtime.interval)*2;
@@ -829,10 +929,99 @@ function onChartClick(param){
 function labelRadarCandidate(value){
   const candidate=runtime.radarSelected;if(!candidate)return;
   store.training.radarLabels.push({id:`RL-${Date.now()}-${store.training.radarLabels.length+1}`,patternId:candidate.patternId,symbol:runtime.symbol,interval:runtime.interval,time:candidate.time,level:candidate.level,score:candidate.score,features:{dropAtr:candidate.dropAtr,recovery:candidate.recovery,balance:candidate.balance,sharpness:candidate.sharpness,closeLift:candidate.closeLift},label:value,labeledAt:nowIso()});
+  labelShadowCandidate(store.shadow,candidate.patternId,value);
   logActivity('radar',value==='positive'?'Radar: отмечено «Это галка»':'Radar: отмечено «Не галка»',{patternId:candidate.patternId,score:candidate.score});save();renderRadar();renderActivity();toast('Оценка сохранена');
 }
 function moveRadarSelection(delta){
   const candidates=visibleRadarCandidates();if(!candidates.length)return;let index=candidates.findIndex(item=>item.patternId===runtime.radarSelected?.patternId);index=index<0?(delta>0?0:candidates.length-1):(index+delta+candidates.length)%candidates.length;selectRadarCandidate(candidates[index]);
+}
+
+/* Galka Lab consumes a signed, static research pack. Historical evidence cannot mutate paper. */
+function labOptions(){return{symbol:store.ui.lab.symbol,interval:store.ui.lab.interval,type:store.ui.lab.type,window:store.ui.lab.window,profile:store.ui.lab.profile,regime:store.ui.lab.regime||'all'};}
+function renderLabControls(){
+  els.labSymbol.value=store.ui.lab.symbol;els.labInterval.value=store.ui.lab.interval;els.labType.value=store.ui.lab.type;els.labWindow.value=store.ui.lab.window;els.labProfile.value=store.ui.lab.profile;els.labRegime.value=store.ui.lab.regime||'all';
+}
+function rankLabel(value){return String(value||'').replaceAll('_',' ').replace(/reclaim (\d{3}) trail (\d{3})/,(_,a,b)=>`reclaim ${(Number(a)/100).toFixed(2)} · trail ${(Number(b)/100).toFixed(2)}`);}
+function renderHeatmap(conditional){
+  if(!conditional?.depths?.length){els.labHeatmap.className='lab-heatmap muted';els.labHeatmap.textContent='Для этого среза недостаточно данных.';return;}
+  const horizons=conditional.depths[0][1].map(row=>row[0]);
+  els.labHeatmap.className='lab-heatmap';els.labHeatmap.innerHTML=`<table><thead><tr><th>Depth</th>${horizons.map(hour=>`<th>${hour}h</th>`).join('')}</tr></thead><tbody>${conditional.depths.map(([depth,rows])=>`<tr><td>${Number(depth).toFixed(2)}%</td>${rows.map(([,probability,low,high,sample,insufficient])=>`<td class="heat ${insufficient?'insufficient':''}" style="--heat:${Math.round(num(probability)*100)}" title="n=${sample} · CI ${pct(low)}–${pct(high)}">${probability==null?'—':pct(probability,0)}${insufficient?'*':''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function renderLabCharts(pack,options,conditional){
+  const histogram=pack.statistics.histograms.filter(row=>row.symbol===options.symbol&&row.interval===options.interval&&row.galka_type===options.type&&row.window===options.window),histMax=Math.max(0,...histogram.map(row=>num(row.count_all_complete)));
+  els.labHistogramCaption.textContent=histogram.length?`${options.symbol} ${options.interval} · ${options.window}`:`${options.window}: distribution отсутствует в compact pack`;
+  els.labDepthHistogram.innerHTML=histogram.length?histogram.map(row=>`<div class="lab-bar-row"><span>${Number(row.depth_from_pct).toFixed(2)}${row.depth_to_pct==null?'+':`–${Number(row.depth_to_pct).toFixed(2)}`}%</span><span class="lab-bar-track"><i style="--bar:${histMax?num(row.count_all_complete)/histMax*100:0}"></i></span><b title="returned / complete">${compactNumber(row.count_returned)}/${compactNumber(row.count_all_complete)}</b></div>`).join(''):'<small class="muted">Доступно для 90d, 365d и all.</small>';
+  const depthRows=(conditional?.depths||[]).map(([depth,rows])=>{const point=rows.find(row=>row[0]===24);return{depth,probability:point?.[1],sample:point?.[4],insufficient:point?.[5]};});
+  els.labDepthCurve.innerHTML=depthRows.length?depthRows.map(row=>`<div class="lab-bar-row ${row.insufficient?'muted':''}"><span>${Number(row.depth).toFixed(2)}%</span><span class="lab-bar-track"><i style="--bar:${num(row.probability)*100}"></i></span><b>${pct(row.probability,0)}${row.insufficient?'*':''}</b></div>`).join(''):'<small class="muted">Нет conditional rows для периода.</small>';
+  const survival=pack.statistics.survival.filter(row=>row.symbol===options.symbol&&row.interval===options.interval&&row.galka_type===options.type&&row.window===options.window&&displayNumber(row.cumulative_return_probability));
+  if(survival.length){
+    const width=320,height=98,pad=12,maxMinutes=Math.max(...survival.map(row=>num(row.minutes))),maxLog=Math.log1p(maxMinutes),points=survival.map(row=>[pad+Math.log1p(num(row.minutes))/maxLog*(width-pad*2),height-pad-num(row.cumulative_return_probability)*(height-pad*2)]),line=points.map((point,index)=>`${index?'L':'M'}${point[0].toFixed(1)},${point[1].toFixed(1)}`).join(' '),area=`${line} L${points.at(-1)[0].toFixed(1)},${height-pad} L${points[0][0].toFixed(1)},${height-pad} Z`;
+    els.labSurvival.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Cumulative return probability over time"><path class="curve-area" d="${area}"></path><path class="curve-line" d="${line}"></path><text x="${pad}" y="${height-1}">${survival[0].minutes}m</text><text x="${width-pad}" y="${height-1}" text-anchor="end">${Math.round(maxMinutes/60)}h</text><text x="${width-pad}" y="10" text-anchor="end">${pct(survival.at(-1).cumulative_return_probability)}</text></svg>`;
+  }else els.labSurvival.innerHTML='<small class="muted">Доступно для 90d, 365d и all.</small>';
+  const types=Object.values(pack.model.type_names),frequencies=types.map(type=>aggregateFinalOos(pack,type)),maxFrequency=Math.max(...frequencies.map(row=>row.count_candidates));
+  els.labTypeFrequency.innerHTML=frequencies.map(row=>`<div class="lab-bar-row"><span title="${esc(row.galka_type)}">${esc(row.galka_type)}</span><span class="lab-bar-track"><i style="--bar:${row.count_candidates/maxFrequency*100};background:${GALKA_TYPE_COLORS[row.galka_type]||COLORS.purple}"></i></span><b>${compactNumber(row.count_candidates)}</b></div>`).join('');
+  const performances=frequencies.map(row=>({type:row.galka_type,value:row.balanced_net_return_pct_mean})),maxPerformance=Math.max(...performances.map(row=>Math.abs(num(row.value))),.001);
+  els.labTypePerformance.innerHTML=performances.map(row=>`<div class="lab-bar-row ${num(row.value)>=0?'positive':'negative'}"><span title="${esc(row.type)}">${esc(row.type)}</span><span class="lab-bar-track"><i style="--bar:${Math.abs(num(row.value))/maxPerformance*100}"></i></span><b>${signedPctPoint(row.value)}</b></div>`).join('');
+}
+function renderShadow(){
+  const state=store.shadow,summary=summarizeShadow(state);els.shadowToggle.checked=state.enabled;
+  els.shadowStatus.className=`shadow-status ${state.enabled?'on':'muted'}`;els.shadowStatus.textContent=state.enabled?`Включён с ${new Date(state.startedAt).toLocaleString('ru-RU')} · ${state.profile} · новые research-confirmed Radar-кандидаты`:'Выключен по умолчанию. Исторические кандидаты задним числом не добавляются.';
+  els.shadowMetrics.innerHTML=`<span><small>Records</small><b>${summary.total}</b></span><span><small>Active</small><b>${summary.active}</b></span><span><small>Complete</small><b>${summary.completed}</b></span><span><small>Fill rate</small><b>${pct(summary.fillRate)}</b></span><span><small>Return rate</small><b>${pct(summary.returnRate)}</b></span><span><small>Manual labels</small><b>${summary.manualCompared}</b></span><span class="${num(summary.meanNetReturnPct)>=0?'positive':'negative'}"><small>Mean candidate EV</small><b>${signedPctPoint(summary.meanNetReturnPct)}</b></span><span><small>Paper impact</small><b>$0.00</b></span>`;
+  els.shadowRecords.innerHTML=(state.records||[]).slice(-30).reverse().map(record=>`<div class="shadow-record"><span><b>${esc(record.symbol.replace('USDT',''))} · ${esc(record.type)}</b><small>${esc(record.profile)} · ${new Date(record.confirmationAt).toLocaleString('ru-RU')} · depth ${pctPoint(record.maxDepthPct)}</small></span><span><b data-status="${esc(record.status)}">${esc(record.status)}</b><small>${record.netReturnPct==null?`${record.levels.filter(level=>level.status==='filled').length}/${record.levels.length} fills`:signedPctPoint(record.netReturnPct)}</small></span></div>`).join('');
+}
+function renderLab(){
+  renderLabControls();renderShadow();
+  const pack=runtime.galkaStats;
+  if(!pack){
+    els.labPackStatus.textContent=runtime.galkaStatsError?'Ошибка':'Не загружен';els.labPackStatus.className=`stream-badge ${runtime.galkaStatsError?'error':''}`;
+    els.labDataMeta.textContent=runtime.galkaStatsError?`Пакет отклонён: ${runtime.galkaStatsError.message}`:'Пакет загружается только при открытии Lab.';
+    for(const element of [els.labOosMetrics,els.labDepthMetrics,els.labDepthHistogram,els.labDepthCurve,els.labSurvival,els.labTypeFrequency,els.labTypePerformance,els.labProfileLevels,els.labGridCards,els.labStopCards,els.labExitCards])element.innerHTML='';
+    els.labHeatmap.className='lab-heatmap muted';els.labHeatmap.textContent='Ожидание проверенного пакета…';els.labDrift.textContent='—';els.labCliff.textContent='—';els.labRegimes.textContent='—';els.labPortability.textContent='—';return;
+  }
+  els.labPackStatus.textContent='Verified';els.labPackStatus.className='stream-badge ok';
+  const options=labOptions(),insight=galkaInsight(pack,options),aggregate=insight.finalOosAggregate,block=insight.block,selected=insight.summary,profile=insight.profile;
+  const balancedBlocked=num(aggregate?.balanced_net_return_pct_mean)>=0?false:true,conservativeBlocked=num(aggregate?.conservative_net_return_pct_mean)>=0?false:true;
+  els.labSafetyBanner.className='lab-safety';els.labSafetyBanner.textContent=balancedBlocked||conservativeBlocked?`PROMOTION BLOCKED · Final OOS ${options.type}: Conservative ${signedPctPoint(aggregate?.conservative_net_return_pct_mean)}, Balanced ${signedPctPoint(aggregate?.balanced_net_return_pct_mean)}. Shadow-only; auto-paper остаётся выключен.`:`OOS gate пройден только статистически; live shadow всё равно обязателен. Auto-paper остаётся выключен.`;
+  if(options.profile==='Aggressive')els.labSafetyBanner.textContent+=` Aggressive — stress-test only (${signedPctPoint(aggregate?.aggressive_net_return_pct_mean)} OOS).`;
+  els.labDataMeta.innerHTML=`<b>${esc(pack.modelVersion)} · schema ${esc(pack.schemaVersion)}</b><br>${new Date(pack.data.start).toLocaleDateString('ru-RU')}–${new Date(pack.data.end).toLocaleDateString('ru-RU')} · ${esc(options.symbol)} ${esc(options.interval)} ${esc(options.window)} · selected n=${compactNumber(selected?.count_candidates)} · checksum verified`;
+  const activation=aggregate?.count_candidates?aggregate.count_activated/aggregate.count_candidates:null,returnRate=aggregate?.count_complete?aggregate.count_returned/aggregate.count_complete:null;
+  els.labOosMetrics.innerHTML=`<span><small>Candidates</small><b>${compactNumber(aggregate?.count_candidates)}</b></span><span><small>Activation</small><b>${pct(activation)}</b></span><span><small>Any return</small><b>${pct(returnRate)}</b></span><span><small>Return 1h</small><b>${pct(block?.return_1h_probability)}</b></span><span><small>Return 24h</small><b>${pct(block?.return_24h_probability)}</b></span><span><small>Return 48h</small><b>${pct(block?.return_48h_probability)}</b></span><span class="negative"><small>Balanced EV</small><b>${signedPctPoint(aggregate?.balanced_net_return_pct_mean)}</b></span><span><small>Return p50</small><b>${num(aggregate?.return_minutes_p50).toFixed(1)}m</b></span><span><small>Return p90</small><b>${num(aggregate?.return_minutes_p90).toFixed(1)}m</b></span><span><small>MAE mean</small><b>${pctPoint(aggregate?.mae_mean_pct)}</b></span><span><small>MFE after reclaim</small><b>${pctPoint(aggregate?.mfe_after_reclaim_mean_pct)}</b></span><span><small>UTC-day blocks</small><b>${compactNumber(block?.block_count)}</b></span>`;
+  els.labDepthMetrics.innerHTML=['50','75','90','95','99'].map(q=>`<span><small>Depth p${q}</small><b>${pctPoint(block?.[`depth_success_p${q}`])}</b></span>`).join('');
+  renderLabCharts(pack,options,insight.conditional);
+  renderHeatmap(insight.conditional);
+  els.labProfileLevels.innerHTML=profile?profile.depths_pct.map((depth,index)=>`<span>${Number(depth).toFixed(2)}% · ${pct(profile.weights[index],0)}</span>`).join(''):'';
+  const oosKeys={Conservative:'conservative_net_return_pct_mean',Balanced:'balanced_net_return_pct_mean',Aggressive:'aggressive_net_return_pct_mean'};
+  els.labGridCards.innerHTML=insight.grids.map(row=>{const oos=num(aggregate?.[oosKeys[row.profile]],NaN);return `<div class="lab-compare-card ${row.profile===options.profile?'active':''} ${oos>=0?'positive':'negative'}"><small>${esc(row.profile)}${row.stress_test_only?' · STRESS':''}</small><b>${signedPctPoint(oos)} OOS</b><small>all-history ${signedPctPoint(row.mean_net_return_pct)} · fill ${pct(row.fill_probability)} · CVaR ${pctPoint(row.cvar_95_pct)}</small></div>`;}).join('');
+  const stops=[...insight.stops].sort((a,b)=>num(b.mean_net_return_pct)-num(a.mean_net_return_pct)),exits=[...insight.exits].sort((a,b)=>num(b.mean_net_return_pct)-num(a.mean_net_return_pct)).slice(0,6);
+  els.labStopCards.innerHTML=`<small class="muted">Top all-history stops</small>${stops.map((row,index)=>`<div class="lab-rank-row"><span><b>${index+1}. ${esc(rankLabel(row.stop))}</b><small>n=${compactNumber(row.count)} · CVaR ${pctPoint(row.cvar_95_pct)}</small></span><b>${signedPctPoint(row.mean_net_return_pct)}</b></div>`).join('')}`;
+  els.labExitCards.innerHTML=`<small class="muted">Top all-history exits</small>${exits.map((row,index)=>`<div class="lab-rank-row"><span><b>${index+1}. ${esc(rankLabel(row.exit))}</b><small>n=${compactNumber(row.count)} · CVaR ${pctPoint(row.cvar_95_pct)}</small></span><b>${signedPctPoint(row.mean_net_return_pct)}</b></div>`).join('')}`;
+  const recent=pack.statistics.recent.filter(row=>row.galka_type===options.type);
+  els.labDrift.innerHTML=`<b>Recent drift · all markets/TF · p75 / return 24h</b><br>${recent.map(row=>`${esc(row.window)}: ${pctPoint(row.depth_p75)} (${signedPctPoint(row.depth_p75_delta)}) / ${pct(row.return_24h_probability)}${row.insufficient_data?' · n<40':''}`).join('<br>')}`;
+  const cliff=insight.cliff||probabilityCliff(pack,{...options,window:'all'})||probabilityCliff(pack,{...options,window:'90d'});
+  els.labCliff.innerHTML=cliff&&!cliff.insufficient_data?`<b>Probability cliff · ${esc(cliff.window)}</b><br>${pctPoint(cliff.cliff_depth_pct)}: ${pct(cliff.probability_before)} → ${pct(cliff.probability_after)} (−${(Math.abs(num(cliff.probability_drop))*100).toFixed(1)} pp)${cliff.significant_cliff?' · significant':' · exploratory'}`:'<b>Probability cliff</b><br>В выбранном срезе устойчивый cliff не подтверждён (minimum n=40).';
+  const regimes=pack.statistics.regimes.filter(row=>row.galka_type===options.type&&(options.regime==='all'||row.regime===options.regime)).sort((a,b)=>num(b.balanced_net_return_pct_mean)-num(a.balanced_net_return_pct_mean)),best=regimes[0],worst=regimes.at(-1);
+  els.labRegimes.innerHTML=`<b>Market regimes · all history · ${esc(options.regime)}</b><br>Лучший: ${esc(best?.regime||'—')} / ${esc(best?.volatility_regime||'—')} · ${signedPctPoint(best?.balanced_net_return_pct_mean)}<br>Худший: ${esc(worst?.regime||'—')} / ${esc(worst?.volatility_regime||'—')} · ${signedPctPoint(worst?.balanced_net_return_pct_mean)}`;
+  const portability=pack.statistics.blockBootstrap.filter(row=>row.scope==='symbol'&&row.galka_type===options.type&&row.split==='final_oos');
+  els.labPortability.innerHTML=`<b>Final OOS portability · block CI 24h</b><br>${portability.map(row=>`${esc(row.symbol.replace('USDT',''))}: ${pct(row.return_24h_probability)} [${pct(row.return_24h_block_ci_low)}, ${pct(row.return_24h_block_ci_high)}] · p75 ${pctPoint(row.depth_success_p75)}`).join('<br>')}`;
+}
+function updateLabFilters(){
+  store.ui.lab={symbol:els.labSymbol.value,interval:els.labInterval.value,type:els.labType.value,window:els.labWindow.value,profile:els.labProfile.value,regime:els.labRegime.value};store.shadow.profile=store.ui.lab.profile;save();renderLab();
+}
+async function toggleShadowMode(){
+  const enable=els.shadowToggle.checked;
+  if(enable){
+    try{
+      const pack=await ensureGalkaStats();store.shadow.profile=store.ui.lab.profile;setShadowEnabled(store.shadow,true,Date.now(),{modelVersion:pack.modelVersion,modelHash:pack.model.model_hash});
+      if(!store.ui.radar.enabled)store.ui.radar.enabled=true;
+      logActivity('shadow',`Shadow mode включён · ${store.shadow.profile}`,{paperBalanceImpact:0,autoPaper:false,realOrders:false});save();scanRadar();renderRadar();updateMarkers();toast('Shadow включён · Radar активирован','alert');
+    }catch(error){els.shadowToggle.checked=false;toast('Shadow не включён: '+error.message,'error');}
+  }else{
+    setShadowEnabled(store.shadow,false);logActivity('shadow','Shadow mode выключен',{paperBalanceImpact:0});save();toast('Shadow выключен');
+  }
+  renderLab();renderActivity();
+}
+function exportShadowRecords(){
+  download(`galka-shadow-${Date.now()}.json`,new Blob([JSON.stringify({kind:'galka-shadow-v1',exportedAt:nowIso(),modelVersion:store.shadow.modelVersion,paperBalanceImpact:0,state:store.shadow},null,2)],{type:'application/json'}));
 }
 
 /* Galka paper bot */
@@ -1000,7 +1189,7 @@ function renderPaper(){
 function updateMarkers(){
   if(!runtime.priceSeries)return;
   for(const line of runtime.paperLines){try{runtime.priceSeries.removePriceLine(line);}catch(_){}}runtime.paperLines=[];
-  const addPaperLine=(value,color,title,axisLabelVisible=true,lineStyle=LWC.LineStyle.Dashed)=>{if(value>0)runtime.paperLines.push(runtime.priceSeries.createPriceLine({price:value,color,lineWidth:2,lineStyle,axisLabelVisible,title}));};
+  const addPaperLine=(value,color,title,axisLabelVisible=true,lineStyle=LWC.LineStyle.Dashed,lineWidth=2)=>{if(value>0)runtime.paperLines.push(runtime.priceSeries.createPriceLine({price:value,color,lineWidth,lineStyle,axisLabelVisible,title}));};
   const markers=[],symbol=runtime.symbol,ss=store.paper.symbols[symbol],p=ss.pattern,c=ss.campaign;
   scanRadar();renderRadar();
   if(store.ui.radar?.enabled){
@@ -1012,7 +1201,15 @@ function updateMarkers(){
       const r=group.reduce((best,item)=>item.score>best.score?item:best,group[0]),cluster=group.length>1?`×${group.length}`:`${Math.round(r.score)}`;
       markers.push({time:r.time,position:'belowBar',color:radarCandidateColor(r),shape:r.strength==='strong'?'arrowUp':'circle',text:`G${cluster}${r.manualMatch?'★':''}`});
     }
-    if(runtime.radarSelected)addPaperLine(runtime.radarSelected.level,radarCandidateColor(runtime.radarSelected),`RADAR ${Math.round(runtime.radarSelected.score)}`);
+    if(runtime.radarSelected){
+      const selected=runtime.radarSelected,color=radarCandidateColor(selected);addPaperLine(selected.level,color,`RADAR ${Math.round(selected.score)}`);
+      if(selected.galkaType&&runtime.galkaStats){
+        const block=blockSummary(runtime.galkaStats,{type:selected.galkaType}),profile=runtime.galkaStats.profiles[selected.galkaType]?.Balanced,stop=runtime.galkaStats.stops.probability[selected.galkaType];
+        for(const percentile of [50,75,90]){const depth=block?.[`depth_success_p${percentile}`];if(displayNumber(depth))addPaperLine(selected.level*(1-Number(depth)/100),color,`p${percentile}`,percentile===90,LWC.LineStyle.Dotted,1);}
+        const gridDepth=profile?.depths_pct?.at(-1);if(displayNumber(gridDepth))addPaperLine(selected.level*(1-Number(gridDepth)/100),COLORS.cyan,'GRID',true,LWC.LineStyle.Dashed,1);
+        if(displayNumber(stop))addPaperLine(selected.level*(1-Number(stop)/100),COLORS.red,'INVALID',true,LWC.LineStyle.Dashed,1);
+      }
+    }
   }
   els.levelCluster.classList.add('hidden');
   if(store.ui.showLevels!==false){
@@ -1096,7 +1293,7 @@ function exportFullSnapshot({automatic=false}={}){
 async function prepareRestore(file){
   try{
     const snapshot=JSON.parse(await file.text()),summary=summarizeBackupSnapshot(snapshot);runtime.pendingRestore={snapshot,store:validateBackupSnapshot(snapshot)};
-    els.restoreSummary.innerHTML=`<span><small>Активные кампании</small><b>${summary.campaigns}</b></span><span><small>Filled уровни</small><b>${summary.filledLevels}</b></span><span><small>Paper-сделки</small><b>${summary.trades}</b></span><span><small>Рисунки</small><b>${summary.drawings}</b></span><span><small>Ручные примеры</small><b>${summary.manualExamples}</b></span><span><small>Radar labels</small><b>${summary.radarLabels}</b></span>`;
+    els.restoreSummary.innerHTML=`<span><small>Активные кампании</small><b>${summary.campaigns}</b></span><span><small>Filled уровни</small><b>${summary.filledLevels}</b></span><span><small>Paper-сделки</small><b>${summary.trades}</b></span><span><small>Рисунки</small><b>${summary.drawings}</b></span><span><small>Ручные примеры</small><b>${summary.manualExamples}</b></span><span><small>Radar labels</small><b>${summary.radarLabels}</b></span><span><small>Shadow records</small><b>${summary.shadowRecords}</b></span>`;
     openModal(els.restoreModal);
   }catch(error){runtime.pendingRestore=null;toast('Snapshot не принят: '+error.message,'error');}
 }
@@ -1128,9 +1325,9 @@ function finishOnboarding(){store.ui.onboarding.completed=true;store.ui.onboardi
 /* Rendering and UI */
 function renderDiagnostics(){
   const s=accountSnapshot();
-  els.diagnostics.textContent=JSON.stringify({version:VERSION,storageKey:STORAGE_KEY,symbol:runtime.symbol,interval:runtime.interval,chartType:runtime.chartType,ws:runtime.ws?.readyState,quoteAge:ageText(runtime.lastQuoteAt),tabVisible:!document.hidden,recovering:runtime.recovering,recoveryPolicy:PAPER_RECOVERY_POLICY,lastRecovery:runtime.lastRecoverySummary,lastCatchup:runtime.lastCatchupAt?new Date(runtime.lastCatchupAt).toISOString():null,rows:chartRows().length,botRows:Object.fromEntries(SYMBOLS.map(x=>[x,botRows(x).length])),drawings:drawingStore().length,alerts:store.ui.alerts.filter(x=>x.active).length,equity:s.equity},null,2);
+  els.diagnostics.textContent=JSON.stringify({version:VERSION,storageKey:STORAGE_KEY,symbol:runtime.symbol,interval:runtime.interval,chartType:runtime.chartType,ws:runtime.ws?.readyState,quoteAge:ageText(runtime.lastQuoteAt),tabVisible:!document.hidden,recovering:runtime.recovering,recoveryPolicy:PAPER_RECOVERY_POLICY,lastRecovery:runtime.lastRecoverySummary,lastCatchup:runtime.lastCatchupAt?new Date(runtime.lastCatchupAt).toISOString():null,galkaStats:runtime.galkaStats?.modelVersion||runtime.galkaStatsError?.message||'not-loaded',shadow:summarizeShadow(store.shadow),rows:chartRows().length,botRows:Object.fromEntries(SYMBOLS.map(x=>[x,botRows(x).length])),drawings:drawingStore().length,alerts:store.ui.alerts.filter(x=>x.active).length,equity:s.equity},null,2);
 }
-function renderAll(){renderWatchlist();renderPaper();renderObjects();renderAlerts();renderTemplates();renderRadar();renderActivity();renderDiagnostics();renderSessionHealth();renderTicker();}
+function renderAll(){renderWatchlist();renderPaper();renderObjects();renderAlerts();renderTemplates();renderRadar();renderLab();renderActivity();renderDiagnostics();renderSessionHealth();renderTicker();}
 function changeSymbol(symbol){
   runtime.selectedDrawing=null;syncDrawingInteraction();runtime.radarSelected=null;runtime.symbol=symbol;store.ui.symbol=symbol;els.symbolSelect.value=symbol;els.watermark.textContent=symbol+' · '+runtime.interval;save();
   loadCurrent(false);renderAll();runtime.mainChart.timeScale().scrollToRealTime();
@@ -1142,8 +1339,9 @@ function changeChartType(type){runtime.chartType=type;store.ui.chartType=type;sa
 function openPanel(name){
   document.querySelectorAll('.side-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.panel===name));
   document.querySelectorAll('.side-panel').forEach(p=>p.classList.toggle('active',p.dataset.panelId===name));
-  const titles={paper:['Paper','Все три инструмента'],radar:['Radar',`${runtime.symbol.replace('USDT','')} · ${runtime.interval}`],watchlist:['Watchlist','BTC · ETH · SOL'],objects:['Рисование','Объекты и свойства'],more:['More','Сессия, backup и настройки'],alerts:['Алерты','Локальные уведомления'],data:['Данные','Свеча и диагностика']},copy=titles[name]||[name,''];els.sheetTitle.textContent=copy[0];els.sheetSubtitle.textContent=copy[1];
+  const titles={paper:['Paper','Все три инструмента'],radar:['Radar',`${runtime.symbol.replace('USDT','')} · ${runtime.interval}`],lab:['Galka Lab','OOS статистика · live shadow'],watchlist:['Watchlist','BTC · ETH · SOL'],objects:['Рисование','Объекты и свойства'],more:['More','Сессия, backup и настройки'],alerts:['Алерты','Локальные уведомления'],data:['Данные','Свеча и диагностика']},copy=titles[name]||[name,''];els.sheetTitle.textContent=copy[0];els.sheetSubtitle.textContent=copy[1];
   document.querySelectorAll('.mobile-nav [data-mobile-panel]').forEach(button=>button.classList.toggle('active',button.dataset.mobilePanel===name));store.ui.sheet.panel=name;save();
+  if(name==='lab'||name==='radar')ensureGalkaStats().catch(()=>{});if(name==='lab')renderLab();
 }
 function syncMobileOverlay(){
   const mobile=matchMedia('(max-width:1099px)').matches,open=mobile&&(els.sidebar.classList.contains('open')||els.leftbar.classList.contains('open'));
@@ -1240,6 +1438,7 @@ els.clearActivity.onclick=()=>{if(confirm('Очистить только жур�
 els.startOnboarding.onclick=startOnboarding;els.skipOnboarding.onclick=finishOnboarding;els.nextOnboarding.onclick=()=>{if(runtime.onboardingIndex>=onboardingSteps.length-1)finishOnboarding();else{runtime.onboardingIndex++;renderOnboarding();}};
 els.radarPanelToggle.onchange=()=>{if(els.radarPanelToggle.checked!==store.ui.radar.enabled)toggleRadar();};els.radarMinScore.oninput=e=>{store.ui.radar.minScore=num(e.target.value,45);save();scanRadar();renderRadar();updateMarkers();};els.radarVisibleOnly.onchange=e=>{store.ui.radar.visibleOnly=e.target.checked;save();scanRadar();renderRadar();updateMarkers();};
 els.radarFilters.onclick=e=>{const button=e.target.closest('[data-radar-filter]');if(!button)return;store.ui.radar.filter=button.dataset.radarFilter;save();renderRadar();updateMarkers();};els.radarCandidatesList.onclick=e=>{const button=e.target.closest('[data-radar-id]');if(!button)return;selectRadarCandidate(runtime.radarCandidates.find(item=>item.patternId===button.dataset.radarId));};els.radarPositive.onclick=()=>labelRadarCandidate('positive');els.radarNegative.onclick=()=>labelRadarCandidate('negative');els.radarPrev.onclick=()=>moveRadarSelection(-1);els.radarNext.onclick=()=>moveRadarSelection(1);
+[els.labSymbol,els.labInterval,els.labType,els.labWindow,els.labProfile,els.labRegime].forEach(element=>element.onchange=updateLabFilters);els.shadowToggle.onchange=toggleShadowMode;els.exportShadow.onclick=exportShadowRecords;els.openWatchlist.onclick=()=>openPanel('watchlist');
 els.paperPortfolioCards.onclick=e=>{const card=e.target.closest('[data-paper-symbol]');if(card)changeSymbol(card.dataset.paperSymbol);};els.paperPortfolioCards.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-paper-symbol]')){e.preventDefault();changeSymbol(e.target.closest('[data-paper-symbol]').dataset.paperSymbol);}};
 els.chartActionBtn.onclick=()=>{const open=els.chartActionMenu.classList.toggle('hidden')===false;els.chartActionBtn.classList.toggle('open',open);els.chartActionBtn.setAttribute('aria-expanded',String(open));};
 function closeChartActions(){els.chartActionMenu.classList.add('hidden');els.chartActionBtn.classList.remove('open');els.chartActionBtn.setAttribute('aria-expanded','false');}
@@ -1261,13 +1460,14 @@ document.addEventListener('keydown',e=>{
   if(e.key==='+'||e.key==='=')zoom(.75);if(e.key==='-')zoom(1.35);
   if(e.key.toLowerCase()==='f')els.fitBtn.click();if(e.key.toLowerCase()==='l')setTool('trend');
 });
-setInterval(()=>{els.clock.textContent=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});renderDiagnostics();renderPaperHeader();renderSessionHealth();},1000);
+setInterval(()=>{els.clock.textContent=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});if(runtime.shadowDirty&&Date.now()-runtime.lastShadowPersistAt>=5000){save();runtime.shadowDirty=false;runtime.lastShadowPersistAt=Date.now();}renderDiagnostics();renderPaperHeader();renderSessionHealth();},1000);
 
 /* Init */
 document.body.dataset.theme=store.ui.theme;
 els.magnetBtn.classList.toggle('active',store.ui.magnet);els.lockBtn.classList.toggle('active',store.ui.drawingsLocked);els.hideDrawingsBtn.classList.toggle('active',store.ui.drawingsHidden);
 if(store.ui.sheet.snap==='low')els.sidebar.classList.add('snap-low');if(store.ui.sheet.snap==='high')els.sidebar.classList.add('snap-high');if(matchMedia('(min-width:1100px)').matches)els.sidebar.setAttribute('aria-hidden','false');
 createMainChart();createOscChart();applyScaleMode();renderIndicatorList();openPanel(matchMedia('(min-width:1100px)').matches?(store.ui.sheet.panel||'paper'):'paper');if(!matchMedia('(min-width:1100px)').matches)closeMobileOverlays();renderAll();scanRadar();renderRadar();resizeCanvas();bootstrap();
+if(store.shadow.enabled)ensureGalkaStats().catch(()=>{});
 if(!store.ui.onboarding.completed)setTimeout(startOnboarding,1400);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Service worker:',error)));
 })();

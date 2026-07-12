@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { gunzipSync } from 'node:zlib';
 
 const paths = {
   html: 'terminal/pro.html',
@@ -10,12 +12,15 @@ const paths = {
   paper: 'terminal/modules/paper-engine.js',
   radar: 'terminal/modules/radar-engine.js',
   backup: 'terminal/modules/backup.js',
+  stats: 'terminal/modules/galka-stats.js',
+  shadow: 'terminal/modules/shadow-engine.js',
+  statsAsset: 'terminal/data/galka-stats-v1.json.gz',
   sw: 'terminal/sw.js',
   manifest: 'terminal/manifest.webmanifest',
 };
 
 for (const path of Object.values(paths)) assert.ok(fs.existsSync(path), `Missing ${path}`);
-for (const path of [paths.app, paths.store, paths.paper, paths.radar, paths.backup, paths.sw]) {
+for (const path of [paths.app, paths.store, paths.paper, paths.radar, paths.backup, paths.stats, paths.shadow, paths.sw]) {
   execFileSync(process.execPath, ['--check', path], { stdio: 'pipe' });
 }
 
@@ -26,9 +31,13 @@ const store = fs.readFileSync(paths.store, 'utf8');
 const paper = fs.readFileSync(paths.paper, 'utf8');
 const radar = fs.readFileSync(paths.radar, 'utf8');
 const backup = fs.readFileSync(paths.backup, 'utf8');
+const stats = fs.readFileSync(paths.stats, 'utf8');
+const shadow = fs.readFileSync(paths.shadow, 'utf8');
 const sw = fs.readFileSync(paths.sw, 'utf8');
+const statsAsset = fs.readFileSync(paths.statsAsset);
+const statsPack = JSON.parse(gunzipSync(statsAsset));
 const manifest = JSON.parse(fs.readFileSync(paths.manifest, 'utf8'));
-const clientSource = [html, app, store, paper, radar, backup, sw].join('\n');
+const clientSource = [html, app, store, paper, radar, backup, stats, shadow, sw].join('\n');
 
 const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
 assert.equal(new Set(ids).size, ids.length, 'HTML IDs must be unique');
@@ -37,6 +46,7 @@ const requiredIds = [
   'mainChart', 'drawingCanvas', 'symbolSelect', 'intervalSelect', 'radarBtn', 'radarLegend',
   'paperPortfolioCards', 'manualGalkaPrice', 'pretradeModal', 'confirmPretrade',
   'radarCandidatesList', 'radarPositive', 'radarNegative', 'sessionStatus',
+  'labPackStatus', 'labHeatmap', 'labDepthHistogram', 'labSurvival', 'shadowToggle', 'shadowRecords',
   'exportSnapshot', 'importSnapshot', 'onboardingModal', 'activityLog', 'mobile-nav',
 ];
 for (const id of requiredIds) {
@@ -45,7 +55,7 @@ for (const id of requiredIds) {
 }
 
 const checks = [
-  ['module entrypoint', /<script type="module" src="pro\.js\?v=7"><\/script>/.test(html)],
+  ['module entrypoint', /<script type="module" src="pro\.js\?v=8"><\/script>/.test(html)],
   ['three paper symbols', /export const SYMBOLS = \['BTCUSDT', 'ETHUSDT', 'SOLUSDT'\]/.test(store)],
   ['storage key unchanged', /export const STORAGE_KEY = 'galka-pro-v1'/.test(store)],
   ['additive migration', /migrateStore/.test(store) && /deepMerge\(createDefaultStore\(\), source\)/.test(store)],
@@ -58,16 +68,23 @@ const checks = [
   ['safe pre-trade preview', /previewCampaign/.test(app) && /PAPER PREVIEW/.test(html)],
   ['Radar visual only', !/createCampaign|paper\.symbols/.test(radar) && /EXPLAINABLE SCORE/.test(html)],
   ['positive and negative labels', /labelRadarCandidate\('positive'\)/.test(app) && /labelRadarCandidate\('negative'\)/.test(app)],
-  ['Radar filters', ['all', 'strong', 'medium'].every((value) => html.includes(`data-radar-filter="${value}"`))],
+  ['Radar filters', ['all', 'strong', 'mine', 'profitable', 'losing'].every((value) => html.includes(`data-radar-filter="${value}"`))],
+  ['verified Galka stats asset', createHash('sha256').update(statsAsset).digest('hex') === '4dc40d3bc7779475904ba0e3af533d47bf17ca53368c120c42e4c75ac54c77e2' && /parseGalkaStatsBytes/.test(stats)],
+  ['mobile stats budget', statsAsset.length < 1_000_000 && !fs.existsSync('terminal/data/galka-stats-v1.json')],
+  ['Galka Lab safety contract', statsPack.safety.paperOnly === true && statsPack.safety.autoPaperDefault === false && statsPack.safety.realOrders === false && statsPack.safety.liveShadowRequiredBeforeAutoPaper === true],
+  ['Galka Lab full market contract', ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].every((symbol) => statsPack.data.symbols.includes(symbol)) && statsPack.model.selected_k >= 4 && statsPack.model.selected_k <= 7],
+  ['shadow is isolated and opt-in', /enabled: false/.test(shadow) && /paperBalanceImpact: 0/.test(shadow) && !/paper\.symbols|startingBalance|realizedPnl/.test(shadow)],
+  ['shadow does not authorize auto-paper', /Shadow-only; auto-paper остаётся выключен/.test(app) && statsPack.safety.historicalScreenIsNotAuthorization === true],
   ['drawing tool set', ['cursor','crosshair','trend','ray','horizontal','vertical','rect','channel','fib','measure','longPosition','text'].every((tool) => html.includes(`data-tool="${tool}"`))],
   ['drawing selection and handles', /drawingHitAt/.test(app) && /openSelectedDrawingProperties/.test(app) && /editing-object/.test(css)],
   ['session health and paper replay', /catchUpAfterReconnect/.test(app) && /fetchClosedMinuteRange/.test(app) && /replayCampaignCandles/.test(app) && /sessionQuoteAge/.test(html)],
   ['full backup restore', /createBackupSnapshot/.test(app) && /validateBackupSnapshot/.test(app) && /PRE_RESTORE_BACKUP_KEY/.test(app)],
   ['installable PWA', manifest.display === 'standalone' && manifest.icons.length >= 2 && /serviceWorker\.register/.test(app)],
   ['service worker is shell-only', /service worker never runs the paper engine/i.test(sw) && !/processCampaignQuote|createCampaign/.test(sw)],
+  ['large stats pack stays lazy', !/data\/galka-stats-v1\.json\.gz/.test(sw) && /loadGalkaStatsPack/.test(app)],
   ['onboarding', /onboardingSteps/.test(app) && /ШАГ 1 ИЗ 5/.test(html)],
   ['training replay', /markReplayGalka/.test(app) && /replayExamples/.test(store) && /future=replay\.source/.test(app)],
-  ['mobile navigation', ['chart','paper','radar','watchlist','more'].every((panel) => html.includes(`data-mobile-panel="${panel}"`))],
+  ['mobile navigation', ['chart','paper','radar','lab','more'].every((panel) => html.includes(`data-mobile-panel="${panel}"`))],
   ['bottom sheet snaps', /\.sidebar\.snap-low/.test(css) && /\.sidebar\.snap-high/.test(css) && /beginSheetGesture/.test(app)],
   ['chart-first shell', /\.chart-main-wrap[\s\S]*height: 100%/.test(css) && /translateY\(calc\(100% \+ 12px\)\)/.test(css)],
   ['no chart grid', /vertLines:\{visible:false\}/.test(app) && /horzLines:\{visible:false\}/.test(app)],

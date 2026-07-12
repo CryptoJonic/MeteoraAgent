@@ -1,5 +1,24 @@
 # Galka Lab changelog
 
+## Terminal 2.1.0 — Galka Lab and live-forward shadow
+
+- added a lazy, SHA-256-verified browser loader for the schema-1.2 gzip pack without bundling the
+  5+ MiB uncompressed JSON into the mobile shell;
+- added mobile-first Lab views for OOS block intervals, depth percentiles, depth × horizon,
+  histograms, survival, type frequency/performance, grids, stops, exits, regimes, drift, cliffs and
+  cross-symbol portability;
+- classified fully confirmed Radar candidates with the frozen train centroids while preserving the
+  original Radar score and visual-only contract;
+- added type-colored markers plus selected-candidate p50/p75/p90, grid and invalidation guides;
+- added an opt-in, live-only shadow ledger with fills, MAE/MFE, reclaim, trailing, outcomes, manual
+  labels and an invariant paper-balance impact of zero;
+- migrated the unchanged `galka-pro-v1` key additively to schema 4 and included shadow records in
+  full backup/restore without rewriting existing paper campaigns, limits, trades or drawings;
+- added S24, landscape and desktop browser assertions/screenshots and kept auto-paper disabled.
+
+The frozen statistical model remains `galka-lab-v0.3.0`; this terminal release does not retrain it
+or alter production paper strategy defaults.
+
 ## 0.3.0 — dependence-aware uncertainty and candidate EV
 
 - added deterministic UTC-day block bootstrap intervals for all return horizons and depth

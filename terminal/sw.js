@@ -1,8 +1,8 @@
-const CACHE_NAME = 'galka-pro-shell-v3';
+const CACHE_NAME = 'galka-pro-shell-v4';
 const APP_SHELL = [
   './pro.html',
-  './pro.css?v=6',
-  './pro.js?v=7',
+  './pro.css?v=7',
+  './pro.js?v=8',
   './manifest.webmanifest',
   './icons/galka-mark.svg',
   './icons/galka-192.png',
@@ -11,6 +11,8 @@ const APP_SHELL = [
   './modules/paper-engine.js',
   './modules/radar-engine.js',
   './modules/backup.js',
+  './modules/galka-stats.js',
+  './modules/shadow-engine.js',
   'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js',
 ];
 

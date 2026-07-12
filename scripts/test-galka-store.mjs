@@ -64,6 +64,17 @@ assert.deepEqual(migrated.training.radarLabels, []);
 assert.equal(migrated.paper.recovery.policy, 'closed-1m-directional-v1');
 assert.deepEqual(Object.keys(migrated.paper.recovery.symbols), ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']);
 assert.equal(migrated.paper.recovery.symbols.BTCUSDT.lastMarketAt, null);
+assert.equal(migrated.shadow.enabled, false);
+assert.equal(migrated.shadow.profile, 'Balanced');
+assert.deepEqual(migrated.shadow.records, []);
+assert.equal(migrated.ui.lab.window, 'all');
+assert.equal(migrated.ui.lab.regime, 'all');
+
+const paperBeforeShadow = JSON.stringify(migrated.paper);
+migrated.shadow.enabled = true;
+migrated.shadow.startedAt = '2026-07-12T00:00:00.000Z';
+migrated.shadow.records.push({ id: 'S-test', paperBalanceImpact: 0 });
+assert.equal(JSON.stringify(migrated.paper), paperBeforeShadow);
 
 const memory = createMemoryStorage();
 saveStore(migrated, memory);
@@ -73,6 +84,7 @@ assert.deepEqual(roundTrip.paper.symbols, migrated.paper.symbols);
 assert.deepEqual(roundTrip.ui.drawings, migrated.ui.drawings);
 assert.deepEqual(roundTrip.training.manualExamples, migrated.training.manualExamples);
 assert.deepEqual(roundTrip.paper.recovery, migrated.paper.recovery);
+assert.deepEqual(roundTrip.shadow, migrated.shadow);
 
 const blank = createDefaultStore();
 assert.deepEqual(Object.keys(blank.paper.symbols), ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']);
@@ -87,6 +99,8 @@ assert.deepEqual(summary, {
   drawings: 1,
   manualExamples: 1,
   radarLabels: 0,
+  shadowRecords: 1,
+  shadowEnabled: true,
 });
 assert.deepEqual(validateBackupSnapshot(snapshot).paper.symbols, migrated.paper.symbols);
 assert.throws(() => validateBackupSnapshot({}), /не полный snapshot/);

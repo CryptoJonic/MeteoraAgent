@@ -8,4 +8,21 @@ deterministic public-market fixture and paper snapshot for `main` and the redesi
 - `after-s24-paper.png` — redesigned Paper bottom sheet, 390×844.
 - `after-desktop.png` — redesigned DeX/desktop layout, 1440×900.
 
+## Galka statistics engine
+
+The statistics screenshots compare the stabilized PR #9 UI with the `agent/galka-statistics-engine`
+branch. The browser verifies the compressed pack checksum before rendering. The red promotion gate
+is intentional: every Conservative and Balanced type remains negative on final OOS, so shadow is the
+only enabled forward path.
+
+- `before-statistics-s24.png` — stabilized chart-first base from PR #9, 390×844.
+- `after-s24-lab.png` — Galka Lab filters and final-OOS gate on Samsung S24, 390×844.
+- `after-landscape-lab.png` — chart plus Lab side sheet, 844×390.
+- `after-desktop-lab.png` — full chart and Lab overview, 1440×900.
+- `after-desktop-lab-data.png` — depth histogram and conditional 24h curve, 1440×900.
+
+The capture also asserts zero document overflow, shadow disabled by default, no historical backfill,
+paper-state equality across the shadow toggle, research-classified Radar evidence, and empty
+`Profitable` results under the final-OOS Balanced gate.
+
 The fixture contains virtual positions only. It does not use API keys or submit exchange orders.
