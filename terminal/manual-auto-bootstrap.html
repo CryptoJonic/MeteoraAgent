@@ -24,9 +24,13 @@
         const controllerChanged=new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
         const registration=await navigator.serviceWorker.register(`./sw.js?v=${encodeURIComponent(build)}`,{scope:'./',updateViaCache:'none'});
         await registration.update();
-        if(registration.installing){
+        const installing=registration.installing;
+        if(installing){
           await Promise.race([
-            new Promise(resolve=>registration.installing.addEventListener('statechange',()=>registration.installing?.state==='activated'&&resolve(),{once:false})),
+            new Promise(resolve=>{
+              if(installing.state==='activated'){resolve();return;}
+              installing.addEventListener('statechange',()=>installing.state==='activated'&&resolve());
+            }),
             new Promise(resolve=>setTimeout(resolve,4500)),
           ]);
         }
