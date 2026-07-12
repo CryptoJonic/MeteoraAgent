@@ -23,6 +23,23 @@ def _is_true(value) -> bool:
     return bool(value) if pd.notna(value) else False
 
 
+def _strategy_evaluable(event) -> bool:
+    """Whether a detected level has a fully observable no-trade or trade result."""
+    activated = _is_true(getattr(event, "activated", False))
+    if not activated:
+        return not _is_true(getattr(event, "activation_censored", True))
+    return _is_true(getattr(event, "returned", False)) or not _is_true(
+        getattr(event, "outcome_censored", True)
+    )
+
+
+def _fixed_notional_return(raw_return: float, fill_fraction: float) -> float:
+    """Candidate-level return: a fully unfilled grid leaves cash unchanged."""
+    if fill_fraction <= 0:
+        return 0.0
+    return raw_return * fill_fraction if np.isfinite(raw_return) else math.nan
+
+
 def derive_grid_profiles(events: pd.DataFrame) -> dict[str, dict[str, dict]]:
     fit = events[(events["split"].isin(("train", "validation"))) & (events["activated"] == True)]  # noqa: E712
     profiles: dict[str, dict[str, dict]] = {}
@@ -120,6 +137,9 @@ def _probability_stops(fit: pd.DataFrame) -> dict[str, float]:
 
 def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]) -> tuple[pd.DataFrame, dict]:
     output = events.copy()
+    output["strategy_evaluable"] = [
+        _strategy_evaluable(event) for event in output.itertuples(index=False)
+    ]
     fit = output[output["split"].isin(("train", "validation"))]
     fit_complete = fit[
         (fit["activated"] == True)  # noqa: E712
@@ -160,16 +180,20 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
         averages = []
         for event in output.itertuples(index=False):
             profile = profiles.get(str(event.galka_type), {}).get(profile_name)
-            if not profile or not _is_true(event.activated) or not np.isfinite(event.mae_pct):
+            if not profile or not _is_true(event.strategy_evaluable):
                 averages.append(math.nan);fill_fractions.append(0.0);fill_counts.append(0)
                 returns_on_filled.append(math.nan);fixed_notional_returns.append(math.nan);fixed_risk_r.append(math.nan)
+                continue
+            if not _is_true(event.activated) or not np.isfinite(event.mae_pct):
+                averages.append(math.nan);fill_fractions.append(0.0);fill_counts.append(0)
+                returns_on_filled.append(math.nan);fixed_notional_returns.append(0.0);fixed_risk_r.append(0.0)
                 continue
             entry, fraction, count = _entry_from_profile(float(event.mae_pct), profile)
             exit_pct = getattr(event, "trail_075_exit_pct", math.nan)
             return_on_filled = _net_return(entry, fraction, exit_pct)
             averages.append(entry);fill_fractions.append(fraction);fill_counts.append(count)
             returns_on_filled.append(return_on_filled)
-            fixed_notional_returns.append(return_on_filled * fraction if np.isfinite(return_on_filled) else math.nan)
+            fixed_notional_returns.append(_fixed_notional_return(return_on_filled, fraction))
 
             risk_stop = percentile_stops.get(str(event.galka_type), 3.50)
             risk_entry, risk_fraction, _ = _entry_from_profile(
@@ -186,7 +210,7 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
             fixed_risk_r.append(
                 risk_return / risk_distance
                 if np.isfinite(risk_return) and np.isfinite(risk_distance) and risk_distance > 0
-                else math.nan
+                else 0.0 if risk_fraction <= 0 else math.nan
             )
         output[f"{prefix}_average_entry_ratio"] = averages
         output[f"{prefix}_fill_fraction"] = fill_fractions
@@ -199,9 +223,13 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
     stop_return_on_filled = {name: [] for name in stop_columns}
     for event in output.itertuples(index=False):
         profile = profiles.get(str(event.galka_type), {}).get("Balanced")
-        if not profile or not _is_true(event.activated) or not np.isfinite(event.mae_pct):
+        if not profile or not _is_true(event.strategy_evaluable):
             for name in stop_columns:
                 stop_columns[name].append(math.nan);stop_return_on_filled[name].append(math.nan)
+            continue
+        if not _is_true(event.activated) or not np.isfinite(event.mae_pct):
+            for name in stop_columns:
+                stop_columns[name].append(0.0);stop_return_on_filled[name].append(math.nan)
             continue
         percentile = percentile_stops.get(str(event.galka_type), 3.50)
         probability = probability_stops.get(str(event.galka_type), 3.50)
@@ -214,12 +242,12 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
             exit_pct = -threshold if event.mae_pct >= threshold else getattr(event, "trail_075_exit_pct", math.nan)
             raw_return = _net_return(entry, fraction, exit_pct)
             stop_return_on_filled[name].append(raw_return)
-            stop_columns[name].append(raw_return * fraction if np.isfinite(raw_return) else math.nan)
+            stop_columns[name].append(_fixed_notional_return(raw_return, fraction))
         entry, fraction, _ = _entry_from_profile(float(event.mae_pct), profile)
         time_exit = 0.0 if _is_true(getattr(event, "return_24h", False)) else event.close_24h_pct
         raw_return = _net_return(entry, fraction, time_exit)
         stop_return_on_filled["time"].append(raw_return)
-        stop_columns["time"].append(raw_return * fraction if np.isfinite(raw_return) else math.nan)
+        stop_columns["time"].append(_fixed_notional_return(raw_return, fraction))
         hybrid_depth = min(percentile, probability, max(0.75, atr_stop))
         hybrid_entry, hybrid_fraction, _ = _entry_from_profile(
             min(float(event.mae_pct), max(0.0, hybrid_depth - 1e-9)), profile
@@ -232,13 +260,13 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
             hybrid_exit = event.close_48h_pct
         raw_return = _net_return(hybrid_entry, hybrid_fraction, hybrid_exit)
         stop_return_on_filled["hybrid"].append(raw_return)
-        stop_columns["hybrid"].append(raw_return * hybrid_fraction if np.isfinite(raw_return) else math.nan)
+        stop_columns["hybrid"].append(_fixed_notional_return(raw_return, hybrid_fraction))
         no_stop_exit = getattr(event, "trail_075_exit_pct", math.nan)
         if not np.isfinite(no_stop_exit):
             no_stop_exit = event.close_48h_pct
         raw_return = _net_return(entry, fraction, no_stop_exit)
         stop_return_on_filled["no_stop"].append(raw_return)
-        stop_columns["no_stop"].append(raw_return * fraction if np.isfinite(raw_return) else math.nan)
+        stop_columns["no_stop"].append(_fixed_notional_return(raw_return, fraction))
     for name, values in stop_columns.items():
         output[f"stop_{name}_net_return_pct"] = values
         output[f"stop_{name}_return_on_filled_pct"] = stop_return_on_filled[name]
@@ -261,12 +289,15 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
     trailing_values = {name: [] for name in trailing_strategies}
     for event in output.itertuples(index=False):
         profile = profiles.get(str(event.galka_type), {}).get("Balanced")
-        if not profile or not _is_true(event.activated) or not np.isfinite(event.mae_pct):
+        if not profile or not _is_true(event.strategy_evaluable):
             for values in trailing_values.values(): values.append(math.nan)
+            continue
+        if not _is_true(event.activated) or not np.isfinite(event.mae_pct):
+            for values in trailing_values.values(): values.append(0.0)
             continue
         entry, fraction, _ = _entry_from_profile(float(event.mae_pct), profile)
         if fraction <= 0:
-            for values in trailing_values.values(): values.append(math.nan)
+            for values in trailing_values.values(): values.append(0.0)
             continue
         fixed_target_exit = (
             0.0
@@ -298,7 +329,7 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
                 )
                 raw_return = _net_return(entry, fraction, exit_pct)
             trailing_values[name].append(
-                raw_return * fraction if np.isfinite(raw_return) else math.nan
+                _fixed_notional_return(raw_return, fraction)
             )
     for name, values in trailing_values.items():
         output[f"exit_{name}_net_return_pct"] = values
@@ -317,10 +348,8 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
             if not len(values):
                 continue
             tail_count = max(1, int(np.ceil(len(values) * 0.05)))
-            eligible = group[
-                (group["activated"] == True)  # noqa: E712
-                & ((group["returned"] == True) | (group["outcome_censored"] == False))  # noqa: E712
-            ]
+            eligible = group[group["strategy_evaluable"] == True]  # noqa: E712
+            activated_eligible = eligible[eligible["activated"] == True]  # noqa: E712
             fill_fraction = eligible[f"{profile_name.lower()}_fill_fraction"]
             levels_filled = eligible[f"{profile_name.lower()}_levels_filled"]
             profile_level_count = len(profile.get("depths_pct", []))
@@ -335,15 +364,29 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
                     "win_rate": float((values > 0).mean()),
                     "eligible_count": int(len(eligible)),
                     "fill_probability": float((fill_fraction > 0).mean()) if len(eligible) else math.nan,
+                    "fill_probability_given_activation": (
+                        float(
+                            (activated_eligible[f"{profile_name.lower()}_fill_fraction"] > 0).mean()
+                        )
+                        if len(activated_eligible)
+                        else math.nan
+                    ),
                     "full_fill_probability": (
                         float((levels_filled >= profile_level_count).mean())
                         if len(eligible) and profile_level_count
                         else math.nan
                     ),
                     "expected_fill_fraction": float(fill_fraction.mean()) if len(eligible) else math.nan,
-                    "expected_mae_pct": float(eligible["mae_pct"].mean()) if len(eligible) else math.nan,
+                    "expected_mae_pct": (
+                        float(activated_eligible["mae_pct"].mean())
+                        if len(activated_eligible)
+                        else math.nan
+                    ),
                     "cvar_95_pct": float(np.sort(values)[:tail_count].mean()),
                     "mean_return_on_filled_pct": float(filled_values.mean()) if len(filled_values) else math.nan,
+                    "filled_win_rate": (
+                        float((filled_values > 0).mean()) if len(filled_values) else math.nan
+                    ),
                     "mean_fixed_risk_r": float(risk_values.mean()) if len(risk_values) else math.nan,
                     "cvar_95_fixed_risk_r": (
                         float(np.sort(risk_values)[: max(1, int(np.ceil(len(risk_values) * 0.05)))].mean())
@@ -360,16 +403,23 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
     ]
     for keys, group in stop_groups:
         for name in stop_columns:
-            values = group[f"stop_{name}_net_return_pct"].dropna().to_numpy(float)
+            value_series = group[f"stop_{name}_net_return_pct"]
+            values = value_series.dropna().to_numpy(float)
             if not len(values):
                 continue
             tail_count = max(1, int(np.ceil(len(values) * 0.05)))
+            eligible = group[group["strategy_evaluable"] == True]  # noqa: E712
+            filled = group[
+                (group["balanced_fill_fraction"] > 0) & value_series.notna()
+            ]
             stop_rows.append(
                 {
                     "galka_type": keys[0],
                     "split": keys[1],
                     "stop": name,
+                    "eligible_count": int(len(eligible)),
                     "count": int(len(values)),
+                    "filled_count": int(len(filled)),
                     "mean_net_return_pct": float(values.mean()),
                     "win_rate": float((values > 0).mean()),
                     "cvar_95_pct": float(np.sort(values)[:tail_count].mean()),
@@ -381,16 +431,23 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
     ]
     for keys, group in trailing_groups:
         for name in trailing_strategies:
-            values = group[f"exit_{name}_net_return_pct"].dropna().to_numpy(float)
+            value_series = group[f"exit_{name}_net_return_pct"]
+            values = value_series.dropna().to_numpy(float)
             if not len(values):
                 continue
             tail_count = max(1, int(np.ceil(len(values) * 0.05)))
+            eligible = group[group["strategy_evaluable"] == True]  # noqa: E712
+            filled = group[
+                (group["balanced_fill_fraction"] > 0) & value_series.notna()
+            ]
             trailing_rows.append(
                 {
                     "galka_type": keys[0],
                     "split": keys[1],
                     "exit": name,
+                    "eligible_count": int(len(eligible)),
                     "count": int(len(values)),
+                    "filled_count": int(len(filled)),
                     "mean_net_return_pct": float(values.mean()),
                     "median_net_return_pct": float(np.median(values)),
                     "win_rate": float((values > 0).mean()),
@@ -407,8 +464,8 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
         "trailing_summary": trailing_rows,
         "fees": {"maker": MAKER_FEE, "taker": TAKER_FEE, "slippage": SLIPPAGE},
         "sizing": {
-            "fixed_notional": "returns include unfilled reserve as zero-return cash",
-            "fixed_risk": "R multiple uses train-fitted percentile stop; 1R is a fixed risk budget",
+            "fixed_notional": "candidate-level returns include no-activation and fully unfilled grids as zero-return cash; unresolved censored candidates are excluded",
+            "fixed_risk": "candidate-level R uses a train-fitted percentile stop; no-fill candidates are 0R and 1R is a fixed risk budget",
             "liquidation": "approximation assumes 0.50% maintenance margin and excludes exchange tier details",
         },
     }

@@ -29,6 +29,16 @@ def markdown_table(frame: pd.DataFrame, columns: list[str], limit: int | None = 
     return "\n".join((header, divider, *rows))
 
 
+def _select(frame: pd.DataFrame, **matches) -> pd.DataFrame:
+    """Filter optional report tables without treating a scalar False as a column name."""
+    if frame.empty or any(column not in frame for column in matches):
+        return frame.iloc[0:0].copy()
+    mask = pd.Series(True, index=frame.index)
+    for column, value in matches.items():
+        mask &= frame[column] == value
+    return frame[mask].copy()
+
+
 def _type_summary(events: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for keys, group in events.groupby(["galka_type", "split"], sort=True):
@@ -126,10 +136,16 @@ def write_reports(
     oos_events = events[events["split"] == "final_oos"]
     symbol_oos = _summary_by(oos_events, ["galka_type", "symbol"])
     interval_oos = _summary_by(oos_events, ["galka_type", "interval"])
-    grid_oos = grid[grid.get("split", "") == "final_oos"] if not grid.empty else grid
-    balanced_oos = grid_oos[grid_oos.get("profile", "") == "Balanced"].copy()
+    grid_oos = _select(grid, split="final_oos")
+    balanced_oos = _select(grid_oos, profile="Balanced")
+    balanced_columns = [
+        "galka_type",
+        "mean_net_return_pct",
+        "cvar_95_pct",
+        "mean_fixed_risk_r",
+    ]
     promotion = oos.merge(
-        balanced_oos[["galka_type", "mean_net_return_pct", "cvar_95_pct", "mean_fixed_risk_r"]],
+        balanced_oos.reindex(columns=balanced_columns),
         on="galka_type",
         how="left",
     )
@@ -194,22 +210,14 @@ def write_reports(
 
     best = oos[oos["count_complete"] >= MIN_SAMPLE].head(3)
     weak = promotion[promotion["historical_screen_pass"] == False]  # noqa: E712
-    significant_cliffs = (
-        cliffs[
-            (cliffs.get("split", "") == "final_oos")
-            & (cliffs.get("window", "") == "all")
-            & (cliffs.get("significant_cliff", False) == True)  # noqa: E712
-        ]
-        if not cliffs.empty
-        else cliffs
+    significant_cliffs = _select(
+        _select(cliffs, split="final_oos"), window="all", significant_cliff=True
     )
+    regime_oos = _select(regimes, split="final_oos")
     regime_oos = (
-        regimes[
-            (regimes.get("split", "") == "final_oos")
-            & (regimes.get("count_complete", 0) >= MIN_SAMPLE)
-        ]
-        if not regimes.empty
-        else regimes
+        regime_oos[regime_oos["count_complete"] >= MIN_SAMPLE]
+        if "count_complete" in regime_oos
+        else regime_oos.iloc[0:0].copy()
     )
     best_regimes = regime_oos.sort_values(
         ["balanced_net_return_pct_mean", "return_24h_probability"], ascending=False
@@ -217,10 +225,10 @@ def write_reports(
     worst_regimes = regime_oos.sort_values(
         ["balanced_net_return_pct_mean", "return_24h_probability"], ascending=True
     ).head(8) if not regime_oos.empty else regime_oos
-    exit_oos = exits[exits.get("split", "") == "final_oos"] if not exits.empty else exits
+    exit_oos = _select(exits, split="final_oos")
     mandatory_exits = (
         exit_oos[
-            exit_oos.get("exit", "").isin(
+            exit_oos["exit"].isin(
                 (
                     "galka_tp_48h",
                     "reclaim_010_trail_075",
@@ -233,7 +241,7 @@ def write_reports(
                 )
             )
         ]
-        if not exit_oos.empty
+        if not exit_oos.empty and "exit" in exit_oos
         else exit_oos
     )
     best_exits = (
@@ -247,11 +255,13 @@ def write_reports(
         ["galka_type", "exit"]
     ) if not exit_oos.empty else exit_oos
     stable_correlations = (
-        correlations[correlations.get("stable_direction", False) == True]  # noqa: E712
+        correlations[correlations["stable_direction"] == True]  # noqa: E712
         .assign(abs_oos=lambda value: value["final_oos_spearman"].abs())
         .sort_values("abs_oos", ascending=False)
         .head(15)
         if not correlations.empty
+        and "stable_direction" in correlations
+        and "final_oos_spearman" in correlations
         else correlations
     )
     decision = [
@@ -286,15 +296,17 @@ def write_reports(
         "",
         "## Grid profiles",
         "",
-        markdown_table(grid_oos, ["galka_type", "profile", "eligible_count", "count", "fill_probability", "full_fill_probability", "expected_fill_fraction", "expected_mae_pct", "mean_net_return_pct", "median_net_return_pct", "mean_return_on_filled_pct", "mean_fixed_risk_r", "win_rate", "cvar_95_pct", "cvar_95_fixed_risk_r", "paper_only", "stress_test_only"]),
+        "Fixed-notional EV is candidate-level: observable non-activations and fully unfilled grids are 0%, while unresolved censored candidates are excluded. Return on filled capital and filled win rate remain conditional on a fill.",
+        "",
+        markdown_table(grid_oos, ["galka_type", "profile", "eligible_count", "count", "fill_probability", "fill_probability_given_activation", "full_fill_probability", "expected_fill_fraction", "expected_mae_pct", "mean_net_return_pct", "median_net_return_pct", "mean_return_on_filled_pct", "mean_fixed_risk_r", "win_rate", "filled_win_rate", "cvar_95_pct", "cvar_95_fixed_risk_r", "paper_only", "stress_test_only"]),
         "",
         "## Stop trade-offs",
         "",
-        markdown_table(stops[stops.get("split", "") == "final_oos"] if not stops.empty else stops, ["galka_type", "stop", "count", "mean_net_return_pct", "win_rate", "cvar_95_pct"]),
+        markdown_table(_select(stops, split="final_oos"), ["galka_type", "stop", "eligible_count", "count", "filled_count", "mean_net_return_pct", "win_rate", "cvar_95_pct"]),
         "",
         "## Exit and trailing trade-offs",
         "",
-        markdown_table(shown_exits, ["galka_type", "exit", "count", "mean_net_return_pct", "median_net_return_pct", "win_rate", "cvar_95_pct", "paper_only"]),
+        markdown_table(shown_exits, ["galka_type", "exit", "eligible_count", "count", "filled_count", "mean_net_return_pct", "median_net_return_pct", "win_rate", "cvar_95_pct", "paper_only"]),
         "",
         "All reclaim buffers (0.00/0.10/0.20%), fixed trails (0.15/0.30/0.50/0.75/1.00%), ATR trail, two-bar-confirmed local-minimum trail, fixed GALKA TP, partial runner, and maximum holds remain in evaluation.json.",
         "",
@@ -345,7 +357,8 @@ def write_reports(
 - Market regimes drift. Seven-day and rare-crisis samples can be too small for stable conclusions.
 - Clustering is descriptive. Human names do not prove causality or persistence.
 - Multiple grid/stop/trailing comparisons create multiple-testing risk; failed variants remain in outputs.
-- Fixed-notional results include unfilled reserve as cash; fixed-risk results use a train-fitted percentile stop and are reported separately.
+- Candidate-level fixed-notional results count observable non-activations and fully unfilled grids as 0% cash returns; unresolved censored candidates are excluded. Return-on-filled is reported separately.
+- Candidate-level fixed-risk results count no-fill candidates as 0R and use a train-fitted percentile stop.
 - Liquidation distance is only a normalized approximation with a stated maintenance-margin assumption, not an exchange liquidation calculation.
 - Paper results cannot be assumed to transfer to real trading. This repository contains no real-order path.
 """

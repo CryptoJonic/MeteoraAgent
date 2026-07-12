@@ -49,6 +49,45 @@ class StatisticsEvaluationPackTests(unittest.TestCase):
         self.assertFalse(verify_terminal_pack(tampered))
         self.assertFalse(pack["safety"]["autoPaperDefault"])
 
+    def test_candidate_ev_keeps_no_fill_as_cash_and_excludes_censoring(self):
+        events = self.events.copy()
+        events.loc[0, ["activated", "returned", "activation_censored"]] = [
+            False,
+            False,
+            False,
+        ]
+        events.loc[0, "mae_pct"] = np.nan
+        events.loc[1, "mae_pct"] = 0.05
+        events.loc[2, ["activated", "returned", "activation_censored"]] = [
+            False,
+            False,
+            True,
+        ]
+        events.loc[2, "mae_pct"] = np.nan
+
+        profiles = derive_grid_profiles(events)
+        evaluated, evaluation = evaluate_profiles(events, profiles)
+
+        no_activation = evaluated.loc[0]
+        shallow_activation = evaluated.loc[1]
+        censored = evaluated.loc[2]
+        self.assertTrue(no_activation["strategy_evaluable"])
+        self.assertEqual(no_activation["balanced_net_return_pct"], 0.0)
+        self.assertEqual(no_activation["balanced_fixed_risk_r"], 0.0)
+        self.assertEqual(no_activation["stop_fixed_net_return_pct"], 0.0)
+        self.assertEqual(no_activation["exit_galka_tp_48h_net_return_pct"], 0.0)
+        self.assertTrue(np.isnan(no_activation["balanced_return_on_filled_pct"]))
+        self.assertEqual(shallow_activation["balanced_fill_fraction"], 0.0)
+        self.assertEqual(shallow_activation["balanced_net_return_pct"], 0.0)
+        self.assertFalse(censored["strategy_evaluable"])
+        self.assertTrue(np.isnan(censored["balanced_net_return_pct"]))
+        self.assertTrue(
+            all("fill_probability_given_activation" in row for row in evaluation["grid_summary"])
+        )
+        self.assertTrue(
+            all(row["count"] == row["eligible_count"] for row in evaluation["grid_summary"])
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -125,13 +125,22 @@ def summarize_group(group: pd.DataFrame) -> dict:
         summary[f"return_{hours}h_ci_low"] = low
         summary[f"return_{hours}h_ci_high"] = high
         summary[f"return_{hours}h_n"] = total
+    strategy_evaluable = (
+        group[group["strategy_evaluable"] == True]  # noqa: E712
+        if "strategy_evaluable" in group
+        else activated
+    )
+    if "strategy_evaluable" in group:
+        summary["strategy_evaluable_count"] = int(len(strategy_evaluable))
     for column in (
         "balanced_net_return_pct",
         "conservative_net_return_pct",
         "aggressive_net_return_pct",
     ):
-        if column in activated:
-            summary[f"{column}_mean"] = float(activated[column].dropna().mean())
+        if column in strategy_evaluable:
+            summary[f"{column}_mean"] = float(
+                strategy_evaluable[column].dropna().mean()
+            )
     return summary
 
 

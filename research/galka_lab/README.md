@@ -63,3 +63,5 @@ python research/galka_lab.py --synthetic --synthetic-days 45 --build-dataset --c
 Type names describe train-fitted clusters; they are not predefined labels or trading guarantees.
 Every grid is paper-only, Aggressive is stress-test-only, and a historical screen cannot authorize
 auto-paper without separately accumulated live shadow evidence. Auto-paper remains off.
+Grid EV is candidate-level: observable non-activations and fully unfilled grids remain cash at 0%,
+while unresolved censored candidates are excluded. Return on filled capital is reported separately.
