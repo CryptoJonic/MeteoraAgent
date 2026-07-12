@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import copy
+import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
 from galka_lab.evaluation import derive_grid_profiles, evaluate_profiles
-from galka_lab.pack import build_terminal_pack, verify_terminal_pack
+from galka_lab.pack import build_terminal_pack, verify_terminal_pack, write_terminal_pack
 from galka_lab.statistics import (
     block_bootstrap_statistics,
     build_statistics,
@@ -14,6 +16,7 @@ from galka_lab.statistics import (
     wilson_interval,
 )
 from galka_lab.tests.helpers import feature_rows
+from galka_lab.utils import sha256_file
 
 
 class StatisticsEvaluationPackTests(unittest.TestCase):
@@ -51,6 +54,15 @@ class StatisticsEvaluationPackTests(unittest.TestCase):
         self.assertTrue(verify_terminal_pack(pack))
         self.assertEqual(pack["schemaVersion"], "1.2")
         self.assertTrue(pack["statistics"]["blockBootstrap"])
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "first.json"
+            second = Path(directory) / "second.json"
+            write_terminal_pack(first, pack)
+            write_terminal_pack(second, pack)
+            self.assertEqual(
+                sha256_file(first.with_suffix(".json.gz")),
+                sha256_file(second.with_suffix(".json.gz")),
+            )
         tampered = copy.deepcopy(pack)
         tampered["safety"]["autoPaperDefault"] = True
         self.assertFalse(verify_terminal_pack(tampered))

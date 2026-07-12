@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import gzip
 import hashlib
+import io
 import json
 from pathlib import Path
 from typing import Any
@@ -34,6 +36,21 @@ def frame_hash(frame: pd.DataFrame) -> str:
         values = frame[column].to_numpy(dtype="<f8", copy=False)
         digest.update(np.ascontiguousarray(values).tobytes())
     return digest.hexdigest()
+
+
+def write_gzip_csv(path: Path, frame: pd.DataFrame) -> None:
+    """Write a reproducible gzip CSV without filename or wall-clock headers."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("wb") as raw:
+        with gzip.GzipFile(
+            filename="",
+            fileobj=raw,
+            mode="wb",
+            compresslevel=9,
+            mtime=0,
+        ) as compressed:
+            with io.TextIOWrapper(compressed, encoding="utf-8", newline="") as text:
+                frame.to_csv(text, index=False)
 
 
 def iso_utc(value: Any) -> str:

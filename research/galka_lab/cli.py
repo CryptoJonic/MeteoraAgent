@@ -28,7 +28,7 @@ from .pack import build_terminal_pack, write_terminal_pack
 from .report import write_reports
 from .splits import assert_oos_isolation, assign_chronological_splits, mark_split_embargo
 from .statistics import build_statistics
-from .utils import canonical_json, frame_hash, sha256_bytes, sha256_file, write_json
+from .utils import canonical_json, frame_hash, sha256_bytes, sha256_file, write_gzip_csv, write_json
 from .validation import walk_forward_validate
 
 
@@ -94,6 +94,29 @@ def _prefetch(args, datasets: list[tuple[str, str]]) -> None:
 def _load_one(args, symbol: str, interval: str):
     cache = BinanceArchiveCache(Path(args.cache))
     return load_market_data(cache, symbol, interval, args.start, args.end)
+
+
+def canonical_manifest_datasets(
+    datasets: list[dict], symbols: tuple[str, ...], intervals: tuple[str, ...]
+) -> list[dict]:
+    """Remove thread-completion order from the source manifest."""
+    symbol_order = {symbol: index for index, symbol in enumerate(symbols)}
+    interval_order = {
+        interval: index
+        for index, interval in enumerate(dict.fromkeys((*intervals, EXECUTION_INTERVAL)))
+    }
+    return sorted(
+        datasets,
+        key=lambda item: (
+            interval_order.get(item.get("interval"), len(interval_order)),
+            symbol_order.get(item.get("symbol"), len(symbol_order)),
+            str(item.get("interval", "")),
+            str(item.get("symbol", "")),
+            str(item.get("start", "")),
+            str(item.get("end", "")),
+            str(item.get("hash", "")),
+        ),
+    )
 
 
 def build_dataset(args) -> tuple[pd.DataFrame, dict]:
@@ -192,7 +215,7 @@ def build_dataset(args) -> tuple[pd.DataFrame, dict]:
         "execution_interval": EXECUTION_INTERVAL,
         "start": min(item["start"] for item in manifests),
         "end": max(item["end"] for item in manifests),
-        "datasets": manifests,
+        "datasets": canonical_manifest_datasets(manifests, symbols, intervals),
         "candidate_count": int(len(events)),
         "family_representative_count": int(events["analysis_eligible"].sum()),
         "analysis_event_count": int(
@@ -211,7 +234,7 @@ def run(args) -> dict:
     manifest_path = output / "data_manifest.json"
     if args.build_dataset or not dataset_path.exists():
         events, manifest = build_dataset(args)
-        events.to_csv(dataset_path, index=False, compression="gzip")
+        write_gzip_csv(dataset_path, events)
         write_json(manifest_path, manifest)
     else:
         events = pd.read_csv(
@@ -247,15 +270,15 @@ def run(args) -> dict:
         "manifest_hash": manifest["manifest_hash"],
         "arguments": vars(args),
     }
-    all_candidates.to_csv(output / "all_candidates.csv.gz", index=False, compression="gzip")
-    evaluated.to_csv(output / "events.csv.gz", index=False, compression="gzip")
+    write_gzip_csv(output / "all_candidates.csv.gz", all_candidates)
+    write_gzip_csv(output / "events.csv.gz", evaluated)
     dataset_directory = output / "dataset"
     dataset_directory.mkdir(parents=True, exist_ok=True)
     dataset_index = []
     for dataset_name, dataset in (("all_candidates", all_candidates), ("events", evaluated)):
         for (symbol, interval), partition in dataset.groupby(["symbol", "interval"], sort=True):
             path = dataset_directory / f"{dataset_name}_{symbol}_{interval}.csv.gz"
-            partition.to_csv(path, index=False, compression="gzip")
+            write_gzip_csv(path, partition)
             dataset_index.append(
                 {
                     "dataset": dataset_name,

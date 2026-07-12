@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gzip
+import io
 import json
 import math
 from pathlib import Path
@@ -142,5 +143,14 @@ def write_terminal_pack(path: Path, pack: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     content = json.dumps(pack, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
     path.write_text(content)
-    with gzip.open(path.with_suffix(path.suffix + ".gz"), "wt", encoding="utf-8", compresslevel=9) as stream:
-        stream.write(content)
+    gzip_path = path.with_suffix(path.suffix + ".gz")
+    with gzip_path.open("wb") as raw:
+        with gzip.GzipFile(
+            filename="",
+            fileobj=raw,
+            mode="wb",
+            compresslevel=9,
+            mtime=0,
+        ) as compressed:
+            with io.TextIOWrapper(compressed, encoding="utf-8", newline="") as text:
+                text.write(content)
