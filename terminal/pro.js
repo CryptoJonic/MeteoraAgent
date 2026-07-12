@@ -1,4 +1,5 @@
 import {
+  PAPER_RECOVERY_POLICY,
   STORAGE_KEY,
   SYMBOLS,
   appendActivity,
@@ -9,11 +10,13 @@ import {
   saveStore,
 } from './modules/store.js';
 import {
+  RECOVERY_PATH_POLICY,
   campaignLadder as buildCampaignLadder,
   createCampaign as createPaperCampaign,
   moveManualCampaign,
   previewCampaign,
   processCampaignQuote,
+  replayCampaignCandles,
   recalculateCampaign,
 } from './modules/paper-engine.js';
 import {
@@ -31,11 +34,14 @@ import {
 'use strict';
 
 const LWC = window.LightweightCharts;
-const VERSION = 'pro-v2.0.0-mobile-cockpit';
+const VERSION = 'pro-v2.0.1-paper-recovery';
 const INTERVALS = ['1m','3m','5m','15m','30m','1h','4h','1d'];
 const REST = 'https://fapi.binance.com';
 const WS_BASE = 'wss://fstream.binance.com/stream?streams=';
 const PRE_RESTORE_BACKUP_KEY = `${STORAGE_KEY}-pre-restore-backup`;
+const RECOVERY_CANDLE_MS = 60_000;
+const RECOVERY_CHECKPOINT_MS = 5_000;
+const RECOVERY_MAX_BUFFER = 50_000;
 const COLORS = {green:'#089981',red:'#f23645',blue:'#2962ff',orange:'#ff9800',purple:'#9c6ade',cyan:'#26c6da',gray:'#8b93a4'};
 const $ = id => document.getElementById(id);
 const els = Object.fromEntries([
@@ -61,7 +67,7 @@ const els = Object.fromEntries([
 let store=loadStore();
 const defaultStore=createDefaultStore;
 function save(){saveStore(store);}
-function logActivity(type,message,meta={}){appendActivity(store,{type,message,meta});}
+function logActivity(type,message,meta={},at=nowIso()){appendActivity(store,{type,message,meta},at);}
 if(num(store.paper.settings.symbolNotional)===3333.33&&!store.paper.trades.length&&!SYMBOLS.some(x=>store.paper.symbols[x].campaign)){store.paper.settings.symbolNotional=400;save();}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
@@ -90,8 +96,8 @@ const runtime={
   mainChart:null,priceSeries:null,markerApi:null,compareSeries:null,paperLines:[],
   indicatorSeries:[],volumeSeries:null,oscChart:null,oscSeries:[],
   candles:new Map(),botCandles:Object.fromEntries(SYMBOLS.map(s=>[s,[]])),
-  quotes:Object.fromEntries(SYMBOLS.map(s=>[s,{bid:null,ask:null,last:null,open24:null,change24:null,updated:null}])),
-  ws:null,reconnect:null,wsAttempt:0,loading:new Set(),syncing:false,connectionState:'idle',lastQuoteAt:null,lastEngineAt:null,disconnectedAt:null,recovering:false,lastCatchupAt:null,
+  quotes:Object.fromEntries(SYMBOLS.map(s=>[s,{bid:null,ask:null,last:null,open24:null,change24:null,updated:null,marketAt:null}])),
+  ws:null,reconnect:null,wsAttempt:0,loading:new Set(),syncing:false,connectionState:'idle',lastQuoteAt:null,lastEngineAt:null,disconnectedAt:null,recovering:false,lastCatchupAt:null,recoveryPromise:null,recoveryQuoteBuffer:[],recoveryBufferOverflow:false,recoveryOverflowAt:null,lastRecoverySummary:null,lastRecoveryPersistAt:0,
   tool:'cursor',drawingStart:null,drawingPreview:null,selectedDrawing:null,drawingEdit:null,longPressTimer:null,undo:[],redo:[],
   dpr:window.devicePixelRatio||1,toastTimer:null,lastCrosshair:null,
   replay:{active:false,index:0,playing:false,timer:null,source:null,pendingLabel:null,revealed:false},
@@ -190,11 +196,69 @@ function nearestIndex(rows,time){
   if(lo<=0)return 0;if(lo>=rows.length)return rows.length-1;
   return Math.abs(rows[lo].time-time)<Math.abs(rows[lo-1].time-time)?lo:lo-1;
 }
+function paperRecovery(){return store.paper.recovery;}
+function paperRecoverySymbol(symbol){return paperRecovery().symbols[symbol];}
+function lastClosedMinute(nowMs=Date.now()){return Math.floor(nowMs/RECOVERY_CANDLE_MS)*RECOVERY_CANDLE_MS-1;}
+function activeCampaignSymbols(){return SYMBOLS.filter(symbol=>!!store.paper.symbols[symbol]?.campaign);}
+function initializePaperRecovery(nowMs=Date.now()){
+  const recovery=paperRecovery();
+  recovery.policy=PAPER_RECOVERY_POLICY;
+  if(recovery.checkpointAt==null&&recovery.gapStartedAt==null){
+    recovery.checkpointAt=nowMs;
+    recovery.lastRecoveryStatus='baseline';
+    for(const symbol of SYMBOLS){
+      const state=paperRecoverySymbol(symbol);state.lastMarketAt=state.lastMarketAt??nowMs;state.lastRecoveryStatus='baseline';
+    }
+    save();runtime.lastRecoveryPersistAt=nowMs;
+    return false;
+  }
+  return needsPaperRecovery(nowMs);
+}
+function needsPaperRecovery(nowMs=Date.now()){
+  const recovery=paperRecovery();
+  if(recovery.gapStartedAt!=null)return true;
+  const closedThrough=lastClosedMinute(nowMs);
+  return activeCampaignSymbols().some(symbol=>num(paperRecoverySymbol(symbol).lastMarketAt,nowMs)<closedThrough);
+}
+function markPaperGap(reason,atMs=Date.now()){
+  const recovery=paperRecovery(),processed=activeCampaignSymbols().map(symbol=>num(paperRecoverySymbol(symbol).lastMarketAt,atMs));
+  const start=Math.min(atMs,...processed);
+  recovery.gapStartedAt=recovery.gapStartedAt==null?start:Math.min(recovery.gapStartedAt,start);
+  recovery.gapReason=recovery.gapReason||reason;
+  recovery.gapSequence=num(recovery.gapSequence)+1;
+  recovery.checkpointAt=atMs;
+  recovery.lastRecoveryStatus='pending';
+  save();runtime.lastRecoveryPersistAt=atMs;
+}
+function markMarketProcessed(symbol,eventTime=Date.now()){
+  const recovery=paperRecovery(),state=paperRecoverySymbol(symbol),at=num(eventTime,Date.now());
+  state.lastMarketAt=Math.max(num(state.lastMarketAt,0),at);
+  recovery.checkpointAt=Date.now();
+}
+function maybePersistRecoveryCursor(force=false){
+  const now=Date.now();if(!force&&now-runtime.lastRecoveryPersistAt<RECOVERY_CHECKPOINT_MS)return;
+  save();runtime.lastRecoveryPersistAt=now;
+}
 async function fetchKlines(symbol,interval,limit=1500){
   const url=`${REST}/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
   const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`${symbol} ${interval}: HTTP ${r.status}`);
   const data=await r.json();
-  return data.map(x=>({time:Math.floor(x[0]/1000),open:num(x[1]),high:num(x[2]),low:num(x[3]),close:num(x[4]),volume:num(x[5])}));
+  return data.map(x=>({openTime:num(x[0]),closeTime:num(x[6]),time:Math.floor(x[0]/1000),open:num(x[1]),high:num(x[2]),low:num(x[3]),close:num(x[4]),volume:num(x[5])}));
+}
+async function fetchClosedMinuteRange(symbol,startMs,endMs){
+  if(!(endMs>startMs))return[];
+  let cursor=Math.max(0,Math.floor(startMs/RECOVERY_CANDLE_MS)*RECOVERY_CANDLE_MS),pages=0;
+  const output=[];
+  while(cursor<=endMs&&pages<32){
+    const url=`${REST}/fapi/v1/klines?symbol=${symbol}&interval=1m&startTime=${cursor}&endTime=${endMs}&limit=1500`;
+    const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error(`${symbol} recovery: HTTP ${response.status}`);
+    const data=await response.json();if(!Array.isArray(data)||!data.length)break;
+    const rows=data.map(x=>({openTime:num(x[0]),closeTime:num(x[6]),time:Math.floor(x[0]/1000),open:num(x[1]),high:num(x[2]),low:num(x[3]),close:num(x[4]),volume:num(x[5])})).filter(row=>row.closeTime>startMs&&row.closeTime<=endMs);
+    output.push(...rows);pages+=1;
+    const next=num(data.at(-1)?.[0],cursor)+RECOVERY_CANDLE_MS;if(next<=cursor)break;cursor=next;
+    if(data.length<1500)break;
+  }
+  return output;
 }
 async function ensureData(symbol,interval,force=false){
   const k=symbol+'|'+interval;
@@ -225,35 +289,95 @@ async function loadCurrent(fit=true){
 }
 async function bootstrap(){
   setConnection('Загрузка данных…','warn');
+  const recoverOnStart=initializePaperRecovery();
   try{
     await Promise.all(SYMBOLS.map(s=>ensureData(s,'15m')));
     await ensureData(runtime.symbol,runtime.interval);
     scanRecentPatterns();
     await loadCurrent();
+    if(recoverOnStart)await catchUpAfterReconnect('startup');
     connectWs();
   }catch(e){console.error(e);setConnection('Ошибка загрузки: '+e.message,'error');connectWs();}
 }
 
-async function catchUpAfterReconnect(){
-  if(runtime.recovering)return;
+function recoveryStartForSymbol(symbol,nowMs){
+  const recovery=paperRecovery(),state=paperRecoverySymbol(symbol),candidates=[recovery.gapStartedAt,state.lastMarketAt,recovery.checkpointAt].filter(value=>value!=null).map(Number).filter(Number.isFinite);
+  const rawStart=candidates.length?Math.min(...candidates):nowMs;
+  const earliest=nowMs-336*3_600_000;
+  const recoveredThrough=state.lastRecoveredCloseAt==null?-Infinity:Number(state.lastRecoveredCloseAt)+1;
+  const campaignCreated=Date.parse(store.paper.symbols[symbol]?.campaign?.createdAt||'');
+  const afterMs=Math.max(rawStart,recoveredThrough,earliest,Number.isFinite(campaignCreated)?campaignCreated:-Infinity);
+  return{afterMs,truncated:rawStart<earliest,rawStart};
+}
+function logRecoveredPaperEvents(symbol,result){
+  for(const event of result.events){
+    const at=new Date(event.atMs).toISOString(),meta={price:event.price,stop:event.stop,recovered:true,policy:RECOVERY_PATH_POLICY,candleOpenTime:event.candleOpenTime};
+    if(event.type==='level_filled')logActivity('paper',`${symbol.replace('USDT','')}: L${event.level} восстановлена после reconnect`,meta,at);
+    if(event.type==='trailing_armed')logActivity('paper',`${symbol.replace('USDT','')}: trailing восстановлен после reconnect`,meta,at);
+    if(event.type==='trailing_raised')logActivity('paper',`${symbol.replace('USDT','')}: stop восстановлен выше`,meta,at);
+  }
+}
+async function recoverMissedPaperTrading(reason,nowMs=Date.now()){
+  const recovery=paperRecovery(),endMs=lastClosedMinute(nowMs),symbols=activeCampaignSymbols();
+  const gapSequence=num(recovery.gapSequence);
+  const summary={reason,policy:RECOVERY_PATH_POLICY,symbols:symbols.length,candles:0,boundaryCandles:0,fills:0,trailingArmed:0,trailingRaised:0,closed:0,expired:0,truncated:0,failures:[]};
+  recovery.lastRecoveryStatus='running';
+  const fetched=await Promise.all(symbols.map(async symbol=>{
+    const start=recoveryStartForSymbol(symbol,nowMs),state=paperRecoverySymbol(symbol);state.lastRecoveryStatus='running';
+    try{return{symbol,start,candles:await fetchClosedMinuteRange(symbol,start.afterMs,endMs)};}
+    catch(error){return{symbol,start,error};}
+  }));
+  for(const item of fetched){
+    const {symbol,start}=item,state=paperRecoverySymbol(symbol),ss=store.paper.symbols[symbol],campaign=ss.campaign;
+    if(item.error){state.lastRecoveryStatus='error';summary.failures.push({symbol,message:item.error.message});continue;}
+    if(!campaign){state.lastRecoveryStatus='ok';continue;}
+    const result=replayCampaignCandles(campaign,item.candles,store.paper.settings,{afterMs:start.afterMs});
+    summary.candles+=result.candlesReplayed;summary.boundaryCandles+=result.boundaryCandles;summary.truncated+=start.truncated?1:0;
+    summary.fills+=result.events.filter(event=>event.type==='level_filled').length;
+    summary.trailingArmed+=result.events.filter(event=>event.type==='trailing_armed').length;
+    summary.trailingRaised+=result.events.filter(event=>event.type==='trailing_raised').length;
+    state.lastRecoveredCloseAt=Math.max(num(state.lastRecoveredCloseAt,0),num(result.lastCloseTime,endMs));
+    state.lastMarketAt=Math.max(num(state.lastMarketAt,0),num(result.lastEventAt,endMs));
+    state.lastRecoveryAt=nowMs;state.lastRecoveryStatus=start.truncated?'truncated':'ok';state.recoveredCandles=num(state.recoveredCandles)+result.candlesReplayed;state.boundaryCandles=num(state.boundaryCandles)+result.boundaryCandles;
+    logRecoveredPaperEvents(symbol,result);
+    if(result.close){summary.closed+=1;closeCampaign(symbol,result.close.price,result.close.reason,{atMs:result.close.atMs,recovered:true,deferRender:true});}
+    else if(result.expiredWithoutFill){summary.expired+=1;ss.campaign=null;if(ss.pattern)ss.pattern.status='expired';logActivity('paper',`${symbol.replace('USDT','')}: кампания истекла во время reconnect`,{recovered:true,policy:RECOVERY_PATH_POLICY},new Date(result.lastEventAt).toISOString());}
+  }
+  recovery.lastRecoveryAt=nowMs;recovery.lastRecoveryStatus=summary.failures.length?'partial':summary.truncated?'truncated':'ok';
+  if(!summary.failures.length&&num(recovery.gapSequence)===gapSequence&&!document.hidden){recovery.gapStartedAt=null;recovery.gapReason=null;}
+  recovery.checkpointAt=nowMs;runtime.lastCatchupAt=nowMs;runtime.lastRecoverySummary=summary;
+  const message=`Paper replay: ${summary.candles} × 1m, fills ${summary.fills}, exits ${summary.closed}, boundary ${summary.boundaryCandles}`;
+  logActivity(summary.failures.length?'risk':'connection',summary.failures.length?'Paper replay завершён частично':message,{...summary});
+  save();runtime.lastRecoveryPersistAt=nowMs;
+  return summary;
+}
+function bufferRecoveryQuote(quote){
+  if(runtime.recoveryQuoteBuffer.length>=RECOVERY_MAX_BUFFER){const dropped=runtime.recoveryQuoteBuffer.splice(0,Math.floor(RECOVERY_MAX_BUFFER/4));runtime.recoveryBufferOverflow=true;runtime.recoveryOverflowAt=Math.min(runtime.recoveryOverflowAt??Infinity,...dropped.map(item=>item.eventTime));}
+  runtime.recoveryQuoteBuffer.push(quote);
+}
+function flushRecoveryQuotes(){
+  const buffered=runtime.recoveryQuoteBuffer.splice(0).sort((a,b)=>a.eventTime-b.eventTime||num(a.updateId)-num(b.updateId)||String(a.symbol).localeCompare(b.symbol));
+  for(const quote of buffered)processQuote(quote.symbol,quote.bid,quote.ask,{eventTime:quote.eventTime,updateId:quote.updateId,source:'buffered',silent:true});
+  if(runtime.recoveryBufferOverflow){const overflowAt=runtime.recoveryOverflowAt??Date.now();logActivity('risk','Буфер live-котировок переполнился во время paper replay',{limit:RECOVERY_MAX_BUFFER,overflowAt});runtime.recoveryBufferOverflow=false;runtime.recoveryOverflowAt=null;markPaperGap('buffer-overflow',overflowAt);}
+  if(buffered.length){renderWatchlist();renderPaper();renderActivity();renderTicker();updateMarkers();}
+}
+async function catchUpAfterReconnect(reason='reconnect'){
+  if(runtime.recoveryPromise)return runtime.recoveryPromise;
   runtime.recovering=true;renderSessionHealth();
-  try{
+  runtime.recoveryPromise=(async()=>{
     const requests=SYMBOLS.map(symbol=>ensureData(symbol,'15m',true));
     if(runtime.interval!=='15m')requests.push(ensureData(runtime.symbol,runtime.interval,true));
-    await Promise.all(requests);
-    runtime.lastCatchupAt=Date.now();
-    if(!runtime.replay.active){
-      runtime.priceSeries.setData(priceDataForType(chartRows(),runtime.chartType));
-      updateIndicators();updateMarkers();
-    }
-    logActivity('connection','Соединение восстановлено, свечи сверены через REST',{symbols:SYMBOLS});
-    els.sessionRecovery.textContent=`Свечи сверены через REST ${new Date(runtime.lastCatchupAt).toLocaleTimeString('ru-RU')}. Существующие fills и trailing сохранены без повторного исполнения.`;
-    save();renderActivity();
-  }catch(error){
-    console.error(error);logActivity('risk','Не удалось сверить пропущенные свечи',{message:error.message});save();
-  }finally{
-    runtime.recovering=false;renderSessionHealth();
-  }
+    const [chartResults,summary]=await Promise.all([Promise.allSettled(requests),recoverMissedPaperTrading(reason)]);
+    const chartFailures=chartResults.filter(item=>item.status==='rejected');
+    if(chartFailures.length)logActivity('risk','Часть свечей графика не обновилась',{failures:chartFailures.map(item=>item.reason?.message||String(item.reason))});
+    scanRecentPatterns();
+    if(!runtime.replay.active){runtime.priceSeries.setData(priceDataForType(chartRows(),runtime.chartType));updateIndicators();updateMarkers();}
+    els.sessionRecovery.textContent=summary.failures.length?`Paper replay частичный: ошибки ${summary.failures.map(item=>item.symbol).join(', ')}. Повторим при следующем reconnect.`:`Восстановлено ${summary.candles} закрытых 1m свечей · fills ${summary.fills} · exits ${summary.closed} · boundary ${summary.boundaryCandles}${summary.truncated?` · capped ${summary.truncated}`:''}.`;
+    save();renderActivity();return summary;
+  })();
+  try{return await runtime.recoveryPromise;}
+  catch(error){console.error(error);logActivity('risk','Не удалось восстановить paper-события',{message:error.message});save();return null;}
+  finally{runtime.recovering=false;runtime.recoveryPromise=null;flushRecoveryQuotes();renderSessionHealth();}
 }
 function updateCandleMap(symbol,interval,c){
   const k=symbol+'|'+interval,rows=runtime.candles.get(k)||[];
@@ -279,24 +403,25 @@ function connectWs(){
   ws.onopen=()=>{
     const wasDisconnected=!!runtime.disconnectedAt;
     setConnection('Онлайн · Binance USD-M Futures','ok');
-    if(wasDisconnected||runtime.wsAttempt>1)catchUpAfterReconnect();
+    if(wasDisconnected||runtime.wsAttempt>1)catchUpAfterReconnect(wasDisconnected?'reconnect':'socket-restart');
     runtime.disconnectedAt=null;
   };
   ws.onerror=()=>setConnection('Ошибка WebSocket','error');
   ws.onclose=()=>{
     if(runtime.ws!==ws)return;
-    if(!runtime.disconnectedAt){runtime.disconnectedAt=Date.now();logActivity('connection','Поток котировок потерян');save();}
+    if(!runtime.disconnectedAt){runtime.disconnectedAt=Date.now();markPaperGap('websocket',runtime.disconnectedAt);logActivity('connection','Поток котировок потерян');save();}
     setConnection('Переподключение…','warn');runtime.reconnect=setTimeout(connectWs,3000);
   };
   ws.onmessage=e=>{
     try{
       const p=JSON.parse(e.data),d=p.data||p,s=d.s;if(!SYMBOLS.includes(s))return;
+      const eventTime=num(d.E,num(d.T,Date.now()));
       if(d.e==='bookTicker'){
-        processQuote(s,num(d.b),num(d.a));
+        processQuote(s,num(d.b),num(d.a),{eventTime,updateId:d.u,source:'live'});
       }else if(d.e==='kline'){
         const k=d.k,interval=k.i,c={time:Math.floor(k.t/1000),open:num(k.o),high:num(k.h),low:num(k.l),close:num(k.c),volume:num(k.v)};
         updateCandleMap(s,interval,c);
-        if(interval==='15m'&&k.x){detectLatestPattern(s);processBotQuote(s);}
+        if(interval==='15m'&&k.x){detectLatestPattern(s);if(!runtime.recovering)processBotQuote(s,{nowMs:eventTime,source:'kline'});}
         if(k.x&&store.ui.radar?.enabled&&s===runtime.symbol&&interval===runtime.interval)updateMarkers();
       }
     }catch(err){console.error(err);}
@@ -309,16 +434,23 @@ function setConnection(text,type){
   if(changed&&type==='ok'){logActivity('connection','WebSocket online');save();}
   renderSessionHealth();
 }
-function processQuote(symbol,bid,ask){
-  const q=runtime.quotes[symbol],prev=q.last;
-  q.bid=bid;q.ask=ask;q.last=(bid+ask)/2;q.updated=Date.now();
+function processQuote(symbol,bid,ask,{eventTime=Date.now(),updateId=null,source='live',silent=false}={}){
+  const q=runtime.quotes[symbol],prev=q.last,eventAt=Number(eventTime)>0?Number(eventTime):Date.now();
+  q.bid=bid;q.ask=ask;q.last=(bid+ask)/2;q.updated=Date.now();q.marketAt=eventAt;
   runtime.lastQuoteAt=q.updated;
   if(prev&&q.open24==null)q.open24=prev;
   if(q.open24)q.change24=q.last/q.open24-1;
-  processAlerts(symbol,q.last,prev);
-  processBotQuote(symbol);
+  if(runtime.recovering&&source==='live'){
+    bufferRecoveryQuote({symbol,bid,ask,eventTime:eventAt,updateId});
+    if(!silent){renderWatchlist();renderPaperHeader();renderTicker();}
+    return;
+  }
+  markMarketProcessed(symbol,eventAt);
+  if(source==='live')processAlerts(symbol,q.last,prev);
+  processBotQuote(symbol,{quote:{bid,ask},nowMs:eventAt,source,suppressRender:silent});
   runtime.lastEngineAt=Date.now();
-  renderWatchlist();renderPaperHeader();renderTicker();
+  maybePersistRecoveryCursor();
+  if(!silent){renderWatchlist();renderPaperHeader();renderTicker();}
 }
 function renderTicker(){
   const q=runtime.quotes[runtime.symbol];
@@ -728,8 +860,8 @@ function detectLatestPattern(symbol){
 function campaignLadder(st,p){
   return buildCampaignLadder(st,p);
 }
-function createCampaign(symbol,p){
-  return createPaperCampaign(symbol,p,store.paper.settings);
+function createCampaign(symbol,p,nowMs=Date.now()){
+  return createPaperCampaign(symbol,p,store.paper.settings,nowMs);
 }
 function editableManualCampaign(symbol=runtime.symbol){
   const c=store.paper.symbols[symbol]?.campaign;
@@ -797,44 +929,46 @@ function exportManualExamples(){
 function recalcCampaign(c){
   recalculateCampaign(c);
 }
-function closeCampaign(symbol,rawExit,reason){
+function closeCampaign(symbol,rawExit,reason,{atMs=Date.now(),recovered=false,deferRender=false}={}){
   const ss=store.paper.symbols[symbol],c=ss.campaign;if(!c?.qty)return;
   if(store.paper.trades.some(trade=>trade.campaignId===c.campaignId)){ss.campaign=null;save();return;}
   const st=store.paper.settings,exit=reason==='v_low_target'?rawExit:rawExit*(1-st.slippage),exitNotional=c.qty*exit,exitFee=exitNotional*(reason==='v_low_target'?st.makerFee:st.takerFee),gross=c.qty*(exit-c.averageEntry),net=gross-c.entryFees-exitFee;
-  const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime:nowIso(),averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,levelsTotal:c.levels.length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow,exitMode:c.exitMode||'target',trailActivatedAt:c.trailActivatedAt||null,trailHigh:c.trailHigh||null,trailStop:c.trailStop||null};
+  const exitTime=new Date(num(atMs,Date.now())).toISOString();
+  const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime,averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,levelsTotal:c.levels.length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow,exitMode:c.exitMode||'target',trailActivatedAt:c.trailActivatedAt||null,trailHigh:c.trailHigh||null,trailStop:c.trailStop||null,executionSource:recovered?'recovery':'live',recoveryPolicy:recovered?RECOVERY_PATH_POLICY:null};
   if(c.trainingExampleId){const x=store.training.manualExamples.find(v=>v.id===c.trainingExampleId);if(x)Object.assign(x,{status:'closed',exitTime:trade.exitTime,exitPrice:trade.exitPrice,netPnl:trade.netPnl,reason:trade.reason,levelsFilled:trade.levelsFilled,levelsTotal:trade.levelsTotal,trailHigh:trade.trailHigh});}
   store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=trade.fees;ss.campaign=null;if(ss.pattern?.patternId===c.patternId)ss.pattern.status=reason;
-  logActivity(net>=0?'paper':'risk',`${symbol.replace('USDT','')}: paper-сделка закрыта ${signedMoney(net)}`,{reason,tradeId:trade.tradeId});save();renderPaper();renderActivity();updateMarkers();
+  logActivity(net>=0?'paper':'risk',`${symbol.replace('USDT','')}: paper-сделка закрыта ${signedMoney(net)}`,{reason,tradeId:trade.tradeId,recovered},trade.exitTime);save();if(!deferRender){renderPaper();renderActivity();updateMarkers();}
 }
 function accountSnapshot(){
   let unreal=0,notional=0,maintenance=0;
   for(const s of SYMBOLS){const c=store.paper.symbols[s].campaign,q=runtime.quotes[s];if(c?.qty&&q.bid){const gross=c.qty*(q.bid-c.averageEntry);c.unrealizedPnl=gross-c.entryFees;unreal+=c.unrealizedPnl;notional+=c.filledNotional;maintenance+=c.filledNotional*store.paper.settings.maintenanceMargin;}}
   return{unreal,notional,maintenance,equity:store.paper.settings.startingBalance+store.paper.realizedPnl+unreal,margin:notional/store.paper.settings.leverage};
 }
-function checkGlobalLiquidation(){
+function checkGlobalLiquidation({atMs=Date.now(),recovered=false,deferRender=false}={}){
   const snap=accountSnapshot();if(!snap.notional||snap.equity>snap.maintenance)return;
-  for(const s of SYMBOLS){const c=store.paper.symbols[s].campaign,q=runtime.quotes[s];if(c?.qty&&q.bid)closeCampaign(s,q.bid,'paper_liquidation');}
+  for(const s of SYMBOLS){const c=store.paper.symbols[s].campaign,q=runtime.quotes[s];if(c?.qty&&q.bid)closeCampaign(s,q.bid,'paper_liquidation',{atMs,recovered,deferRender});}
 }
-function processBotQuote(symbol){
-  const q=runtime.quotes[symbol];if(!q.bid||!q.ask)return;
+function processBotQuote(symbol,{quote=runtime.quotes[symbol],nowMs=Date.now(),source='live',suppressRender=false}={}){
+  const q=quote;if(!q.bid||!q.ask)return;
   const ss=store.paper.symbols[symbol],p=ss.pattern;let changed=false;
   if(store.paper.settings.signalMode==='auto'&&!ss.campaign&&p&&p.status==='watching'){
-    const age=(Date.now()/1000-p.confirmedTime)/3600;
-    if(age<=336&&q.bid<p.vLow-.10*p.atr){ss.campaign=createCampaign(symbol,p);p.status='trading';changed=true;}
+    const age=(nowMs/1000-p.confirmedTime)/3600;
+    if(age<=336&&q.bid<p.vLow-.10*p.atr){ss.campaign=createCampaign(symbol,p,nowMs);p.status='trading';changed=true;}
   }
   const c=ss.campaign;
   if(c){
-    const result=processCampaignQuote(c,{bid:q.bid,ask:q.ask},store.paper.settings,Date.now());changed=changed||result.changed;
+    const result=processCampaignQuote(c,{bid:q.bid,ask:q.ask},store.paper.settings,nowMs);changed=changed||result.changed;
+    const restored=source==='buffered',eventAt=new Date(nowMs).toISOString();
     for(const event of result.events){
-      if(event.type==='level_filled')logActivity('paper',`${symbol.replace('USDT','')}: L${event.level} исполнена`,{price:event.price});
-      if(event.type==='trailing_armed'){logActivity('paper',`${symbol.replace('USDT','')}: trailing активирован`,{stop:event.stop});if(symbol===runtime.symbol)toast(`${symbol}: trailing активирован, стоп ${price(event.stop,symbol)}`,'alert');}
-      if(event.type==='trailing_raised')logActivity('paper',`${symbol.replace('USDT','')}: stop поднят`,{stop:event.stop});
+      if(event.type==='level_filled')logActivity('paper',`${symbol.replace('USDT','')}: L${event.level} исполнена`,{price:event.price,recovered:restored},eventAt);
+      if(event.type==='trailing_armed'){logActivity('paper',`${symbol.replace('USDT','')}: trailing активирован`,{stop:event.stop,recovered:restored},eventAt);if(symbol===runtime.symbol&&!suppressRender)toast(`${symbol}: trailing активирован, стоп ${price(event.stop,symbol)}`,'alert');}
+      if(event.type==='trailing_raised')logActivity('paper',`${symbol.replace('USDT','')}: stop поднят`,{stop:event.stop,recovered:restored},eventAt);
     }
-    if(result.close){closeCampaign(symbol,result.close.price,result.close.reason);return;}
-    if(result.expiredWithoutFill){ss.campaign=null;if(p)p.status='expired';changed=true;logActivity('paper',`${symbol.replace('USDT','')}: кампания истекла без fill`);}
+    if(result.close){closeCampaign(symbol,result.close.price,result.close.reason,{atMs:nowMs,recovered:restored,deferRender:suppressRender});return;}
+    if(result.expiredWithoutFill){ss.campaign=null;if(p)p.status='expired';changed=true;logActivity('paper',`${symbol.replace('USDT','')}: кампания истекла без fill`,{recovered:restored},eventAt);}
   }
-  if(changed){save();renderPaper();renderActivity();updateMarkers();}
-  checkGlobalLiquidation();
+  if(changed){save();if(!suppressRender){renderPaper();renderActivity();updateMarkers();}}
+  checkGlobalLiquidation({atMs:nowMs,recovered:source==='buffered',deferRender:suppressRender});
 }
 function renderPaperHeader(){
   const s=accountSnapshot();els.equity.textContent=money(s.equity);els.openPnl.textContent=signedMoney(s.unreal);els.openPnl.className=s.unreal>=0?'up':'down';els.realizedPnl.textContent=signedMoney(store.paper.realizedPnl);els.realizedPnl.className=store.paper.realizedPnl>=0?'up':'down';els.marginUsed.textContent=money(s.margin);
@@ -976,8 +1110,8 @@ function renderActivity(){
 }
 function ageText(timestamp){if(!timestamp)return'нет данных';const seconds=Math.max(0,Math.floor((Date.now()-timestamp)/1000));if(seconds<2)return'сейчас';if(seconds<60)return`${seconds}с`;const minutes=Math.floor(seconds/60);return minutes<60?`${minutes}м`:`${Math.floor(minutes/60)}ч ${minutes%60}м`;}
 function renderSessionHealth(){
-  const online=runtime.connectionState==='ok',quoteAge=runtime.lastQuoteAt?Date.now()-runtime.lastQuoteAt:Infinity,healthy=online&&quoteAge<10000&&!runtime.recovering,status=runtime.recovering?'Сверяем пропущенные свечи':healthy?'Сессия здорова':online?'Котировки задерживаются':'Поток недоступен',kind=healthy?'ok':online?'warn':'error';
-  els.sessionStatus.textContent=status;els.sessionStatusDot.className='dot '+kind;els.sessionWs.textContent=online?'Online':runtime.connectionState==='warn'?'Connecting':'Offline';els.sessionQuoteAge.textContent=ageText(runtime.lastQuoteAt);els.sessionTab.textContent=document.hidden?'Заморожена / скрыта':'Активна';els.sessionEngineGap.textContent=ageText(runtime.lastEngineAt);els.chartHealth.className='chart-health '+kind;els.chartHealthText.textContent=runtime.recovering?'REST catch-up':healthy?'Поток '+ageText(runtime.lastQuoteAt):status;els.paperStreamBadge?.classList.toggle('ok',healthy);
+  const online=runtime.connectionState==='ok',quoteAge=runtime.lastQuoteAt?Date.now()-runtime.lastQuoteAt:Infinity,healthy=online&&quoteAge<10000&&!runtime.recovering,status=runtime.recovering?'Восстанавливаем paper-события':healthy?'Сессия здорова':online?'Котировки задерживаются':'Поток недоступен',kind=healthy?'ok':online?'warn':'error';
+  els.sessionStatus.textContent=status;els.sessionStatusDot.className='dot '+kind;els.sessionWs.textContent=online?'Online':runtime.connectionState==='warn'?'Connecting':'Offline';els.sessionQuoteAge.textContent=ageText(runtime.lastQuoteAt);els.sessionTab.textContent=document.hidden?'Заморожена / скрыта':'Активна';els.sessionEngineGap.textContent=ageText(runtime.lastEngineAt);els.chartHealth.className='chart-health '+kind;els.chartHealthText.textContent=runtime.recovering?'Paper replay · 1m':healthy?'Поток '+ageText(runtime.lastQuoteAt):status;els.paperStreamBadge?.classList.toggle('ok',healthy);
 }
 
 const onboardingSteps=[
@@ -994,7 +1128,7 @@ function finishOnboarding(){store.ui.onboarding.completed=true;store.ui.onboardi
 /* Rendering and UI */
 function renderDiagnostics(){
   const s=accountSnapshot();
-  els.diagnostics.textContent=JSON.stringify({version:VERSION,storageKey:STORAGE_KEY,symbol:runtime.symbol,interval:runtime.interval,chartType:runtime.chartType,ws:runtime.ws?.readyState,quoteAge:ageText(runtime.lastQuoteAt),tabVisible:!document.hidden,recovering:runtime.recovering,lastCatchup:runtime.lastCatchupAt?new Date(runtime.lastCatchupAt).toISOString():null,rows:chartRows().length,botRows:Object.fromEntries(SYMBOLS.map(x=>[x,botRows(x).length])),drawings:drawingStore().length,alerts:store.ui.alerts.filter(x=>x.active).length,equity:s.equity},null,2);
+  els.diagnostics.textContent=JSON.stringify({version:VERSION,storageKey:STORAGE_KEY,symbol:runtime.symbol,interval:runtime.interval,chartType:runtime.chartType,ws:runtime.ws?.readyState,quoteAge:ageText(runtime.lastQuoteAt),tabVisible:!document.hidden,recovering:runtime.recovering,recoveryPolicy:PAPER_RECOVERY_POLICY,lastRecovery:runtime.lastRecoverySummary,lastCatchup:runtime.lastCatchupAt?new Date(runtime.lastCatchupAt).toISOString():null,rows:chartRows().length,botRows:Object.fromEntries(SYMBOLS.map(x=>[x,botRows(x).length])),drawings:drawingStore().length,alerts:store.ui.alerts.filter(x=>x.active).length,equity:s.equity},null,2);
 }
 function renderAll(){renderWatchlist();renderPaper();renderObjects();renderAlerts();renderTemplates();renderRadar();renderActivity();renderDiagnostics();renderSessionHealth();renderTicker();}
 function changeSymbol(symbol){
@@ -1095,7 +1229,7 @@ document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModals
 document.querySelector('.side-tabs').onclick=e=>{const b=e.target.closest('[data-panel]');if(b)openPanel(b.dataset.panel);};
 document.querySelectorAll('[data-back-panel]').forEach(button=>button.onclick=()=>openPanel(button.dataset.backPanel));
 els.savePaperSettings.onclick=()=>{const s=store.paper.settings;s.startingBalance=Math.max(100,num(els.startingBalance.value,1000));s.leverage=clamp(num(els.leverage.value,10),1,20);s.symbolNotional=clamp(num(els.symbolNotional.value,400),50,10000);s.maxHours=clamp(num(els.maxHours.value,72),1,336);s.signalMode=els.signalMode.value==='auto'?'auto':'manual';s.ladderStepPct=clamp(num(els.ladderStepPct.value,.15),.05,2);s.manualDepthPct=clamp(num(els.manualDepthPct.value,1.5),s.ladderStepPct,10);s.exitMode=els.exitMode.value==='target'?'target':'trail';s.reclaimBufferPct=clamp(num(els.reclaimBufferPct.value,.10),0,5);s.trailDistancePct=clamp(num(els.trailDistancePct.value,.75),.05,10);logActivity('paper','Paper-настройки сохранены');save();renderPaper();renderActivity();updateMarkers();toast('Paper-настройки сохранены');};
-els.resetPaper.onclick=()=>{if(!confirm('Удалить все paper-позиции, лимитки, сделки и PnL по BTC, ETH и SOL? Это действие нельзя отменить.'))return;const settings=store.paper.settings;store.paper=defaultStore().paper;store.paper.settings=settings;logActivity('risk','Paper-счёт сброшен после подтверждения');save();renderPaper();renderActivity();updateMarkers();};
+els.resetPaper.onclick=()=>{if(!confirm('Удалить все paper-позиции, лимитки, сделки и PnL по BTC, ETH и SOL? Это действие нельзя отменить.'))return;const settings=store.paper.settings,recovery=store.paper.recovery;store.paper=defaultStore().paper;store.paper.settings=settings;store.paper.recovery=recovery;logActivity('risk','Paper-счёт сброшен после подтверждения');save();renderPaper();renderActivity();updateMarkers();};
 els.exportTrades.onclick=exportTradesCsv;
 els.exportWorkspace.onclick=()=>download(`galka-workspace-${Date.now()}.json`,new Blob([JSON.stringify(workspacePayload(),null,2)],{type:'application/json'}));
 els.importWorkspace.onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!x.ui)throw new Error('Нет ui');store.ui=deepMerge(defaultStore().ui,x.ui);save();location.reload();}catch(err){toast('Ошибка импорта: '+err.message,'error');}};
@@ -1114,8 +1248,10 @@ els.toggleTools.onclick=()=>{els.sidebar.classList.remove('open');els.leftbar.cl
 document.querySelector('.mobile-nav').onclick=e=>{const b=e.target.closest('[data-mobile-panel]');if(!b)return;const panel=b.dataset.mobilePanel;if(panel==='chart')closeMobileOverlays();else showMobilePanel(panel);};
 els.sheetHandle.addEventListener('pointerdown',beginSheetGesture);els.sheetHandle.addEventListener('pointermove',moveSheetGesture);els.sheetHandle.addEventListener('pointerup',endSheetGesture);els.sheetHandle.addEventListener('pointercancel',endSheetGesture);
 window.addEventListener('resize',()=>{resizeCanvas();drawAll();syncMobileOverlay();});
-document.addEventListener('visibilitychange',()=>{renderSessionHealth();if(!document.hidden){if(!runtime.ws||runtime.ws.readyState>1)connectWs();else catchUpAfterReconnect();}});
-window.addEventListener('offline',()=>setConnection('Устройство offline','error'));window.addEventListener('online',()=>connectWs());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)markPaperGap('background');renderSessionHealth();if(!document.hidden){if(!runtime.ws||runtime.ws.readyState>1)connectWs();else catchUpAfterReconnect('background');}});
+window.addEventListener('pagehide',()=>markPaperGap('pagehide'));
+window.addEventListener('pageshow',event=>{if(event.persisted){if(!runtime.ws||runtime.ws.readyState>1)connectWs();else catchUpAfterReconnect('bfcache');}});
+window.addEventListener('offline',()=>{markPaperGap('offline');setConnection('Устройство offline','error');});window.addEventListener('online',()=>connectWs());
 document.addEventListener('keydown',e=>{
   if(e.target.matches('input,select,textarea'))return;
   if(e.key==='Escape'){closeModals();setTool('cursor');closeMobileOverlays();}

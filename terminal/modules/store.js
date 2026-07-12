@@ -1,6 +1,33 @@
 export const STORAGE_KEY = 'galka-pro-v1';
-export const STORE_SCHEMA_VERSION = 2;
+export const STORE_SCHEMA_VERSION = 3;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+export const PAPER_RECOVERY_POLICY = 'closed-1m-directional-v1';
+
+export function createPaperRecoveryState() {
+  return {
+    version: 1,
+    policy: PAPER_RECOVERY_POLICY,
+    checkpointAt: null,
+    gapStartedAt: null,
+    gapReason: null,
+    gapSequence: 0,
+    lastRecoveryAt: null,
+    lastRecoveryStatus: 'idle',
+    symbols: Object.fromEntries(
+      SYMBOLS.map((symbol) => [
+        symbol,
+        {
+          lastMarketAt: null,
+          lastRecoveredCloseAt: null,
+          lastRecoveryAt: null,
+          lastRecoveryStatus: 'idle',
+          recoveredCandles: 0,
+          boundaryCandles: 0,
+        },
+      ]),
+    ),
+  };
+}
 
 export function createDefaultStore() {
   return {
@@ -63,6 +90,7 @@ export function createDefaultStore() {
       realizedPnl: 0,
       fees: 0,
       trades: [],
+      recovery: createPaperRecoveryState(),
       symbols: Object.fromEntries(
         SYMBOLS.map((symbol) => [symbol, { pattern: null, campaign: null }]),
       ),
@@ -102,6 +130,19 @@ export function migrateStore(rawStore) {
     migrated.paper.symbols[symbol] = deepMerge(
       { pattern: null, campaign: null },
       migrated.paper.symbols[symbol],
+    );
+  }
+
+  migrated.paper.recovery = deepMerge(
+    createPaperRecoveryState(),
+    migrated.paper.recovery,
+  );
+  migrated.paper.recovery.policy = PAPER_RECOVERY_POLICY;
+  migrated.paper.recovery.symbols ||= {};
+  for (const symbol of SYMBOLS) {
+    migrated.paper.recovery.symbols[symbol] = deepMerge(
+      createPaperRecoveryState().symbols[symbol],
+      migrated.paper.recovery.symbols[symbol],
     );
   }
 
@@ -158,4 +199,3 @@ export function createMemoryStorage(initial = {}) {
     },
   };
 }
-

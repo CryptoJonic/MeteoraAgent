@@ -27,6 +27,9 @@ This document is the safety contract for every Galka Pro change.
 - Trailing stop never decreases and is never below GALKA.
 - A closed or expired campaign is never processed again.
 - Reconnect/backfill cannot duplicate a fill or trade.
+- Reconnect replay is deterministic and auditable: closed 1-minute candles only, close-only for the
+  overlapping boundary candle, and a named directional OHLC path for fully missed candles.
+- Recovery never rewrites an existing fill or trade and never retroactively creates an auto campaign.
 - UI rendering and Radar evaluation cannot mutate paper state.
 
 ## Delivery rules
@@ -37,4 +40,3 @@ This document is the safety contract for every Galka Pro change.
 - The chart is the default and largest surface. Panels are user-invoked and must not silently cover it.
 - Strategy changes are isolated, named experiments with their own tests; a redesign never changes them.
 - `npm run check` and the store/paper regression suite must pass before a PR is eligible to merge.
-

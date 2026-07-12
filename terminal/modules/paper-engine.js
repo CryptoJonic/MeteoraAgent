@@ -1,6 +1,8 @@
 export const LEGACY_DEPTHS = [0.25, 0.7, 1.25, 1.9, 2.65, 3.5];
 export const LEGACY_WEIGHTS = [0.05, 0.09, 0.14, 0.18, 0.24, 0.3];
 export const ACTIVE_CAMPAIGN_STATUSES = new Set(['waiting', 'open', 'trailing']);
+export const RECOVERY_CANDLE_INTERVAL_MS = 60_000;
+export const RECOVERY_PATH_POLICY = 'directional-ohlc-v1';
 
 const number = (value, fallback = 0) => {
   const parsed = Number(value);
@@ -161,6 +163,145 @@ export function processCampaignQuote(campaign, quote, settings, nowMs = Date.now
   return result;
 }
 
+function normalizedRecoveryCandle(candle) {
+  const openTime = number(candle?.openTime, number(candle?.time) * 1_000);
+  const closeTime = number(candle?.closeTime, openTime + RECOVERY_CANDLE_INTERVAL_MS - 1);
+  const open = number(candle?.open);
+  const high = number(candle?.high);
+  const low = number(candle?.low);
+  const close = number(candle?.close);
+  if (
+    !(openTime >= 0) ||
+    !(closeTime > openTime) ||
+    ![open, high, low, close].every((x) => x > 0) ||
+    high < Math.max(open, close) ||
+    low > Math.min(open, close) ||
+    high < low
+  ) {
+    return null;
+  }
+  return { openTime, closeTime, open, high, low, close };
+}
+
+export function recoveryCandlePath(candle, afterMs = -Infinity) {
+  const normalized = normalizedRecoveryCandle(candle);
+  if (!normalized || normalized.closeTime <= afterMs) return [];
+
+  // The first candle can overlap the last known live quote. Its earlier high/low may predate the
+  // disconnect, so only its close is safe to replay. Every fully missed candle uses a fixed,
+  // documented directional OHLC path.
+  if (normalized.openTime < afterMs) {
+    return [
+      {
+        atMs: normalized.closeTime,
+        price: normalized.close,
+        phase: 'boundary_close',
+        boundary: true,
+        candleOpenTime: normalized.openTime,
+        candleCloseTime: normalized.closeTime,
+      },
+    ];
+  }
+
+  const bullish = normalized.close >= normalized.open;
+  const prices = bullish
+    ? [normalized.open, normalized.low, normalized.high, normalized.close]
+    : [normalized.open, normalized.high, normalized.low, normalized.close];
+  const phases = bullish
+    ? ['open', 'low', 'high', 'close']
+    : ['open', 'high', 'low', 'close'];
+  const span = normalized.closeTime - normalized.openTime;
+  const times = [
+    normalized.openTime + 1,
+    normalized.openTime + Math.floor(span / 3),
+    normalized.openTime + Math.floor((span * 2) / 3),
+    normalized.closeTime,
+  ];
+  return prices.map((price, index) => ({
+    atMs: times[index],
+    price,
+    phase: phases[index],
+    boundary: false,
+    candleOpenTime: normalized.openTime,
+    candleCloseTime: normalized.closeTime,
+  }));
+}
+
+export function replayCampaignCandles(
+  campaign,
+  candles,
+  settings,
+  { afterMs = -Infinity } = {},
+) {
+  const result = {
+    changed: false,
+    events: [],
+    close: null,
+    expiredWithoutFill: false,
+    candlesReplayed: 0,
+    boundaryCandles: 0,
+    lastCloseTime: null,
+    lastEventAt: null,
+    policy: RECOVERY_PATH_POLICY,
+  };
+  if (!campaign || !ACTIVE_CAMPAIGN_STATUSES.has(campaign.status)) return result;
+
+  const ordered = (Array.isArray(candles) ? candles : [])
+    .map(normalizedRecoveryCandle)
+    .filter(Boolean)
+    .sort((a, b) => a.openTime - b.openTime);
+
+  for (const candle of ordered) {
+    const path = recoveryCandlePath(candle, afterMs);
+    if (!path.length) continue;
+    result.candlesReplayed += 1;
+    result.boundaryCandles += path[0].boundary ? 1 : 0;
+    result.lastCloseTime = candle.closeTime;
+
+    for (const point of path) {
+      const stopBefore = number(campaign.trailStop, 0);
+      const step = processCampaignQuote(
+        campaign,
+        { bid: point.price, ask: point.price },
+        settings,
+        point.atMs,
+      );
+      result.changed = result.changed || step.changed;
+      result.lastEventAt = point.atMs;
+      result.events.push(
+        ...step.events.map((event) => ({
+          ...event,
+          atMs: point.atMs,
+          recovered: true,
+          phase: point.phase,
+          candleOpenTime: point.candleOpenTime,
+        })),
+      );
+
+      if (step.close) {
+        const stop = stopBefore || number(campaign.trailStop, 0);
+        result.close = {
+          ...step.close,
+          price:
+            step.close.reason === 'reclaim_trailing_stop' && stop > 0
+              ? stop
+              : step.close.price,
+          atMs: point.atMs,
+          recovered: true,
+          phase: point.phase,
+          candleOpenTime: point.candleOpenTime,
+        };
+        return result;
+      }
+      if (step.expiredWithoutFill) {
+        result.expiredWithoutFill = true;
+        return result;
+      }
+    }
+  }
+  return result;
+}
+
 export function previewCampaign(level, settings) {
   const pattern = { patternId: 'preview', source: 'manual', vLow: level };
   const campaign = createCampaign('PREVIEW', pattern, settings, 0);
@@ -179,4 +320,3 @@ export function previewCampaign(level, settings) {
     estimatedPnlAtGalka: grossAtGalka - entryFees - exitFees,
   };
 }
-

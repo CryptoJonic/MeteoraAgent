@@ -32,4 +32,5 @@ manual GALKA level, mint for fills/profit, and coral for risk/stop. Glow is rese
 - Radar candidates are filtered and clustered before markers are rendered; selection opens an
   explanation card and never creates a campaign.
 - Connection truth is explicit: online state, quote age, tab visibility, engine gap, and catch-up state.
-
+- Session Health distinguishes live streaming from paper replay and reports candle, fill, exit, and
+  boundary-candle counts instead of implying that background JavaScript kept running.

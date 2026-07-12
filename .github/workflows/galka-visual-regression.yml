@@ -27,6 +27,8 @@ jobs:
         run: npm install --no-save --ignore-scripts playwright@1.52.0
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Verify background paper recovery in Chromium
+        run: node scripts/test-paper-recovery-browser.mjs
       - name: Prepare main baseline
         run: git worktree add /tmp/galka-main origin/main
       - name: Capture before and after

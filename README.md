@@ -20,7 +20,7 @@ without a build step, exchange keys, or server infrastructure.
   and positive/negative training labels;
 - touch-safe drawing tools with selection, move, handles, properties, duplicate, lock, undo/redo,
   and delete;
-- Session Health, REST candle catch-up after reconnect, activity log, safe backup/restore,
+- Session Health, deterministic 1m paper replay after background/reconnect, activity log, safe backup/restore,
   onboarding, training Replay, and installable PWA shell;
 - responsive layouts for 360–430 px portrait, Android landscape, Samsung DeX, and desktop.
 
@@ -41,7 +41,9 @@ Radar labels are retained. Full snapshot import validates and previews the file,
 backup of current state before restore.
 
 See [`GALKA_CONSTITUTION.md`](GALKA_CONSTITUTION.md) for the safety contract and
-[`docs/GALKA_DESIGN_SYSTEM.md`](docs/GALKA_DESIGN_SYSTEM.md) for the UI system.
+[`docs/GALKA_DESIGN_SYSTEM.md`](docs/GALKA_DESIGN_SYSTEM.md) for the UI system. The explicit
+reconnect assumptions are documented in
+[`docs/GALKA_PAPER_RECOVERY.md`](docs/GALKA_PAPER_RECOVERY.md).
 
 ## Start in Termux
 
@@ -100,6 +102,7 @@ npm run check
 ```
 
 The suite covers syntax/static contracts, store migration and localStorage round-trip, preservation
-of active campaigns, three simultaneous instruments, fill idempotency, reclaim/trailing invariants,
+of active campaigns, three simultaneous instruments, live and reconnect fill idempotency,
+deterministic 1m recovery, boundary-candle safety, reclaim/trailing invariants,
 Radar visual-only behavior, positive/negative labels, PWA files, accessibility, and responsive
 contracts for 360×800, 390×844, 844×390, and 1440×900.

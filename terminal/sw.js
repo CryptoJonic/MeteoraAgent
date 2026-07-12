@@ -1,8 +1,8 @@
-const CACHE_NAME = 'galka-pro-shell-v2';
+const CACHE_NAME = 'galka-pro-shell-v3';
 const APP_SHELL = [
   './pro.html',
   './pro.css?v=6',
-  './pro.js?v=6',
+  './pro.js?v=7',
   './manifest.webmanifest',
   './icons/galka-mark.svg',
   './icons/galka-192.png',

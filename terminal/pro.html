@@ -294,7 +294,7 @@
             <span><small>Вкладка</small><b id="sessionTab">Активна</b></span>
             <span><small>Paper без данных</small><b id="sessionEngineGap">—</b></span>
           </div>
-          <div id="sessionRecovery" class="recovery-note">После реконнекта свечи сверяются через REST. Браузер не обещает работу, когда Android заморозил вкладку.</div>
+          <div id="sessionRecovery" class="recovery-note">После background/reconnect пропущенные закрытые 1m свечи детерминированно восстанавливают fills, reclaim и trailing. Первая неполная свеча обрабатывается только по close.</div>
 
           <div class="section-head compact"><div><h2>Backup / Restore</h2><small>Полный snapshot localStorage</small></div></div>
           <div class="backup-actions">
@@ -428,6 +428,6 @@
   </div>
 </div>
 
-<script type="module" src="pro.js?v=6"></script>
+<script type="module" src="pro.js?v=7"></script>
 </body>
 </html>

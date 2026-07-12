@@ -45,7 +45,7 @@ for (const id of requiredIds) {
 }
 
 const checks = [
-  ['module entrypoint', /<script type="module" src="pro\.js\?v=6"><\/script>/.test(html)],
+  ['module entrypoint', /<script type="module" src="pro\.js\?v=7"><\/script>/.test(html)],
   ['three paper symbols', /export const SYMBOLS = \['BTCUSDT', 'ETHUSDT', 'SOLUSDT'\]/.test(store)],
   ['storage key unchanged', /export const STORAGE_KEY = 'galka-pro-v1'/.test(store)],
   ['additive migration', /migrateStore/.test(store) && /deepMerge\(createDefaultStore\(\), source\)/.test(store)],
@@ -61,7 +61,7 @@ const checks = [
   ['Radar filters', ['all', 'strong', 'medium'].every((value) => html.includes(`data-radar-filter="${value}"`))],
   ['drawing tool set', ['cursor','crosshair','trend','ray','horizontal','vertical','rect','channel','fib','measure','longPosition','text'].every((tool) => html.includes(`data-tool="${tool}"`))],
   ['drawing selection and handles', /drawingHitAt/.test(app) && /openSelectedDrawingProperties/.test(app) && /editing-object/.test(css)],
-  ['session health and REST catch-up', /catchUpAfterReconnect/.test(app) && /sessionQuoteAge/.test(html)],
+  ['session health and paper replay', /catchUpAfterReconnect/.test(app) && /fetchClosedMinuteRange/.test(app) && /replayCampaignCandles/.test(app) && /sessionQuoteAge/.test(html)],
   ['full backup restore', /createBackupSnapshot/.test(app) && /validateBackupSnapshot/.test(app) && /PRE_RESTORE_BACKUP_KEY/.test(app)],
   ['installable PWA', manifest.display === 'standalone' && manifest.icons.length >= 2 && /serviceWorker\.register/.test(app)],
   ['service worker is shell-only', /service worker never runs the paper engine/i.test(sw) && !/processCampaignQuote|createCampaign/.test(sw)],
