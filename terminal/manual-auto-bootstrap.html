@@ -16,19 +16,26 @@
     (async()=>{
       const status=document.getElementById('status');
       const build=new URLSearchParams(location.search).get('v')||Date.now();
-      const target=`./pro.html?v=${encodeURIComponent(build)}&mode=manual-auto&target=galka`;
+      const target=`./pro.html?v=${encodeURIComponent(build)}&mode=manual-auto&target=galka&fresh=${Date.now()}`;
       if(!('serviceWorker' in navigator)){location.replace(target);return;}
       try{
         status.textContent='Обновление торгового режима…';
+        const controllerBefore=navigator.serviceWorker.controller;
+        const controllerChanged=new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
         const registration=await navigator.serviceWorker.register(`./sw.js?v=${encodeURIComponent(build)}`,{scope:'./',updateViaCache:'none'});
         await registration.update();
-        await navigator.serviceWorker.ready;
-        if(!navigator.serviceWorker.controller){
+        if(registration.installing){
           await Promise.race([
-            new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true})),
-            new Promise(resolve=>setTimeout(resolve,3500)),
+            new Promise(resolve=>registration.installing.addEventListener('statechange',()=>registration.installing?.state==='activated'&&resolve(),{once:false})),
+            new Promise(resolve=>setTimeout(resolve,4500)),
           ]);
         }
+        await navigator.serviceWorker.ready;
+        if(!navigator.serviceWorker.controller||navigator.serviceWorker.controller===controllerBefore){
+          await Promise.race([controllerChanged,new Promise(resolve=>setTimeout(resolve,4500))]);
+        }
+        status.textContent='Центрирование рынка…';
+        await new Promise(resolve=>setTimeout(resolve,250));
         location.replace(target);
       }catch(error){
         console.error(error);
