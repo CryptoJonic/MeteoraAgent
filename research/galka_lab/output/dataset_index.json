@@ -1,0 +1,218 @@
+[
+  {
+    "bytes": 9119760,
+    "dataset": "all_candidates",
+    "interval": "15m",
+    "path": "dataset/all_candidates_BTCUSDT_15m.csv.gz",
+    "rows": 12542,
+    "sha256": "4f5f69a0dc433d32c67a6e117f9309f48d8ba379c6c484c30ff1a03415539841",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 2230096,
+    "dataset": "all_candidates",
+    "interval": "1h",
+    "path": "dataset/all_candidates_BTCUSDT_1h.csv.gz",
+    "rows": 3150,
+    "sha256": "b856fb348c8a2bc05fe55a3fc9100629fa570123146599ad342ec393520b6f0f",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 4534040,
+    "dataset": "all_candidates",
+    "interval": "30m",
+    "path": "dataset/all_candidates_BTCUSDT_30m.csv.gz",
+    "rows": 6292,
+    "sha256": "27d4648ee55637deee8c35d0e6fef0de81fb8c28a94afb12585f2f6f9d0e6453",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 27696050,
+    "dataset": "all_candidates",
+    "interval": "5m",
+    "path": "dataset/all_candidates_BTCUSDT_5m.csv.gz",
+    "rows": 37944,
+    "sha256": "81dcc7489adde0536d513350dbef385e8044852d23a6b117468467d428ccf6e6",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 9068445,
+    "dataset": "all_candidates",
+    "interval": "15m",
+    "path": "dataset/all_candidates_ETHUSDT_15m.csv.gz",
+    "rows": 12624,
+    "sha256": "6960bac1549dc258b6c8bd0a1279956db54e3ebf8d6de3d5ef94919cd4c3d00b",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 2208378,
+    "dataset": "all_candidates",
+    "interval": "1h",
+    "path": "dataset/all_candidates_ETHUSDT_1h.csv.gz",
+    "rows": 3173,
+    "sha256": "3cfa275d8fac5e1a1109285f0e86994cbc4baa4491cefc80f56214a3c0c5d879",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 4453894,
+    "dataset": "all_candidates",
+    "interval": "30m",
+    "path": "dataset/all_candidates_ETHUSDT_30m.csv.gz",
+    "rows": 6277,
+    "sha256": "6759ec97916ed19f6b4befc4f66d54596eb4b24e3b9312de8029ef62a3186bd1",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 27372800,
+    "dataset": "all_candidates",
+    "interval": "5m",
+    "path": "dataset/all_candidates_ETHUSDT_5m.csv.gz",
+    "rows": 37862,
+    "sha256": "5963783c75709f5f472ba22e5e04d23327b68adcee6dd2190446315b480f0c0f",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 7788090,
+    "dataset": "all_candidates",
+    "interval": "15m",
+    "path": "dataset/all_candidates_SOLUSDT_15m.csv.gz",
+    "rows": 11080,
+    "sha256": "f8a55f682409fda912241eb5ae6ef4e1578d43de26360152a91111d0bf8925ae",
+    "symbol": "SOLUSDT"
+  },
+  {
+    "bytes": 1868437,
+    "dataset": "all_candidates",
+    "interval": "1h",
+    "path": "dataset/all_candidates_SOLUSDT_1h.csv.gz",
+    "rows": 2710,
+    "sha256": "d455db7b9bb48faf4f5031cce85db6074f5e1141010f280289b8862587e57c31",
+    "symbol": "SOLUSDT"
+  },
+  {
+    "bytes": 3826576,
+    "dataset": "all_candidates",
+    "interval": "30m",
+    "path": "dataset/all_candidates_SOLUSDT_30m.csv.gz",
+    "rows": 5480,
+    "sha256": "25fd6d54ee54ea09742142ffcd418c51caf6f75bd086f7700a6ab3103a1494e8",
+    "symbol": "SOLUSDT"
+  },
+  {
+    "bytes": 23486948,
+    "dataset": "all_candidates",
+    "interval": "5m",
+    "path": "dataset/all_candidates_SOLUSDT_5m.csv.gz",
+    "rows": 33523,
+    "sha256": "30659ad8fe16896c77dcb1760a17ec7c99eb53986545bdd8156ecb002789afc2",
+    "symbol": "SOLUSDT"
+  },
+  {
+    "bytes": 9859079,
+    "dataset": "events",
+    "interval": "15m",
+    "path": "dataset/events_BTCUSDT_15m.csv.gz",
+    "rows": 12339,
+    "sha256": "78f19a5cf4a3c30d30de8b7bb58f12dbdd900e796b4ddbb7e74a887ee6415163",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 2470761,
+    "dataset": "events",
+    "interval": "1h",
+    "path": "dataset/events_BTCUSDT_1h.csv.gz",
+    "rows": 3119,
+    "sha256": "cbd39687d8bca70af5749e0bf865f92a3493837ba02cbb6ff8dd34d58bea8630",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 4969397,
+    "dataset": "events",
+    "interval": "30m",
+    "path": "dataset/events_BTCUSDT_30m.csv.gz",
+    "rows": 6217,
+    "sha256": "fd05b5163645544ec22ec37ad09dae12d72a8931a00421439e0483f219165871",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 29159626,
+    "dataset": "events",
+    "interval": "5m",
+    "path": "dataset/events_BTCUSDT_5m.csv.gz",
+    "rows": 36845,
+    "sha256": "f526c876f1ea3e7058017bfbc99ffc8a810050597b2ebdfced3f77ca28d5d255",
+    "symbol": "BTCUSDT"
+  },
+  {
+    "bytes": 9937930,
+    "dataset": "events",
+    "interval": "15m",
+    "path": "dataset/events_ETHUSDT_15m.csv.gz",
+    "rows": 12435,
+    "sha256": "6575089f19ca628588a2ae15d5377bf3408bbf1cbd2330e110cccc99cef37752",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 2469057,
+    "dataset": "events",
+    "interval": "1h",
+    "path": "dataset/events_ETHUSDT_1h.csv.gz",
+    "rows": 3134,
+    "sha256": "63ab38b0bb7866aaf55ef10e16486f81590fb806f9205f8eede01238425f6665",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 4940645,
+    "dataset": "events",
+    "interval": "30m",
+    "path": "dataset/events_ETHUSDT_30m.csv.gz",
+    "rows": 6196,
+    "sha256": "0b530c50499a0a5ee11c31dfe1452e06b0abe1c6a5ef347203048a9aa3734483",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 29255127,
+    "dataset": "events",
+    "interval": "5m",
+    "path": "dataset/events_ETHUSDT_5m.csv.gz",
+    "rows": 36933,
+    "sha256": "e7246fb1dcaec7db5f3f85f68f8d9bef216d83eae8168d06aeff4b726b02ace7",
+    "symbol": "ETHUSDT"
+  },
+  {
+    "bytes": 8450251,
+    "dataset": "events",
+    "interval": "15m",
+    "path": "dataset/events_SOLUSDT_15m.csv.gz",
+    "rows": 10777,
+    "sha256": "3c2605f2ff98b84d10254d1d4408356e878380425b6739db845c61449373a89b",
+    "symbol": "SOLUSDT"
+  },
+  {
+    "bytes": 2065025,
+    "dataset": "events",
+    "interval": "1h",
+    "path": "dataset/events_SOLUSDT_1h.csv.gz",
+    "rows": 2667,
+    "sha256": "4efd39f533670f20ab843270eb6c99fc4bc34b3b8158e5ea1983ff5513a42625",
+    "symbol": "SOLUSDT"
+  },
+  {
+    "bytes": 4197070,
+    "dataset": "events",
+    "interval": "30m",
+    "path": "dataset/events_SOLUSDT_30m.csv.gz",
+    "rows": 5364,
+    "sha256": "9d6c6989e4ac595595531f0b08ea32c872cf5f20187122a815c25230aaac8ab9",
+    "symbol": "SOLUSDT"
+  },
+  {
+    "bytes": 24942691,
+    "dataset": "events",
+    "interval": "5m",
+    "path": "dataset/events_SOLUSDT_5m.csv.gz",
+    "rows": 32073,
+    "sha256": "3c830c0f86596685a71a8ece60f444cecf2c15b48de75b2afd28c7dd164542fd",
+    "symbol": "SOLUSDT"
+  }
+]

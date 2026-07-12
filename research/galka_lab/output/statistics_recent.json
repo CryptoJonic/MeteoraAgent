@@ -1,0 +1,202 @@
+[
+  {
+    "count": 53,
+    "depth_p75": 0.30272060440626186,
+    "depth_p75_delta": -0.20242394184196505,
+    "galka_type": "Deep capitulation",
+    "historical_depth_p75": 0.5051445462482269,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9811320754716981,
+    "window": "7d"
+  },
+  {
+    "count": 36,
+    "depth_p75": 0.295198665200439,
+    "depth_p75_delta": -0.049420352463247164,
+    "galka_type": "Fast V",
+    "historical_depth_p75": 0.3446190176636862,
+    "insufficient_data": true,
+    "return_24h_probability": 0.9722222222222222,
+    "window": "7d"
+  },
+  {
+    "count": 232,
+    "depth_p75": 0.23313042352025984,
+    "depth_p75_delta": -0.132308189749447,
+    "galka_type": "Multi-test",
+    "historical_depth_p75": 0.36543861326970684,
+    "insufficient_data": false,
+    "return_24h_probability": 0.978448275862069,
+    "window": "7d"
+  },
+  {
+    "count": 132,
+    "depth_p75": 0.26496818468940175,
+    "depth_p75_delta": -0.03854639676432847,
+    "galka_type": "Rounded recovery",
+    "historical_depth_p75": 0.3035145814537302,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9924242424242424,
+    "window": "7d"
+  },
+  {
+    "count": 199,
+    "depth_p75": 0.2850934996495147,
+    "depth_p75_delta": -0.22005104659871222,
+    "galka_type": "Deep capitulation",
+    "historical_depth_p75": 0.5051445462482269,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9798994974874372,
+    "window": "30d"
+  },
+  {
+    "count": 149,
+    "depth_p75": 0.20674505750096472,
+    "depth_p75_delta": -0.13787396016272147,
+    "galka_type": "Fast V",
+    "historical_depth_p75": 0.3446190176636862,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9932885906040269,
+    "window": "30d"
+  },
+  {
+    "count": 1075,
+    "depth_p75": 0.2225368900622147,
+    "depth_p75_delta": -0.14290172320749214,
+    "galka_type": "Multi-test",
+    "historical_depth_p75": 0.36543861326970684,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9832558139534884,
+    "window": "30d"
+  },
+  {
+    "count": 591,
+    "depth_p75": 0.23384620805228806,
+    "depth_p75_delta": -0.06966837340144216,
+    "galka_type": "Rounded recovery",
+    "historical_depth_p75": 0.3035145814537302,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9864636209813875,
+    "window": "30d"
+  },
+  {
+    "count": 774,
+    "depth_p75": 0.252236898167877,
+    "depth_p75_delta": -0.25290764808034993,
+    "galka_type": "Deep capitulation",
+    "historical_depth_p75": 0.5051445462482269,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9832041343669251,
+    "window": "90d"
+  },
+  {
+    "count": 415,
+    "depth_p75": 0.18279352318056535,
+    "depth_p75_delta": -0.16182549448312084,
+    "galka_type": "Fast V",
+    "historical_depth_p75": 0.3446190176636862,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9951807228915662,
+    "window": "90d"
+  },
+  {
+    "count": 3464,
+    "depth_p75": 0.2183670993570385,
+    "depth_p75_delta": -0.14707151391266834,
+    "galka_type": "Multi-test",
+    "historical_depth_p75": 0.36543861326970684,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9844110854503464,
+    "window": "90d"
+  },
+  {
+    "count": 1700,
+    "depth_p75": 0.18507807981491797,
+    "depth_p75_delta": -0.11843650163881225,
+    "galka_type": "Rounded recovery",
+    "historical_depth_p75": 0.3035145814537302,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9894117647058823,
+    "window": "90d"
+  },
+  {
+    "count": 1442,
+    "depth_p75": 0.3249641760318445,
+    "depth_p75_delta": -0.1801803702163824,
+    "galka_type": "Deep capitulation",
+    "historical_depth_p75": 0.5051445462482269,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9715672676837726,
+    "window": "180d"
+  },
+  {
+    "count": 823,
+    "depth_p75": 0.21361171763629944,
+    "depth_p75_delta": -0.13100730002738675,
+    "galka_type": "Fast V",
+    "historical_depth_p75": 0.3446190176636862,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9866342648845686,
+    "window": "180d"
+  },
+  {
+    "count": 7127,
+    "depth_p75": 0.2584111495225303,
+    "depth_p75_delta": -0.10702746374717653,
+    "galka_type": "Multi-test",
+    "historical_depth_p75": 0.36543861326970684,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9776904728497264,
+    "window": "180d"
+  },
+  {
+    "count": 3386,
+    "depth_p75": 0.2360535243121098,
+    "depth_p75_delta": -0.06746105714162043,
+    "galka_type": "Rounded recovery",
+    "historical_depth_p75": 0.3035145814537302,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9825753101004134,
+    "window": "180d"
+  },
+  {
+    "count": 2755,
+    "depth_p75": 0.3104227503361326,
+    "depth_p75_delta": -0.19472179591209432,
+    "galka_type": "Deep capitulation",
+    "historical_depth_p75": 0.5051445462482269,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9749546279491833,
+    "window": "365d"
+  },
+  {
+    "count": 1578,
+    "depth_p75": 0.2218249683595956,
+    "depth_p75_delta": -0.1227940493040906,
+    "galka_type": "Fast V",
+    "historical_depth_p75": 0.3446190176636862,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9790874524714829,
+    "window": "365d"
+  },
+  {
+    "count": 14109,
+    "depth_p75": 0.25790831096373973,
+    "depth_p75_delta": -0.10753030230596711,
+    "galka_type": "Multi-test",
+    "historical_depth_p75": 0.36543861326970684,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9818555531929973,
+    "window": "365d"
+  },
+  {
+    "count": 7096,
+    "depth_p75": 0.2262763597049505,
+    "depth_p75_delta": -0.07723822174877973,
+    "galka_type": "Rounded recovery",
+    "historical_depth_p75": 0.3035145814537302,
+    "insufficient_data": false,
+    "return_24h_probability": 0.9842164599774521,
+    "window": "365d"
+  }
+]
