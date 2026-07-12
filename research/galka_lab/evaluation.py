@@ -42,6 +42,10 @@ def derive_grid_profiles(events: pd.DataFrame) -> dict[str, dict[str, dict]]:
         type_profiles = {}
         for name, maximum in maximums.items():
             levels = np.arange(0.15, maximum + 1e-9, 0.15)
+            density_histogram, _ = np.histogram(
+                source, bins=np.r_[levels - 0.075, levels[-1] + 0.075]
+            )
+            density_weights = _normalized(density_histogram)
             if name == "Conservative":
                 weights = _normalized(np.exp(-levels / max(maximum, 0.15)))
                 effective_leverage = 2.0
@@ -55,12 +59,15 @@ def derive_grid_profiles(events: pd.DataFrame) -> dict[str, dict[str, dict]]:
             type_profiles[name] = {
                 "depths_pct": [round(float(value), 4) for value in levels],
                 "weights": [float(value) for value in weights],
+                "density_weights": [float(value) for value in density_weights],
                 "maximum_depth_pct": maximum,
                 "effective_leverage": effective_leverage,
                 "paper_only": True,
                 "stress_test_only": name == "Aggressive",
                 "fit_sample": int(len(source)),
                 "fit_scope": "all complete activated events, including non-returns",
+                "probability_full_grid_reached": float((source >= maximum).mean()),
+                "expected_mae_pct": float(source.mean()),
             }
         profiles[str(galka_type)] = type_profiles
     return profiles
@@ -302,6 +309,7 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
     ]
     for keys, group in grid_groups:
         for profile_name in ("Conservative", "Balanced", "Aggressive"):
+            profile = profiles.get(str(keys[0]), {}).get(profile_name, {})
             column = f"{profile_name.lower()}_net_return_pct"
             values = group[column].dropna().to_numpy(float)
             filled_values = group[f"{profile_name.lower()}_return_on_filled_pct"].dropna().to_numpy(float)
@@ -309,6 +317,13 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
             if not len(values):
                 continue
             tail_count = max(1, int(np.ceil(len(values) * 0.05)))
+            eligible = group[
+                (group["activated"] == True)  # noqa: E712
+                & ((group["returned"] == True) | (group["outcome_censored"] == False))  # noqa: E712
+            ]
+            fill_fraction = eligible[f"{profile_name.lower()}_fill_fraction"]
+            levels_filled = eligible[f"{profile_name.lower()}_levels_filled"]
+            profile_level_count = len(profile.get("depths_pct", []))
             grid_rows.append(
                 {
                     "galka_type": keys[0],
@@ -318,6 +333,15 @@ def evaluate_profiles(events: pd.DataFrame, profiles: dict[str, dict[str, dict]]
                     "mean_net_return_pct": float(values.mean()),
                     "median_net_return_pct": float(np.median(values)),
                     "win_rate": float((values > 0).mean()),
+                    "eligible_count": int(len(eligible)),
+                    "fill_probability": float((fill_fraction > 0).mean()) if len(eligible) else math.nan,
+                    "full_fill_probability": (
+                        float((levels_filled >= profile_level_count).mean())
+                        if len(eligible) and profile_level_count
+                        else math.nan
+                    ),
+                    "expected_fill_fraction": float(fill_fraction.mean()) if len(eligible) else math.nan,
+                    "expected_mae_pct": float(eligible["mae_pct"].mean()) if len(eligible) else math.nan,
                     "cvar_95_pct": float(np.sort(values)[:tail_count].mean()),
                     "mean_return_on_filled_pct": float(filled_values.mean()) if len(filled_values) else math.nan,
                     "mean_fixed_risk_r": float(risk_values.mean()) if len(risk_values) else math.nan,

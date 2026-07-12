@@ -4,7 +4,8 @@
 
 - grouped train/validation/final OOS by global timestamps and added outcome-window purge/embargo;
 - prevented conditional-depth hits after first return and added depth-order verification;
-- excluded candidate context that crosses source-data gaps and recorded exact gap ranges;
+- excluded candidate context that crosses source-data gaps, censored 1m activation/outcomes at
+  segment boundaries, and recorded exact gap ranges;
 - separated fixed-notional return, return on filled capital, and fixed-risk R results;
 - derived every grid from complete activated events including non-returns;
 - marked all grids paper-only and Aggressive as stress-test-only;

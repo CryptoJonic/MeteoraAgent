@@ -216,6 +216,8 @@ def _simulate_trails(
     level: float,
     interval_ms: int,
     atr_pct: float,
+    maximum_index: int,
+    extrema: RangeExtremaIndex,
 ) -> dict:
     distances = tuple(float(value) for value in TRAIL_DISTANCES_PCT)
     strategies = [
@@ -255,13 +257,57 @@ def _simulate_trails(
             "exit_ms": None,
             "reason": None,
             "deadline": int(times_ms[activation.index]) + 72 * 3_600_000,
+            "arm_hit": None,
         }
         for strategy in strategies
     }
-    maximum_ms = min(
-        int(times_ms[-1]), int(times_ms[activation.index]) + 2 * 72 * 3_600_000
+
+    def point_ms(hit: Hit) -> int:
+        return int(times_ms[hit.index]) + round(interval_ms * hit.position / 4)
+
+    def deadline_exit(deadline_ms: int) -> tuple[float, int] | None:
+        index = max(
+            activation.index,
+            int(np.searchsorted(times_ms, deadline_ms, side="right")) - 1,
+        )
+        while index <= maximum_index:
+            path = candle_path(open_[index], high[index], low[index], close[index])
+            for position, value in enumerate(path):
+                current_ms = int(times_ms[index]) + round(interval_ms * position / 4)
+                if current_ms >= deadline_ms:
+                    return float(value), current_ms
+            index += 1
+        return None
+
+    activation_deadline_ms = int(times_ms[activation.index]) + 72 * 3_600_000
+    arm_end = min(
+        maximum_index,
+        int(np.searchsorted(times_ms, activation_deadline_ms, side="right")) - 1,
     )
-    for index in range(activation.index, len(times_ms)):
+    arm_hits: dict[float, Hit | None] = {}
+    for buffer in RECLAIM_BUFFERS_PCT:
+        target = level * (1 + float(buffer) / 100)
+        hit = _target_after(
+            open_, high, low, close, activation, arm_end, target, extrema
+        )
+        if hit is not None and point_ms(hit) > activation_deadline_ms:
+            hit = None
+        arm_hits[float(buffer)] = hit
+
+    for item in state.values():
+        item["arm_hit"] = arm_hits[float(item["buffer"])]
+        if item["arm_hit"] is None:
+            direct_exit = deadline_exit(item["deadline"])
+            if direct_exit is not None:
+                item["exit"], item["exit_ms"] = direct_exit
+                item["reason"] = "time_exit"
+
+    active_arm_hits = [item["arm_hit"] for item in state.values() if item["arm_hit"]]
+    loop_start = min((hit.index for hit in active_arm_hits), default=maximum_index + 1)
+    maximum_ms = min(
+        int(times_ms[maximum_index]), int(times_ms[activation.index]) + 2 * 72 * 3_600_000
+    )
+    for index in range(loop_start, maximum_index + 1):
         if times_ms[index] > maximum_ms or all(item["exit"] is not None for item in state.values()):
             break
         path = candle_path(open_[index], high[index], low[index], close[index])
@@ -288,8 +334,15 @@ def _simulate_trails(
             for item in state.values():
                 if item["exit"] is not None:
                     continue
-                reclaim = level * (1 + item["buffer"] / 100)
-                if not item["armed"] and price >= reclaim:
+                arm_hit = item["arm_hit"]
+                if arm_hit is None:
+                    continue
+                if not item["armed"] and (
+                    index < arm_hit.index
+                    or (index == arm_hit.index and position < arm_hit.position)
+                ):
+                    continue
+                if not item["armed"]:
                     item["armed"] = True
                     item["armed_ms"] = point_ms
                     item["high"] = price
@@ -361,22 +414,47 @@ def label_outcomes(
     if len(times_ms) < 2:
         raise ValueError("execution history is too short")
     interval_ms = int(np.median(np.diff(times_ms)))
+    gap_after_indices = np.flatnonzero(np.diff(times_ms) > interval_ms)
+
+    def segment_end_exclusive(start_index: int) -> int:
+        next_gap = int(np.searchsorted(gap_after_indices, start_index, side="left"))
+        return (
+            int(gap_after_indices[next_gap]) + 1
+            if next_gap < len(gap_after_indices)
+            else len(times_ms)
+        )
+
     extrema = RangeExtremaIndex(low, high)
     output: list[dict] = []
 
     for candidate in candidates.itertuples(index=False):
         confirmation_ms = int(pd.Timestamp(candidate.confirmation_time).timestamp() * 1_000)
         search_start = int(np.searchsorted(times_ms, confirmation_ms, side="right"))
+        segment_end = segment_end_exclusive(search_start)
+        segment_last_index = max(0, segment_end - 1)
         activation_limit_ms = confirmation_ms + max_activation_hours * 3_600_000
-        search_end = int(np.searchsorted(times_ms, activation_limit_ms, side="right"))
+        requested_search_end = int(np.searchsorted(times_ms, activation_limit_ms, side="right"))
+        search_end = min(requested_search_end, segment_end)
+        activation_gap_censored = segment_end < requested_search_end
         activation_index = extrema.first_low_below(search_start, search_end, candidate.level)
         base = {
             "candidate_id": candidate.candidate_id,
             "activated": False,
             "activation_time": pd.NaT,
-            "activation_censored": bool(times_ms[-1] < activation_limit_ms),
+            "activation_censored": bool(
+                times_ms[segment_last_index] < activation_limit_ms
+            ),
+            "activation_censor_reason": (
+                "source_gap"
+                if activation_gap_censored
+                else "data_end"
+                if times_ms[-1] < activation_limit_ms
+                else None
+            ),
             "observation_end_time": pd.Timestamp(
-                min(int(times_ms[-1]), activation_limit_ms), unit="ms", tz="UTC"
+                min(int(times_ms[segment_last_index]), activation_limit_ms),
+                unit="ms",
+                tz="UTC",
             ),
             "intrabar_policy": "directional_ohlc_adverse_first_from_activation",
         }
@@ -393,7 +471,8 @@ def label_outcomes(
         activation = Hit(activation_index, activation_position)
         activation_ms = int(times_ms[activation_index]) + round(interval_ms * activation.position / 4)
         outcome_limit_ms = activation_ms + max_outcome_hours * 3_600_000
-        outcome_end = min(len(times_ms) - 1, int(np.searchsorted(times_ms, outcome_limit_ms, side="right")) - 1)
+        requested_outcome_end = int(np.searchsorted(times_ms, outcome_limit_ms, side="right")) - 1
+        outcome_end = min(segment_last_index, requested_outcome_end)
         outcome_end = max(activation_index, outcome_end)
         returned = _target_after(open_, high, low, close, activation, outcome_end, candidate.level, extrema)
         reclaim_level = candidate.level * (1 + RECLAIM_BUFFER_PCT / 100)
@@ -402,7 +481,9 @@ def label_outcomes(
             open_, high, low, close, activation, returned, outcome_end
         )
         depth_pct = max(0.0, (candidate.level - minimum) / candidate.level * 100)
-        available_minutes = max(0.0, (times_ms[-1] - activation_ms) / 60_000)
+        available_minutes = max(
+            0.0, (times_ms[segment_last_index] - activation_ms) / 60_000
+        )
         return_minutes = (
             _point_minutes(times_ms, returned, activation_ms, interval_ms) if returned else np.nan
         )
@@ -429,7 +510,7 @@ def label_outcomes(
                 if reclaimed_ms is not None
                 else returned_ms,
             )
-        observation_used_ms = min(int(times_ms[-1]), observation_used_ms)
+        observation_used_ms = min(int(times_ms[segment_last_index]), observation_used_ms)
         row = {
             **base,
             "activated": True,
@@ -466,7 +547,16 @@ def label_outcomes(
                 * interval_ms
                 / 60_000
             ),
-            "outcome_censored": bool(not returned and times_ms[-1] < outcome_limit_ms),
+            "outcome_censored": bool(
+                not returned and times_ms[segment_last_index] < outcome_limit_ms
+            ),
+            "outcome_censor_reason": (
+                "source_gap"
+                if not returned and segment_end < len(times_ms) and times_ms[segment_last_index] < outcome_limit_ms
+                else "data_end"
+                if not returned and times_ms[-1] < outcome_limit_ms
+                else None
+            ),
             "outcome_end_time": pd.Timestamp(times_ms[outcome_end], unit="ms", tz="UTC"),
             "observation_end_time": pd.Timestamp(
                 observation_used_ms, unit="ms", tz="UTC"
@@ -497,30 +587,47 @@ def label_outcomes(
             )
         for hours in (1, 3, 6, 12, 24, 48):
             target_ms = activation_ms + hours * 3_600_000
-            index = min(len(close) - 1, int(np.searchsorted(times_ms, target_ms, side="right")) - 1)
+            index = min(
+                segment_last_index,
+                int(np.searchsorted(times_ms, target_ms, side="right")) - 1,
+            )
             row[f"close_{hours}h_pct"] = (
-                (close[index] / candidate.level - 1) * 100 if index >= activation_index else np.nan
+                (close[index] / candidate.level - 1) * 100
+                if index >= activation_index and times_ms[segment_last_index] >= target_ms
+                else np.nan
             )
         if returned:
             post_end_ms = int(times_ms[returned.index]) + POST_RECLAIM_HOURS * 3_600_000
-            post_end = min(len(high), int(np.searchsorted(times_ms, post_end_ms, side="right")))
-            post_high = float(np.max(high[returned.index:post_end]))
-            post_low = float(np.min(low[returned.index:post_end]))
-            row["mfe_after_return_pct"] = (post_high / candidate.level - 1) * 100
-            row["drawdown_after_return_pct"] = (candidate.level - post_low) / candidate.level * 100
+            post_end = min(segment_end, int(np.searchsorted(times_ms, post_end_ms, side="right")))
+            row["post_return_censored"] = bool(times_ms[segment_last_index] < post_end_ms)
+            if not row["post_return_censored"]:
+                post_high = float(np.max(high[returned.index:post_end]))
+                post_low = float(np.min(low[returned.index:post_end]))
+                row["mfe_after_return_pct"] = (post_high / candidate.level - 1) * 100
+                row["drawdown_after_return_pct"] = (candidate.level - post_low) / candidate.level * 100
+            else:
+                row["mfe_after_return_pct"] = np.nan
+                row["drawdown_after_return_pct"] = np.nan
         else:
+            row["post_return_censored"] = False
             row["mfe_after_return_pct"] = np.nan
             row["drawdown_after_return_pct"] = np.nan
         if reclaimed:
             post_end_ms = int(times_ms[reclaimed.index]) + POST_RECLAIM_HOURS * 3_600_000
-            post_end = min(len(high), int(np.searchsorted(times_ms, post_end_ms, side="right")))
-            row["mfe_after_reclaim_pct"] = (
-                float(np.max(high[reclaimed.index:post_end])) / candidate.level - 1
-            ) * 100
-            row["drawdown_after_reclaim_pct"] = (
-                reclaim_level - float(np.min(low[reclaimed.index:post_end]))
-            ) / reclaim_level * 100
+            post_end = min(segment_end, int(np.searchsorted(times_ms, post_end_ms, side="right")))
+            row["post_reclaim_censored"] = bool(times_ms[segment_last_index] < post_end_ms)
+            if not row["post_reclaim_censored"]:
+                row["mfe_after_reclaim_pct"] = (
+                    float(np.max(high[reclaimed.index:post_end])) / candidate.level - 1
+                ) * 100
+                row["drawdown_after_reclaim_pct"] = (
+                    reclaim_level - float(np.min(low[reclaimed.index:post_end]))
+                ) / reclaim_level * 100
+            else:
+                row["mfe_after_reclaim_pct"] = np.nan
+                row["drawdown_after_reclaim_pct"] = np.nan
         else:
+            row["post_reclaim_censored"] = False
             row["mfe_after_reclaim_pct"] = np.nan
             row["drawdown_after_reclaim_pct"] = np.nan
         row.update(
@@ -534,6 +641,8 @@ def label_outcomes(
                 candidate.level,
                 interval_ms,
                 float(getattr(candidate, "atr_pct", 0.50)),
+                segment_last_index,
+                extrema,
             )
         )
         output.append(row)

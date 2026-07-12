@@ -22,6 +22,8 @@ Raw monthly/daily archives and their official SHA-256 checksums are cached under
 `research/galka_lab/cache/` and are ignored by git. Re-running downloads only missing archives.
 `data_manifest.json` records symbol, interval, source, time range, row count, gaps, duplicates,
 OHLC errors, archive hashes, and the normalized dataset hash.
+Candidate context and 1m outcome replay never cross a recorded source gap: an incomplete
+activation, return, post-reclaim, or trailing window is censored at the segment boundary.
 
 For a deterministic local smoke run:
 

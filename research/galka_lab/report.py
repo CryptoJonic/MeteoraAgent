@@ -55,7 +55,10 @@ def _dense_zone_rows(profiles: dict) -> pd.DataFrame:
     for galka_type, type_profiles in sorted(profiles.items()):
         for profile_name, profile in type_profiles.items():
             pairs = sorted(
-                zip(profile.get("depths_pct", []), profile.get("weights", [])),
+                zip(
+                    profile.get("depths_pct", []),
+                    profile.get("density_weights", profile.get("weights", [])),
+                ),
                 key=lambda item: item[1],
                 reverse=True,
             )[:3]
@@ -283,7 +286,7 @@ def write_reports(
         "",
         "## Grid profiles",
         "",
-        markdown_table(grid_oos, ["galka_type", "profile", "count", "mean_net_return_pct", "median_net_return_pct", "mean_return_on_filled_pct", "mean_fixed_risk_r", "win_rate", "cvar_95_pct", "cvar_95_fixed_risk_r", "paper_only", "stress_test_only"]),
+        markdown_table(grid_oos, ["galka_type", "profile", "eligible_count", "count", "fill_probability", "full_fill_probability", "expected_fill_fraction", "expected_mae_pct", "mean_net_return_pct", "median_net_return_pct", "mean_return_on_filled_pct", "mean_fixed_risk_r", "win_rate", "cvar_95_pct", "cvar_95_fixed_risk_r", "paper_only", "stress_test_only"]),
         "",
         "## Stop trade-offs",
         "",
@@ -338,6 +341,7 @@ def write_reports(
 - Depth-conditioned return uses only depth reached before the first return; later re-tests are not backfilled into the original event.
 - Nearby candidates are de-duplicated within a symbol/timeframe family, but simultaneous cross-timeframe events are correlated and must not be read as independent trials.
 - Source gaps are recorded and candidate context crossing a gap is excluded; missing bars are not interpolated.
+- One-minute activation/outcome/trailing replay stops at a source-gap boundary; candles after the gap cannot complete the earlier event.
 - Market regimes drift. Seven-day and rare-crisis samples can be too small for stable conclusions.
 - Clustering is descriptive. Human names do not prove causality or persistence.
 - Multiple grid/stop/trailing comparisons create multiple-testing risk; failed variants remain in outputs.

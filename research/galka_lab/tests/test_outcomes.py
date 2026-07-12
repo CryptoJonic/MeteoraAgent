@@ -66,6 +66,24 @@ class OutcomeTests(unittest.TestCase):
         self.assertTrue(event["depth_1_0_reached"])
         self.assertFalse(event["depth_3_0_reached"])
 
+    def test_source_gap_censors_without_using_candles_after_gap(self):
+        before = pd.date_range("2026-01-01", periods=50, freq="1min", tz="UTC")
+        after = pd.date_range("2026-01-03", periods=50, freq="1min", tz="UTC")
+        times = before.append(after)
+        frame = pd.DataFrame(
+            {"time": times, "open": 101.0, "high": 101.1, "low": 100.9, "close": 101.0, "volume": 1.0}
+        )
+        frame.loc[31:49, ["open", "high", "low", "close"]] = [99.5, 99.7, 98.0, 98.5]
+        frame.loc[50, ["open", "high", "low", "close"]] = [98.5, 101.0, 97.0, 100.5]
+        result = label_outcomes(pd.DataFrame([candidate("gap-censored", before[30])]), frame)
+        event = result.iloc[0]
+        self.assertTrue(event["activated"])
+        self.assertFalse(event["returned"])
+        self.assertTrue(event["outcome_censored"])
+        self.assertEqual(event["outcome_censor_reason"], "source_gap")
+        self.assertFalse(event["depth_3_0_reached"])
+        self.assertIsNone(event["return_1h"])
+
 
 if __name__ == "__main__":
     unittest.main()

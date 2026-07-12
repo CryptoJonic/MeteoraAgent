@@ -36,7 +36,9 @@ class StatisticsEvaluationPackTests(unittest.TestCase):
         self.assertIn("stop_hybrid_net_return_pct", evaluated)
         self.assertIn("balanced_return_on_filled_pct", evaluated)
         self.assertTrue(all(profile["paper_only"] for groups in profiles.values() for profile in groups.values()))
+        self.assertTrue(all("density_weights" in profile for groups in profiles.values() for profile in groups.values()))
         self.assertTrue(evaluation["trailing_summary"])
+        self.assertTrue(all("fill_probability" in row for row in evaluation["grid_summary"]))
         statistics = build_statistics(evaluated)
         manifest = {"start": "2020-01-01", "end": "2026-01-01", "symbols": ["BTCUSDT"], "intervals": ["15m"], "manifest_hash": "abc"}
         model = {"model_hash": "m", "selected_k": 4}
