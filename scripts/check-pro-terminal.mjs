@@ -69,7 +69,7 @@ const checks = [
   ['Radar visual only', !/createCampaign|paper\.symbols/.test(radar) && /EXPLAINABLE SCORE/.test(html)],
   ['positive and negative labels', /labelRadarCandidate\('positive'\)/.test(app) && /labelRadarCandidate\('negative'\)/.test(app)],
   ['Radar filters', ['all', 'strong', 'mine', 'profitable', 'losing'].every((value) => html.includes(`data-radar-filter="${value}"`))],
-  ['verified Galka stats asset', createHash('sha256').update(statsAsset).digest('hex') === '4dc40d3bc7779475904ba0e3af533d47bf17ca53368c120c42e4c75ac54c77e2' && /parseGalkaStatsBytes/.test(stats)],
+  ['verified Galka stats asset', createHash('sha256').update(statsAsset).digest('hex') === '828175607d3619c4af1eea24776ee3d2312e0641962fbc016179bc71f0b830f6' && /parseGalkaStatsBytes/.test(stats)],
   ['mobile stats budget', statsAsset.length < 1_000_000 && !fs.existsSync('terminal/data/galka-stats-v1.json')],
   ['Galka Lab safety contract', statsPack.safety.paperOnly === true && statsPack.safety.autoPaperDefault === false && statsPack.safety.realOrders === false && statsPack.safety.liveShadowRequiredBeforeAutoPaper === true],
   ['Galka Lab full market contract', ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].every((symbol) => statsPack.data.symbols.includes(symbol)) && statsPack.model.selected_k >= 4 && statsPack.model.selected_k <= 7],

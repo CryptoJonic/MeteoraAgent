@@ -1,8 +1,8 @@
 export const GALKA_STATS_SCHEMA = '1.2';
 export const GALKA_STATS_MODEL = 'galka-lab-v0.3.0';
 export const GALKA_STATS_ASSET = './data/galka-stats-v1.json.gz';
-export const GALKA_STATS_ASSET_SHA256 = '4dc40d3bc7779475904ba0e3af533d47bf17ca53368c120c42e4c75ac54c77e2';
-export const GALKA_STATS_PAYLOAD_CHECKSUM = 'sha256:79631c422c1023636fa5d7547e167ce487fefce12cd9dd976c3590d9a38631c1';
+export const GALKA_STATS_ASSET_SHA256 = '828175607d3619c4af1eea24776ee3d2312e0641962fbc016179bc71f0b830f6';
+export const GALKA_STATS_PAYLOAD_CHECKSUM = 'sha256:1379ea0d78dfb292e4cc1b909a29e25c9cec37e7d317a8d87ab7dc4af41d665d';
 export const STAT_INTERVALS = ['5m', '15m', '30m', '1h'];
 
 const finite = (value) => Number.isFinite(Number(value));
