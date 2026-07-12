@@ -8,6 +8,7 @@ import pandas as pd
 from galka_lab.clustering import apply_types, fit_types
 from galka_lab.splits import assert_oos_isolation, assign_chronological_splits, walk_forward_splits
 from galka_lab.tests.helpers import feature_rows
+from galka_lab.validation import walk_forward_validate
 
 
 class SplitClusteringTests(unittest.TestCase):
@@ -36,6 +37,13 @@ class SplitClusteringTests(unittest.TestCase):
         self.assertEqual(first.model["model_hash"], from_csv.model["model_hash"])
         predicted = apply_types(frame[frame["split"] == "final_oos"], first.model)
         self.assertEqual(predicted["galka_type"].nunique(), 4)
+
+    def test_walk_forward_keeps_equal_timestamps_in_one_side(self):
+        frame = feature_rows(480)
+        frame.loc[1::2, "confirmation_time"] = frame.loc[::2, "confirmation_time"].to_numpy()
+        rows = walk_forward_validate(frame, selected_k=4, folds=3)
+        self.assertEqual(len(rows), 3)
+        self.assertTrue(all(row["train_end"] < row["validation_start"] for row in rows))
 
 
 if __name__ == "__main__":

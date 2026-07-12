@@ -13,15 +13,25 @@ def walk_forward_validate(frame: pd.DataFrame, selected_k: int, folds: int = 4) 
     )
     if len(pre_oos) < 300:
         return []
-    initial = max(150, int(len(pre_oos) * 0.40))
-    remaining = len(pre_oos) - initial
+    unique_times = pd.Index(pd.to_datetime(pre_oos["confirmation_time"], utc=True).unique()).sort_values()
+    if len(unique_times) < folds + 2:
+        return []
+    initial = max(1, int(len(unique_times) * 0.40))
+    remaining = len(unique_times) - initial
     block = max(1, remaining // folds)
     rows = []
     for fold in range(folds):
-        train_end = initial + fold * block
-        validation_end = len(pre_oos) if fold == folds - 1 else min(len(pre_oos), train_end + block)
-        train = pre_oos.iloc[:train_end].copy()
-        validation = pre_oos.iloc[train_end:validation_end].copy()
+        validation_start_index = initial + fold * block
+        validation_end_index = (
+            len(unique_times) if fold == folds - 1 else min(len(unique_times), validation_start_index + block)
+        )
+        validation_start_time = unique_times[validation_start_index]
+        validation_end_time = unique_times[validation_end_index - 1]
+        train = pre_oos[pre_oos["confirmation_time"] < validation_start_time].copy()
+        validation = pre_oos[
+            (pre_oos["confirmation_time"] >= validation_start_time)
+            & (pre_oos["confirmation_time"] <= validation_end_time)
+        ].copy()
         if len(train) < 100 or len(validation) < 20:
             continue
         if pd.Timestamp(train["confirmation_time"].max()) >= pd.Timestamp(
