@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from galka_lab.evaluation import derive_grid_profiles, evaluate_profiles
 from galka_lab.pack import build_terminal_pack, verify_terminal_pack, write_terminal_pack
@@ -13,6 +14,7 @@ from galka_lab.statistics import (
     block_bootstrap_statistics,
     build_statistics,
     conditional_return_curves,
+    recency_weighted_statistics,
     wilson_interval,
 )
 from galka_lab.tests.helpers import feature_rows
@@ -34,6 +36,13 @@ class StatisticsEvaluationPackTests(unittest.TestCase):
         low, high = wilson_interval(50, 100)
         self.assertLess(low, 0.5)
         self.assertGreater(high, 0.5)
+
+    def test_recency_weighted_statistics_ignore_input_row_order(self):
+        as_of = pd.to_datetime(self.events["activation_time"], utc=True).max()
+        first = recency_weighted_statistics(self.events, as_of=as_of)
+        shuffled = self.events.sample(frac=1, random_state=81357).reset_index(drop=True)
+        second = recency_weighted_statistics(shuffled, as_of=as_of)
+        pd.testing.assert_frame_equal(first, second, check_exact=True)
 
     def test_grid_stop_fee_accounting_and_pack_checksum(self):
         profiles = derive_grid_profiles(self.events)

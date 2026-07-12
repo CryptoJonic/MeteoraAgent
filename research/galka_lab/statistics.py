@@ -444,6 +444,12 @@ def recency_weighted_statistics(
         activated = group[group["activated"] == True].copy()  # noqa: E712
         if activated.empty:
             continue
+        stable_order = [
+            column
+            for column in ("activation_time", "confirmation_time", "candidate_id")
+            if column in activated.columns
+        ]
+        activated = activated.sort_values(stable_order, kind="mergesort").reset_index(drop=True)
         times = pd.to_datetime(activated["activation_time"], utc=True)
         ages = np.maximum(0.0, (as_of - times).dt.total_seconds().to_numpy() / 86_400)
         weights = np.exp(-np.log(2) * ages / half_life_days)
