@@ -1,5 +1,5 @@
 {
-  "activated_event_count": 157554,
+  "activated_event_count": 157499,
   "analysis_event_count": 168099,
   "arguments": {
     "build_dataset": true,
@@ -29,10 +29,10 @@
   "candidate_count": 172657,
   "chronological_split": "60% train / 20% validation / 20% final OOS by global timestamp groups",
   "final_oos_used_for_fit": false,
-  "generated_at": "2026-07-12T15:53:44.002704Z",
-  "manifest_hash": "89f3a3713c8acf68f05c77ebcbf8667ef5fe70390887a782e91713125f7d812e",
+  "generated_at": "2026-07-12T20:57:28.304473Z",
+  "manifest_hash": "16061ad0c3d8ca46e8f07552ab6f12817c5a0a65af505b03e97f81045cecc7d4",
   "model_hash": "b572451d8e65411f64bd9ad2dba18dfc78fa9bf23a3d9eef92373e9fc85db1de",
-  "model_version": "galka-lab-v0.2.0",
+  "model_version": "galka-lab-v0.3.0",
   "purged_event_count": 1155,
   "seed": 20260712,
   "walk_forward_folds": 4

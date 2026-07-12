@@ -1,6 +1,6 @@
 # Galka Lab model card
 
-- Model version: `galka-lab-v0.2.0`
+- Model version: `galka-lab-v0.3.0`
 - Model hash: `b572451d8e65411f64bd9ad2dba18dfc78fa9bf23a3d9eef92373e9fc85db1de`
 - Algorithm: KMeans
 - Types: 4
