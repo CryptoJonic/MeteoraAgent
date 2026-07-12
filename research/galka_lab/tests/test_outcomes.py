@@ -44,9 +44,27 @@ class OutcomeTests(unittest.TestCase):
         self.assertTrue(returned["return_3h"])
         self.assertTrue(returned["depth_1_5_reached"])
         self.assertGreaterEqual(returned["trail_075_high_pct"], 0.4)
+        self.assertIn("reclaim_000_trail_015_exit_pct", returned.index)
+        self.assertIn("trail_atr_exit_pct", returned.index)
+        self.assertIn("trail_swing_exit_pct", returned.index)
         self.assertTrue(censored["outcome_censored"])
         self.assertIsNone(censored["return_48h"])
         self.assertGreater(pd.Timestamp(returned["activation_time"]), times[30])
+
+    def test_depth_reached_after_first_return_is_not_conditioned_as_pre_return(self):
+        times = pd.date_range("2026-01-01", periods=180, freq="1min", tz="UTC")
+        frame = pd.DataFrame(
+            {"time": times, "open": 101.0, "high": 101.1, "low": 100.9, "close": 101.0, "volume": 1.0}
+        )
+        frame.loc[31, ["open", "high", "low", "close"]] = [100.5, 100.6, 99.0, 99.4]
+        frame.loc[32, ["open", "high", "low", "close"]] = [99.4, 100.2, 99.0, 100.1]
+        frame.loc[40, ["open", "high", "low", "close"]] = [100.2, 100.3, 95.0, 96.0]
+        result = label_outcomes(pd.DataFrame([candidate("ordered-depth", times[30])]), frame)
+        event = result.iloc[0]
+        self.assertTrue(event["returned"])
+        self.assertAlmostEqual(event["mae_pct"], 1.0)
+        self.assertTrue(event["depth_1_0_reached"])
+        self.assertFalse(event["depth_3_0_reached"])
 
 
 if __name__ == "__main__":

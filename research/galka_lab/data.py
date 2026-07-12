@@ -188,6 +188,7 @@ def validate_market_data(frame: pd.DataFrame, interval: str) -> dict:
     duplicates = int(pd.Series(times).duplicated().sum())
     backwards = int((differences < 0).sum())
     gap_mask = differences > expected
+    gap_indices = np.flatnonzero(gap_mask)
     missing = int(np.maximum(differences[gap_mask] // expected - 1, 0).sum()) if gap_mask.any() else 0
     invalid_ohlc = int(
         (
@@ -203,6 +204,14 @@ def validate_market_data(frame: pd.DataFrame, interval: str) -> dict:
         "backwards": backwards,
         "gaps": int(gap_mask.sum()),
         "missing_bars": missing,
+        "gap_ranges": [
+            {
+                "after": iso_utc(frame["time"].iloc[int(index)]),
+                "before": iso_utc(frame["time"].iloc[int(index) + 1]),
+                "missing_bars": int(max(differences[int(index)] // expected - 1, 0)),
+            }
+            for index in gap_indices
+        ],
         "invalid_ohlc": invalid_ohlc,
         "start": iso_utc(frame["time"].iloc[0]),
         "end": iso_utc(frame["time"].iloc[-1]),

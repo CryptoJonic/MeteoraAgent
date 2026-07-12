@@ -36,14 +36,16 @@ def records(frame: pd.DataFrame) -> list[dict]:
     return json_safe(frame.to_dict(orient="records"))
 
 
-def compact_conditional(frame: pd.DataFrame) -> list[dict]:
+def compact_conditional(
+    frame: pd.DataFrame, *, extra_dimensions: tuple[str, ...] = ()
+) -> list[dict]:
     if frame.empty:
         return []
     selected = frame[
         (frame["split"] == "all") & frame["window"].isin(("all", "90d", "365d"))
     ]
     rows = []
-    dimensions = ["symbol", "interval", "galka_type", "window"]
+    dimensions = ["symbol", "interval", "galka_type", *extra_dimensions, "window"]
     for keys, group in selected.groupby(dimensions, dropna=False, sort=True):
         depths = []
         for depth, depth_group in group.groupby("depth_pct", sort=True):
@@ -60,15 +62,9 @@ def compact_conditional(frame: pd.DataFrame) -> list[dict]:
                     ]
                 )
             depths.append([float(depth), horizons])
-        rows.append(
-            {
-                "symbol": keys[0],
-                "interval": keys[1],
-                "type": keys[2],
-                "window": keys[3],
-                "depths": depths,
-            }
-        )
+        identity = dict(zip(dimensions, keys))
+        identity["type"] = identity.pop("galka_type")
+        rows.append({**json_safe(identity), "depths": depths})
     return rows
 
 
@@ -101,16 +97,30 @@ def build_terminal_pack(
             "global": records(statistics["global"][statistics["global"]["split"] == "all"]),
             "finalOos": records(statistics["global"][(statistics["global"]["split"] == "final_oos") & (statistics["global"]["window"] == "all")]),
             "conditional": compact_conditional(statistics["conditional"]),
+            "conditionalRegime": compact_conditional(
+                statistics["conditional_regime"],
+                extra_dimensions=("regime", "volatility_regime"),
+            ),
             "cliffs": records(statistics["cliffs"][(statistics["cliffs"]["split"] == "all") & statistics["cliffs"]["window"].isin(("all", "90d"))]),
             "regimes": records(statistics["regimes"][statistics["regimes"]["split"] == "all"]),
             "recent": records(statistics["recent"]),
+            "recencyWeighted": records(statistics["recency_weighted"]),
+            "histograms": records(statistics["histograms"]),
+            "survival": records(statistics["survival"]),
+            "shapeProfiles": records(statistics["shape_profiles"]),
+            "examples": records(statistics["examples"]),
+            "correlationStability": records(statistics["correlation_stability"]),
         },
         "gridComparison": json_safe([row for row in evaluation.get("grid_summary", []) if row.get("split") == "all"]),
         "stopComparison": json_safe([row for row in evaluation.get("stop_summary", []) if row.get("split") == "all"]),
+        "exitComparison": json_safe([row for row in evaluation.get("trailing_summary", []) if row.get("split") == "all"]),
+        "sizing": json_safe(evaluation.get("sizing", {})),
         "safety": {
             "paperOnly": True,
             "autoPaperDefault": False,
             "realOrders": False,
+            "liveShadowRequiredBeforeAutoPaper": True,
+            "historicalScreenIsNotAuthorization": True,
             "minimumSample": 40,
         },
     }

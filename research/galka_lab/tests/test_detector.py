@@ -47,6 +47,12 @@ class DetectorTests(unittest.TestCase):
             self.assertAlmostEqual(candidate[column], repeated[column], places=12)
         self.assertEqual(first["candidate_id"].duplicated().sum(), 0)
 
+    def test_candidate_context_does_not_cross_market_data_gap(self):
+        original = fixture()
+        original.loc[80:, "time"] += pd.Timedelta(days=2)
+        candidates = extract_candidates(build_market_features(original, "15m"), "BTCUSDT", "15m")
+        self.assertNotIn(90, candidates.get("pivot_index", pd.Series(dtype=int)).tolist())
+
 
 if __name__ == "__main__":
     unittest.main()

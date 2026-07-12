@@ -26,7 +26,7 @@ from .features import build_market_features, enrich_cross_asset
 from .outcomes import label_outcomes
 from .pack import build_terminal_pack, write_terminal_pack
 from .report import write_reports
-from .splits import assert_oos_isolation, assign_chronological_splits
+from .splits import assert_oos_isolation, assign_chronological_splits, mark_split_embargo
 from .statistics import build_statistics
 from .utils import canonical_json, frame_hash, sha256_bytes, sha256_file, write_json
 from .validation import walk_forward_validate
@@ -182,6 +182,7 @@ def build_dataset(args) -> tuple[pd.DataFrame, dict]:
     events.loc[representative.to_numpy(int), "analysis_eligible"] = True
     events = assign_chronological_splits(events)
     assert_oos_isolation(events)
+    events = mark_split_embargo(events)
 
     manifest_payload = {
         "schema_version": DATASET_SCHEMA_VERSION,
@@ -193,7 +194,10 @@ def build_dataset(args) -> tuple[pd.DataFrame, dict]:
         "end": max(item["end"] for item in manifests),
         "datasets": manifests,
         "candidate_count": int(len(events)),
-        "analysis_event_count": int(events["analysis_eligible"].sum()),
+        "family_representative_count": int(events["analysis_eligible"].sum()),
+        "analysis_event_count": int(
+            (events["analysis_eligible"] & ~events["purged_for_split"]).sum()
+        ),
     }
     manifest_payload["manifest_hash"] = sha256_bytes(canonical_json(manifest_payload).encode("utf-8"))
     return events, manifest_payload
@@ -216,9 +220,10 @@ def run(args) -> dict:
         )
         manifest = json.loads(manifest_path.read_text())
 
-    analysis = events[events["analysis_eligible"] == True].copy()  # noqa: E712
-    clustered = fit_types(analysis)
+    classification = events[events["analysis_eligible"] == True].copy()  # noqa: E712
+    clustered = fit_types(classification)
     all_candidates = apply_types(events, clustered.model)
+    analysis = classification[classification["purged_for_split"] == False].copy()  # noqa: E712
     analysis = apply_types(analysis, clustered.model)
     profiles = derive_grid_profiles(analysis)
     evaluated, evaluation = evaluate_profiles(analysis, profiles)
@@ -232,11 +237,12 @@ def run(args) -> dict:
         "model_hash": clustered.model["model_hash"],
         "generated_at": generated_at,
         "seed": SEED,
-        "chronological_split": "60% train / 20% validation / 20% final OOS per symbol/timeframe",
+        "chronological_split": "60% train / 20% validation / 20% final OOS by global timestamp groups",
         "walk_forward_folds": len(walk_forward),
         "final_oos_used_for_fit": False,
         "candidate_count": int(len(all_candidates)),
         "analysis_event_count": int(len(evaluated)),
+        "purged_event_count": int(events["purged_for_split"].sum()),
         "activated_event_count": int((evaluated["activated"] == True).sum()),  # noqa: E712
         "manifest_hash": manifest["manifest_hash"],
         "arguments": vars(args),

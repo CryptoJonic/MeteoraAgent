@@ -26,6 +26,8 @@
     "level": { "type": "number", "exclusiveMinimum": 0 },
     "activated": { "type": "boolean" },
     "outcome_censored": { "type": ["boolean", "null"] },
+    "observation_end_time": { "type": ["string", "object", "null"] },
+    "purged_for_split": { "type": "boolean" },
     "mae_pct": { "type": ["number", "null"], "minimum": 0 },
     "return_minutes": { "type": ["number", "null"], "minimum": 0 },
     "split": { "enum": ["train", "validation", "final_oos"] },

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-MODEL_VERSION = "galka-lab-v0.1.0"
-PACK_SCHEMA_VERSION = "1.0"
-DATASET_SCHEMA_VERSION = "1.0"
+MODEL_VERSION = "galka-lab-v0.2.0"
+PACK_SCHEMA_VERSION = "1.1"
+DATASET_SCHEMA_VERSION = "1.1"
 SEED = 20260712
 
 SYMBOLS = ("BTCUSDT", "ETHUSDT", "SOLUSDT")

@@ -32,6 +32,15 @@ def walk_forward_validate(frame: pd.DataFrame, selected_k: int, folds: int = 4) 
             (pre_oos["confirmation_time"] >= validation_start_time)
             & (pre_oos["confirmation_time"] <= validation_end_time)
         ].copy()
+        if "observation_end_time" in pre_oos:
+            train = train[
+                pd.to_datetime(train["observation_end_time"], utc=True)
+                < validation_start_time
+            ]
+            validation = validation[
+                pd.to_datetime(validation["observation_end_time"], utc=True)
+                <= validation_end_time
+            ]
         if len(train) < 100 or len(validation) < 20:
             continue
         if pd.Timestamp(train["confirmation_time"].max()) >= pd.Timestamp(

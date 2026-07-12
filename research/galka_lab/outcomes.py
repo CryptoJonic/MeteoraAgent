@@ -12,6 +12,7 @@ from .config import (
     MAX_OUTCOME_HOURS,
     POST_RECLAIM_HOURS,
     RECLAIM_BUFFER_PCT,
+    RECLAIM_BUFFERS_PCT,
     TRAIL_DISTANCES_PCT,
 )
 from .utils import iso_utc
@@ -114,6 +115,54 @@ def _target_after(
     return None
 
 
+def _depth_before_return(
+    open_: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    activation: Hit,
+    returned: Hit | None,
+    end_index: int,
+    target: float,
+    extrema: RangeExtremaIndex,
+) -> Hit | None:
+    """Find a depth hit in event order, never after the first return to level."""
+    activation_path = candle_path(
+        open_[activation.index], high[activation.index], low[activation.index], close[activation.index]
+    )
+    first_end = returned.position if returned and returned.index == activation.index else 3
+    first_position = _first_position(
+        activation_path[: first_end + 1], lambda value: value <= target, activation.position
+    )
+    if first_position is not None:
+        return Hit(activation.index, first_position)
+    if returned and returned.index == activation.index:
+        return None
+
+    full_end = returned.index if returned else end_index + 1
+    cursor = activation.index + 1
+    while cursor < full_end:
+        index = extrema.first_low_below(cursor, full_end, target, inclusive=True)
+        if index is None:
+            break
+        path = candle_path(open_[index], high[index], low[index], close[index])
+        position = _first_position(path, lambda value: value <= target)
+        if position is not None:
+            return Hit(index, position)
+        cursor = index + 1
+
+    if returned and returned.index > activation.index:
+        return_path = candle_path(
+            open_[returned.index], high[returned.index], low[returned.index], close[returned.index]
+        )
+        position = _first_position(
+            return_path[: returned.position + 1], lambda value: value <= target
+        )
+        if position is not None:
+            return Hit(returned.index, position)
+    return None
+
+
 def _point_minutes(times_ms: np.ndarray, hit: Hit, origin_ms: int, interval_ms: int) -> float:
     point_ms = int(times_ms[hit.index]) + round(interval_ms * hit.position / 4)
     return max(0.0, (point_ms - origin_ms) / 60_000)
@@ -166,11 +215,38 @@ def _simulate_trails(
     activation: Hit,
     level: float,
     interval_ms: int,
+    atr_pct: float,
 ) -> dict:
-    reclaim = level * (1 + RECLAIM_BUFFER_PCT / 100)
     distances = tuple(float(value) for value in TRAIL_DISTANCES_PCT)
+    strategies = [
+        {
+            "key": f"reclaim_{int(round(buffer * 100)):03d}_trail_{int(round(distance * 100)):03d}",
+            "buffer": float(buffer),
+            "distance": float(distance),
+            "kind": "fixed",
+        }
+        for buffer in RECLAIM_BUFFERS_PCT
+        for distance in distances
+    ]
+    strategies.extend(
+        (
+            {
+                "key": "reclaim_010_trail_atr",
+                "buffer": RECLAIM_BUFFER_PCT,
+                "distance": float(np.clip(1.5 * atr_pct, 0.15, 2.0)),
+                "kind": "atr",
+            },
+            {
+                "key": "reclaim_010_trail_swing",
+                "buffer": RECLAIM_BUFFER_PCT,
+                "distance": None,
+                "kind": "swing",
+            },
+        )
+    )
     state = {
-        distance: {
+        strategy["key"]: {
+            **strategy,
             "armed": False,
             "armed_ms": None,
             "high": None,
@@ -180,7 +256,7 @@ def _simulate_trails(
             "reason": None,
             "deadline": int(times_ms[activation.index]) + 72 * 3_600_000,
         }
-        for distance in distances
+        for strategy in strategies
     }
     maximum_ms = min(
         int(times_ms[-1]), int(times_ms[activation.index]) + 2 * 72 * 3_600_000
@@ -190,12 +266,29 @@ def _simulate_trails(
             break
         path = candle_path(open_[index], high[index], low[index], close[index])
         start_position = activation.position if index == activation.index else 0
+        swing_pivot = index - 3
+        if swing_pivot >= activation.index + 2:
+            pivot_low = float(low[swing_pivot])
+            confirmed_swing = pivot_low <= float(
+                np.min(low[swing_pivot - 2 : swing_pivot + 3])
+            )
+            for item in state.values():
+                if (
+                    confirmed_swing
+                    and item["kind"] == "swing"
+                    and item["armed"]
+                    and item["exit"] is None
+                ):
+                    item["stop"] = max(
+                        item["stop"], level, pivot_low * (1 - 0.05 / 100)
+                    )
         for position in range(start_position, len(path)):
             point_ms = int(times_ms[index]) + round(interval_ms * position / 4)
             price = path[position]
-            for distance, item in state.items():
+            for item in state.values():
                 if item["exit"] is not None:
                     continue
+                reclaim = level * (1 + item["buffer"] / 100)
                 if not item["armed"] and price >= reclaim:
                     item["armed"] = True
                     item["armed_ms"] = point_ms
@@ -206,7 +299,10 @@ def _simulate_trails(
                 if item["armed"]:
                     if price > item["high"]:
                         item["high"] = price
-                        item["stop"] = max(level, price * (1 - distance / 100))
+                        if item["kind"] != "swing":
+                            item["stop"] = max(
+                                level, price * (1 - item["distance"] / 100)
+                            )
                     if price <= item["stop"]:
                         item["exit"] = item["stop"]
                         item["exit_ms"] = point_ms
@@ -218,8 +314,7 @@ def _simulate_trails(
                     item["reason"] = "time_exit"
     output = {}
     origin_ms = int(times_ms[activation.index])
-    for distance, item in state.items():
-        key = f"trail_{int(round(distance * 100)):03d}"
+    for key, item in state.items():
         output[f"{key}_armed"] = bool(item["armed"])
         output[f"{key}_exit_pct"] = (
             (item["exit"] / level - 1) * 100 if item["exit"] is not None else np.nan
@@ -231,6 +326,19 @@ def _simulate_trails(
         output[f"{key}_high_pct"] = (
             (item["high"] / level - 1) * 100 if item["high"] is not None else np.nan
         )
+        if item["kind"] == "atr":
+            output[f"{key}_distance_pct"] = item["distance"]
+    for distance in distances:
+        source = f"reclaim_010_trail_{int(round(distance * 100)):03d}"
+        alias = f"trail_{int(round(distance * 100)):03d}"
+        for suffix in ("armed", "exit_pct", "minutes", "reason", "high_pct"):
+            output[f"{alias}_{suffix}"] = output[f"{source}_{suffix}"]
+    for kind in ("atr", "swing"):
+        source = f"reclaim_010_trail_{kind}"
+        alias = f"trail_{kind}"
+        for suffix in ("armed", "exit_pct", "minutes", "reason", "high_pct"):
+            output[f"{alias}_{suffix}"] = output[f"{source}_{suffix}"]
+    output["trail_atr_distance_pct"] = output["reclaim_010_trail_atr_distance_pct"]
     return output
 
 
@@ -267,6 +375,9 @@ def label_outcomes(
             "activated": False,
             "activation_time": pd.NaT,
             "activation_censored": bool(times_ms[-1] < activation_limit_ms),
+            "observation_end_time": pd.Timestamp(
+                min(int(times_ms[-1]), activation_limit_ms), unit="ms", tz="UTC"
+            ),
             "intrabar_policy": "directional_ohlc_adverse_first_from_activation",
         }
         if activation_index is None:
@@ -298,6 +409,27 @@ def label_outcomes(
         reclaim_minutes = (
             _point_minutes(times_ms, reclaimed, activation_ms, interval_ms) if reclaimed else np.nan
         )
+        returned_ms = (
+            int(times_ms[returned.index]) + round(interval_ms * returned.position / 4)
+            if returned
+            else None
+        )
+        reclaimed_ms = (
+            int(times_ms[reclaimed.index]) + round(interval_ms * reclaimed.position / 4)
+            if reclaimed
+            else None
+        )
+        if returned_ms is None:
+            observation_used_ms = outcome_limit_ms
+        else:
+            observation_used_ms = max(
+                activation_ms + 2 * 72 * 3_600_000,
+                returned_ms + POST_RECLAIM_HOURS * 3_600_000,
+                (reclaimed_ms + POST_RECLAIM_HOURS * 3_600_000)
+                if reclaimed_ms is not None
+                else returned_ms,
+            )
+        observation_used_ms = min(int(times_ms[-1]), observation_used_ms)
         row = {
             **base,
             "activated": True,
@@ -306,7 +438,7 @@ def label_outcomes(
             "returned": bool(returned),
             "return_time": (
                 pd.Timestamp(
-                    int(times_ms[returned.index]) + round(interval_ms * returned.position / 4),
+                    returned_ms,
                     unit="ms",
                     tz="UTC",
                 )
@@ -317,7 +449,7 @@ def label_outcomes(
             "reclaimed": bool(reclaimed),
             "reclaim_time": (
                 pd.Timestamp(
-                    int(times_ms[reclaimed.index]) + round(interval_ms * reclaimed.position / 4),
+                    reclaimed_ms,
                     unit="ms",
                     tz="UTC",
                 )
@@ -336,6 +468,9 @@ def label_outcomes(
             ),
             "outcome_censored": bool(not returned and times_ms[-1] < outcome_limit_ms),
             "outcome_end_time": pd.Timestamp(times_ms[outcome_end], unit="ms", tz="UTC"),
+            "observation_end_time": pd.Timestamp(
+                observation_used_ms, unit="ms", tz="UTC"
+            ),
             "available_minutes": available_minutes,
             "target_exit_pct": 0.0 if returned else np.nan,
         }
@@ -350,13 +485,13 @@ def label_outcomes(
         for threshold in DEPTH_THRESHOLDS_PCT:
             suffix = str(threshold).replace(".", "_")
             target = candidate.level * (1 - threshold / 100)
-            depth_index = extrema.first_low_below(
-                activation_index, outcome_end + 1, target, inclusive=True
+            depth_hit = _depth_before_return(
+                open_, high, low, close, activation, returned, outcome_end, target, extrema
             )
-            reached = depth_index is not None
+            reached = depth_hit is not None
             row[f"depth_{suffix}_reached"] = reached
             row[f"depth_{suffix}_minutes"] = (
-                (times_ms[depth_index] - activation_ms) / 60_000
+                _point_minutes(times_ms, depth_hit, activation_ms, interval_ms)
                 if reached
                 else np.nan
             )
@@ -390,14 +525,28 @@ def label_outcomes(
             row["drawdown_after_reclaim_pct"] = np.nan
         row.update(
             _simulate_trails(
-                open_, high, low, close, times_ms, activation, candidate.level, interval_ms
+                open_,
+                high,
+                low,
+                close,
+                times_ms,
+                activation,
+                candidate.level,
+                interval_ms,
+                float(getattr(candidate, "atr_pct", 0.50)),
             )
         )
         output.append(row)
 
     outcomes = pd.DataFrame(output)
     result = candidates.merge(outcomes, on="candidate_id", how="left", validate="one_to_one")
-    for column in ("activation_time", "return_time", "reclaim_time", "outcome_end_time"):
+    for column in (
+        "activation_time",
+        "return_time",
+        "reclaim_time",
+        "outcome_end_time",
+        "observation_end_time",
+    ):
         if column in result:
             result[column] = pd.to_datetime(result[column], utc=True)
     result["activation_time_iso"] = result["activation_time"].map(

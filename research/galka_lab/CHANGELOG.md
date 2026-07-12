@@ -1,5 +1,19 @@
 # Galka Lab changelog
 
+## 0.2.0 — statistical reliability pass
+
+- grouped train/validation/final OOS by global timestamps and added outcome-window purge/embargo;
+- prevented conditional-depth hits after first return and added depth-order verification;
+- excluded candidate context that crosses source-data gaps and recorded exact gap ranges;
+- separated fixed-notional return, return on filled capital, and fixed-risk R results;
+- derived every grid from complete activated events including non-returns;
+- marked all grids paper-only and Aggressive as stress-test-only;
+- added reclaim-buffer, fixed/ATR/confirmed-swing trailing, partial-runner and max-hold comparisons;
+- added regime-conditioned curves, recency weighting, Kaplan–Meier survival, histograms,
+  median shape profiles, representative examples, and split-stable feature correlations;
+- made historical-screen status incapable of authorizing auto-paper without live shadow evidence;
+- retained the original Radar, paper defaults, `galka-pro-v1`, positions and user data unchanged.
+
 ## 0.1.0 — dataset and interim-report phase
 
 - froze the draft PR #9 Radar baseline and source hash;

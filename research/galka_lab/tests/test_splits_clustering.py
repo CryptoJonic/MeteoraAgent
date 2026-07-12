@@ -6,7 +6,7 @@ from io import StringIO
 import pandas as pd
 
 from galka_lab.clustering import apply_types, fit_types
-from galka_lab.splits import assert_oos_isolation, assign_chronological_splits, walk_forward_splits
+from galka_lab.splits import assert_oos_isolation, assign_chronological_splits, mark_split_embargo, walk_forward_splits
 from galka_lab.tests.helpers import feature_rows
 from galka_lab.validation import walk_forward_validate
 
@@ -16,6 +16,8 @@ class SplitClusteringTests(unittest.TestCase):
         frame = feature_rows(480).drop(columns="split")
         split = assign_chronological_splits(frame)
         assert_oos_isolation(split)
+        by_time = split.groupby("confirmation_time")["split"].nunique()
+        self.assertEqual(int(by_time.max()), 1)
         for _, group in split.groupby(["symbol", "interval"]):
             self.assertLessEqual(
                 group[group["split"] != "final_oos"]["confirmation_time"].max(),
@@ -44,6 +46,26 @@ class SplitClusteringTests(unittest.TestCase):
         rows = walk_forward_validate(frame, selected_k=4, folds=3)
         self.assertEqual(len(rows), 3)
         self.assertTrue(all(row["train_end"] < row["validation_start"] for row in rows))
+
+    def test_final_oos_keeps_equal_timestamps_in_one_side(self):
+        frame = feature_rows(480).drop(columns="split")
+        frame.loc[1::2, "confirmation_time"] = frame.loc[::2, "confirmation_time"].to_numpy()
+        split = assign_chronological_splits(frame)
+        assert_oos_isolation(split)
+        self.assertEqual(int(split.groupby("confirmation_time")["split"].nunique().max()), 1)
+
+    def test_split_embargo_purges_cross_boundary_outcomes(self):
+        frame = feature_rows(480).drop(columns="split")
+        split = assign_chronological_splits(frame)
+        split["observation_end_time"] = split["confirmation_time"] + pd.Timedelta(hours=48)
+        embargoed = mark_split_embargo(split)
+        validation_start = embargoed.loc[embargoed["split"] == "validation", "confirmation_time"].min()
+        oos_start = embargoed.loc[embargoed["split"] == "final_oos", "confirmation_time"].min()
+        retained_train = embargoed[(embargoed["split"] == "train") & ~embargoed["purged_for_split"]]
+        retained_validation = embargoed[(embargoed["split"] == "validation") & ~embargoed["purged_for_split"]]
+        self.assertTrue((retained_train["observation_end_time"] < validation_start).all())
+        self.assertTrue((retained_validation["observation_end_time"] < oos_start).all())
+        self.assertGreater(int(embargoed["purged_for_split"].sum()), 0)
 
 
 if __name__ == "__main__":

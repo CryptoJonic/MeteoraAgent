@@ -1,5 +1,12 @@
 __pycache__/
 cache/
-output/work/
+output/*
+!output/*.md
+!output/*.json
+!output/galka-stats-v1.json.gz
 output/all_candidates.csv.gz
 output/events.csv.gz
+output/statistics_conditional.json
+output/statistics_conditional_regime.json
+output/dataset/
+output/work/

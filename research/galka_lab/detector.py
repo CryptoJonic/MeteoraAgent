@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .config import CANDIDATE
+from .config import CANDIDATE, INTERVAL_MS
 from .utils import iso_utc
 
 
@@ -33,6 +33,8 @@ def extract_candidates(
     volume = frame["volume"].to_numpy(float)
     atr = frame["atr"].to_numpy(float)
     time = pd.to_datetime(frame["time"], utc=True)
+    time_ms = time.astype("int64").to_numpy() // 1_000_000
+    discontinuities = np.diff(time_ms) != INTERVAL_MS[interval]
     candidates: list[dict] = []
 
     for pivot in range(minimum_index, len(frame) - right):
@@ -54,6 +56,9 @@ def extract_candidates(
             continue
 
         confirmation = pivot + right
+        continuity_start = max(0, pivot - context_bars)
+        if discontinuities[continuity_start:confirmation].any():
+            continue
         left_high_offset = int(np.nanargmax(high[left_slice]))
         right_high_offset = int(np.nanargmax(high[right_slice]))
         left_bars = left - left_high_offset
@@ -79,8 +84,7 @@ def extract_candidates(
         confirmation_time = time.iloc[confirmation]
         event_epoch = int(pivot_time.timestamp())
         candidate_id = f"G-{symbol}-{interval}-{event_epoch}"
-        candidates.append(
-            {
+        candidate_record = {
                 "candidate_id": candidate_id,
                 "event_family_id": candidate_id,
                 "symbol": symbol,
@@ -129,8 +133,13 @@ def extract_candidates(
                 "detector_right_bars": right,
                 "feature_cutoff_time": confirmation_time,
                 "lookahead_bars": right,
-            }
-        )
+        }
+        for offset in range(-left, right + 1):
+            side = "m" if offset < 0 else "p"
+            candidate_record[f"shape_{side}{abs(offset):02d}"] = float(
+                (close[pivot + offset] / low[pivot] - 1) * 100
+            )
+        candidates.append(candidate_record)
 
     if not candidates:
         return pd.DataFrame()

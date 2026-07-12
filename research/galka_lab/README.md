@@ -34,7 +34,10 @@ python research/galka_lab.py --synthetic --synthetic-days 45 --build-dataset --c
 - A pivot uses a named right-side confirmation window.
 - `feature_cutoff_time` is the confirmation time.
 - Activation and every outcome begin strictly after confirmation.
-- Candidates are split chronologically per symbol/timeframe.
+- Candidates are split by global chronological timestamp groups, so the same market instant
+  cannot appear on both sides through another symbol or timeframe.
+- Train/validation rows whose full activation/outcome observation window crosses the next split
+  boundary are purged; walk-forward folds apply the same embargo.
 - Cluster count is selected on train/validation only.
 - Centroids are fit on train only.
 - Walk-forward folds stop before final OOS.
@@ -51,7 +54,10 @@ python research/galka_lab.py --synthetic --synthetic-days 45 --build-dataset --c
 - `HONEST_LIMITATIONS.md` — execution and inference limitations.
 - `MODEL_CARD.md`, `model.json`, `walk_forward.json` — versioned model evidence.
 - `statistics_*.json` — global, conditional, regime, recent and cliff tables.
+- Large full conditional tables stay artifact-only; compact depth × horizon/regime tables,
+  histograms, survival, shape profiles and stable correlations are embedded in the pack.
 - `galka-stats-v1.json(.gz)` — checksum-protected compact terminal pack.
 
 Type names describe train-fitted clusters; they are not predefined labels or trading guarantees.
-Aggressive grids are paper-only. Auto-paper remains off and is outside this dataset phase.
+Every grid is paper-only, Aggressive is stress-test-only, and a historical screen cannot authorize
+auto-paper without separately accumulated live shadow evidence. Auto-paper remains off.

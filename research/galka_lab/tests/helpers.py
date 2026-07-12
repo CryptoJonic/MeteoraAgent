@@ -37,6 +37,8 @@ def feature_rows(count: int = 480) -> pd.DataFrame:
                 "regime": ("uptrend", "range", "downtrend")[index % 3],
                 "volatility_regime": ("low", "normal", "high")[index % 3],
                 "trail_075_exit_pct": 0.5 if index % 5 != 0 else -1.8,
+                "trail_075_minutes": 180.0,
+                "close_12h_pct": 0.1 if index % 5 != 0 else -0.8,
                 "close_24h_pct": 0.2 if index % 5 != 0 else -1.2,
                 "close_48h_pct": 0.3 if index % 5 != 0 else -1.4,
             }
@@ -48,5 +50,13 @@ def feature_rows(count: int = 480) -> pd.DataFrame:
             reached = row["mae_pct"] >= depth
             row[f"depth_{suffix}_reached"] = reached
             row[f"depth_{suffix}_minutes"] = depth * 60 if reached else np.nan
+        for buffer in (0.00, 0.10, 0.20):
+            for distance in (0.15, 0.30, 0.50, 0.75, 1.00):
+                key = f"reclaim_{int(round(buffer * 100)):03d}_trail_{int(round(distance * 100)):03d}"
+                row[f"{key}_exit_pct"] = row["trail_075_exit_pct"] + (distance - 0.75) * 0.1
+                row[f"{key}_minutes"] = 180.0
+        for kind in ("atr", "swing"):
+            row[f"reclaim_010_trail_{kind}_exit_pct"] = row["trail_075_exit_pct"]
+            row[f"reclaim_010_trail_{kind}_minutes"] = 180.0
         rows.append(row)
     return pd.DataFrame(rows)

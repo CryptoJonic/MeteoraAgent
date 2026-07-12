@@ -24,6 +24,8 @@ class DataTests(unittest.TestCase):
         second = validate_market_data(frame.copy(), "1m")
         self.assertEqual(first["gaps"], 1)
         self.assertEqual(first["missing_bars"], 1)
+        self.assertEqual(first["gap_ranges"][0]["after"], "2026-01-01T00:01:00Z")
+        self.assertEqual(first["gap_ranges"][0]["before"], "2026-01-01T00:03:00Z")
         self.assertEqual(first["invalid_ohlc"], 0)
         self.assertEqual(first["hash"], second["hash"])
         self.assertEqual(first["hash"], frame_hash(frame))
