@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galka-manual-auto-shell-v3';
+const CACHE_NAME = 'galka-manual-auto-shell-v4';
 const APP_SHELL = [
   './pro.html',
   './pro.css?v=6',
@@ -14,7 +14,7 @@ const APP_SHELL = [
   'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js',
 ];
 
-const MANUAL_TARGET_VERSION = 'manual-auto-v1.1-galka-target';
+const MANUAL_TARGET_VERSION = 'manual-auto-v1.2-symbol-autocenter';
 
 function replaceOnce(source, oldText, newText, label) {
   if (!source.includes(oldText)) {
@@ -109,6 +109,26 @@ function transformManualTargetSource(originalSource) {
     "s.exitMode='target';s.reclaimBufferPct=0;",
     'force target settings',
   );
+
+  const oldChangeSymbol = [
+    'function changeSymbol(symbol){',
+    "  runtime.selectedDrawing=null;syncDrawingInteraction();runtime.radarSelected=null;runtime.symbol=symbol;store.ui.symbol=symbol;els.symbolSelect.value=symbol;els.watermark.textContent=symbol+' · '+runtime.interval;save();",
+    '  loadCurrent(false);renderAll();runtime.mainChart.timeScale().scrollToRealTime();',
+    '}',
+  ].join('\n');
+  const centeredChangeSymbol = [
+    'async function changeSymbol(symbol){',
+    "  runtime.selectedDrawing=null;syncDrawingInteraction();runtime.radarSelected=null;runtime.symbol=symbol;store.ui.symbol=symbol;els.symbolSelect.value=symbol;els.watermark.textContent=symbol+' · '+runtime.interval;save();",
+    "  const priceScale=runtime.mainChart?.priceScale('right');",
+    "  priceScale?.applyOptions({autoScale:true});els.autoScaleBtn?.classList.add('active');",
+    '  try{runtime.priceSeries?.setData([]);}catch(_){}',
+    '  await loadCurrent(false);',
+    "  priceScale?.applyOptions({autoScale:true});runtime.mainChart?.timeScale().scrollToRealTime();",
+    "  requestAnimationFrame(()=>priceScale?.applyOptions({autoScale:true}));",
+    '  renderAll();',
+    '}',
+  ].join('\n');
+  source = replaceOnce(source, oldChangeSymbol, centeredChangeSymbol, 'symbol auto-center');
 
   return source;
 }
