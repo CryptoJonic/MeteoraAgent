@@ -115,6 +115,7 @@ def write_reports(
     cliffs = statistics.get("cliffs", pd.DataFrame())
     regimes = statistics.get("regimes", pd.DataFrame())
     correlations = statistics.get("correlation_stability", pd.DataFrame())
+    block_bootstrap = statistics.get("block_bootstrap", pd.DataFrame())
     dense_zones = _dense_zone_rows(evaluation.get("profiles", {}))
     split_inventory = _summary_by(events, ["split"])
     source_quality = pd.DataFrame(
@@ -264,6 +265,14 @@ def write_reports(
         and "final_oos_spearman" in correlations
         else correlations
     )
+    block_oos = _select(
+        _select(block_bootstrap, split="final_oos"), scope="cross_symbol"
+    )
+    block_oos = (
+        block_oos.sort_values("galka_type")
+        if not block_oos.empty and "galka_type" in block_oos
+        else block_oos
+    )
     decision = [
         "# Galka Lab decision report",
         "",
@@ -279,6 +288,12 @@ def write_reports(
         "## Most stable observational return types on untouched final OOS",
         "",
         markdown_table(best, ["galka_type", "count_complete", "return_6h_probability", "return_24h_probability", "return_24h_ci_low", "return_24h_ci_high", "depth_success_p75", "depth_success_p90", "depth_success_p95", "depth_success_p99", "return_minutes_p50"]),
+        "",
+        "## Day-block bootstrap uncertainty on untouched final OOS",
+        "",
+        "UTC activation days are resampled as blocks, keeping same-day BTC/ETH/SOL and cross-timeframe events together. These intervals are the primary uncertainty view; event-level Wilson intervals remain a secondary screening aid.",
+        "",
+        markdown_table(block_oos, ["galka_type", "event_count", "activated_count", "returned_count", "block_count", "return_1h_probability", "return_1h_block_ci_low", "return_1h_block_ci_high", "return_24h_probability", "return_24h_block_ci_low", "return_24h_block_ci_high", "return_48h_probability", "return_48h_block_ci_low", "return_48h_block_ci_high", "depth_success_p50", "depth_success_p50_block_ci_low", "depth_success_p50_block_ci_high", "depth_success_p75", "depth_success_p75_block_ci_low", "depth_success_p75_block_ci_high", "depth_success_p90", "depth_success_p90_block_ci_low", "depth_success_p90_block_ci_high", "insufficient_data"]),
         "",
         "## Types that should not be promoted",
         "",
@@ -352,10 +367,12 @@ def write_reports(
 - End-of-data outcomes are censored instead of counted as losses.
 - Depth-conditioned return uses only depth reached before the first return; later re-tests are not backfilled into the original event.
 - Nearby candidates are de-duplicated within a symbol/timeframe family, but simultaneous cross-timeframe events are correlated and must not be read as independent trials.
+- Primary final-OOS uncertainty uses UTC-day block bootstrap so same-day BTC/ETH/SOL and cross-timeframe dependence stays together. Conditional depth tables retain event-level Wilson intervals as a screening aid, not an independent-trial guarantee.
 - Source gaps are recorded and candidate context crossing a gap is excluded; missing bars are not interpolated.
 - One-minute activation/outcome/trailing replay stops at a source-gap boundary; candles after the gap cannot complete the earlier event.
 - Market regimes drift. Seven-day and rare-crisis samples can be too small for stable conclusions.
 - Clustering is descriptive. Human names do not prove causality or persistence.
+- Cluster silhouette and stability metrics must be read together: stable reruns can still have overlapping, weakly separated types.
 - Multiple grid/stop/trailing comparisons create multiple-testing risk; failed variants remain in outputs.
 - Candidate-level fixed-notional results count observable non-activations and fully unfilled grids as 0% cash returns; unresolved censored candidates are excluded. Return-on-filled is reported separately.
 - Candidate-level fixed-risk results count no-fill candidates as 0R and use a train-fitted percentile stop.

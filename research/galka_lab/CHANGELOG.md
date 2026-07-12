@@ -1,5 +1,15 @@
 # Galka Lab changelog
 
+## 0.3.0 — dependence-aware uncertainty and candidate EV
+
+- added deterministic UTC-day block bootstrap intervals for all return horizons and depth
+  quantiles on all-history and final OOS;
+- kept same-day BTC/ETH/SOL and cross-timeframe observations inside one resampled block;
+- exported symbol-specific block intervals so one instrument cannot hide another;
+- counted observable no-activation and fully unfilled candidates as 0%/0R in candidate-level EV;
+- made report generation safe for short windows with empty grid/regime/exit tables;
+- bumped dataset and compact-pack schemas to 1.2.
+
 ## 0.2.0 — statistical reliability pass
 
 - grouped train/validation/final OOS by global timestamps and added outcome-window purge/embargo;
@@ -7,8 +17,6 @@
 - excluded candidate context that crosses source-data gaps, censored 1m activation/outcomes at
   segment boundaries, and recorded exact gap ranges;
 - separated fixed-notional return, return on filled capital, and fixed-risk R results;
-- counted observable no-activation and fully unfilled candidates as 0%/0R in candidate-level EV
-  instead of silently dropping them as missing values;
 - derived every grid from complete activated events including non-returns;
 - marked all grids paper-only and Aggressive as stress-test-only;
 - added reclaim-buffer, fixed/ATR/confirmed-swing trailing, partial-runner and max-hold comparisons;

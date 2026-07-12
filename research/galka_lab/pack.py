@@ -110,6 +110,9 @@ def build_terminal_pack(
             "shapeProfiles": records(statistics["shape_profiles"]),
             "examples": records(statistics["examples"]),
             "correlationStability": records(statistics["correlation_stability"]),
+            "blockBootstrap": records(
+                statistics.get("block_bootstrap", pd.DataFrame())
+            ),
         },
         "gridComparison": json_safe([row for row in evaluation.get("grid_summary", []) if row.get("split") == "all"]),
         "stopComparison": json_safe([row for row in evaluation.get("stop_summary", []) if row.get("split") == "all"]),

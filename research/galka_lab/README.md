@@ -45,6 +45,8 @@ python research/galka_lab.py --synthetic --synthetic-days 45 --build-dataset --c
 - Walk-forward folds stop before final OOS.
 - Final OOS is reported once and never used to choose types, grids, or stops.
 - End-of-data events are censored, not relabeled as losses.
+- Key all-history and final-OOS uncertainty uses a deterministic UTC-day block bootstrap that
+  resamples same-day BTC/ETH/SOL and cross-timeframe observations together.
 
 ## Outputs
 
@@ -56,6 +58,8 @@ python research/galka_lab.py --synthetic --synthetic-days 45 --build-dataset --c
 - `HONEST_LIMITATIONS.md` — execution and inference limitations.
 - `MODEL_CARD.md`, `model.json`, `walk_forward.json` — versioned model evidence.
 - `statistics_*.json` — global, conditional, regime, recent and cliff tables.
+- `statistics_block_bootstrap.json` — day-block bootstrap intervals for each type globally and
+  separately for BTC, ETH, and SOL.
 - Large full conditional tables stay artifact-only; compact depth × horizon/regime tables,
   histograms, survival, shape profiles and stable correlations are embedded in the pack.
 - `galka-stats-v1.json(.gz)` — checksum-protected compact terminal pack.

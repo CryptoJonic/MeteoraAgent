@@ -7,7 +7,12 @@ import numpy as np
 
 from galka_lab.evaluation import derive_grid_profiles, evaluate_profiles
 from galka_lab.pack import build_terminal_pack, verify_terminal_pack
-from galka_lab.statistics import build_statistics, conditional_return_curves, wilson_interval
+from galka_lab.statistics import (
+    block_bootstrap_statistics,
+    build_statistics,
+    conditional_return_curves,
+    wilson_interval,
+)
 from galka_lab.tests.helpers import feature_rows
 
 
@@ -44,6 +49,8 @@ class StatisticsEvaluationPackTests(unittest.TestCase):
         model = {"model_hash": "m", "selected_k": 4}
         pack = build_terminal_pack(statistics=statistics, model=model, evaluation=evaluation, manifest=manifest, generated_at="2026-07-12T00:00:00Z")
         self.assertTrue(verify_terminal_pack(pack))
+        self.assertEqual(pack["schemaVersion"], "1.2")
+        self.assertTrue(pack["statistics"]["blockBootstrap"])
         tampered = copy.deepcopy(pack)
         tampered["safety"]["autoPaperDefault"] = True
         self.assertFalse(verify_terminal_pack(tampered))
@@ -86,6 +93,39 @@ class StatisticsEvaluationPackTests(unittest.TestCase):
         )
         self.assertTrue(
             all(row["count"] == row["eligible_count"] for row in evaluation["grid_summary"])
+        )
+
+    def test_day_block_bootstrap_is_deterministic_and_symbol_isolated(self):
+        events = self.events.copy()
+        final_oos = events["split"] == "final_oos"
+        for symbol, probability in (("BTCUSDT", 1.0), ("ETHUSDT", 0.0), ("SOLUSDT", 0.5)):
+            selected = final_oos & (events["symbol"] == symbol)
+            indices = events.index[selected]
+            successes = np.arange(len(indices)) < round(len(indices) * probability)
+            for hours in (1, 3, 6, 12, 24, 48):
+                events.loc[indices, f"return_{hours}h"] = successes
+            events.loc[indices, "returned"] = successes
+
+        first = block_bootstrap_statistics(events)
+        second = block_bootstrap_statistics(events)
+        self.assertTrue(first.equals(second))
+        symbol_oos = first[
+            (first["scope"] == "symbol") & (first["split"] == "final_oos")
+        ]
+        self.assertEqual(set(symbol_oos["symbol"]), {"BTCUSDT", "ETHUSDT", "SOLUSDT"})
+        probabilities = symbol_oos.groupby("symbol")["return_24h_probability"].mean()
+        self.assertGreater(probabilities["BTCUSDT"], probabilities["SOLUSDT"])
+        self.assertGreater(probabilities["SOLUSDT"], probabilities["ETHUSDT"])
+        cross_symbol = first[
+            (first["scope"] == "cross_symbol") & (first["split"] == "final_oos")
+        ]
+        self.assertTrue((cross_symbol["block_unit"] == "UTC day").all())
+        self.assertTrue((cross_symbol["bootstrap_samples"] == 400).all())
+        self.assertTrue(
+            (
+                cross_symbol["return_24h_block_ci_low"]
+                <= cross_symbol["return_24h_block_ci_high"]
+            ).all()
         )
 
 

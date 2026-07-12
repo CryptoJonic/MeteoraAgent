@@ -20,6 +20,7 @@ from .config import (
 
 
 SURVIVAL_MINUTES = (15, 30, 60, 180, 360, 720, 1_440, 2_880, 10_080, 20_160)
+BLOCK_BOOTSTRAP_MIN_DAYS = 30
 
 
 def wilson_interval(successes: int, total: int, z: float = 1.959963984540054) -> tuple[float, float]:
@@ -63,6 +64,139 @@ def weighted_quantile(values: np.ndarray, weights: np.ndarray, quantile: float) 
     cumulative = np.cumsum(weights[order])
     cutoff = quantile * cumulative[-1]
     return float(ordered_values[min(np.searchsorted(cumulative, cutoff, side="left"), len(ordered_values) - 1)])
+
+
+def _day_block_bootstrap_group(group: pd.DataFrame, *, seed: int) -> dict:
+    """Resample UTC activation days, preserving all same-day symbol/timeframe dependence."""
+    activated = group[group["activated"] == True].copy()  # noqa: E712
+    summary = summarize_group(group)
+    if activated.empty:
+        return {
+            "event_count": int(len(group)),
+            "block_count": 0,
+            "bootstrap_samples": BOOTSTRAP_SAMPLES,
+            "block_unit": "UTC day",
+            "insufficient_data": True,
+        }
+
+    days = pd.to_datetime(activated["activation_time"], utc=True).dt.floor("D")
+    day_values = days.dt.tz_localize(None).to_numpy(dtype="datetime64[D]")
+    unique_days, day_codes = np.unique(day_values, return_inverse=True)
+    block_count = len(unique_days)
+    horizon_totals = np.zeros((len(HORIZON_HOURS), block_count), dtype=float)
+    horizon_successes = np.zeros_like(horizon_totals)
+    for horizon_index, hours in enumerate(HORIZON_HOURS):
+        values = activated[f"return_{hours}h"]
+        eligible = values.notna().to_numpy()
+        np.add.at(horizon_totals[horizon_index], day_codes[eligible], 1)
+        successes = eligible & (values == True).to_numpy()  # noqa: E712
+        np.add.at(horizon_successes[horizon_index], day_codes[successes], 1)
+
+    successful_mask = (
+        (activated["returned"] == True)  # noqa: E712
+        & activated["mae_pct"].notna()
+    ).to_numpy()
+    depth_values = activated.loc[successful_mask, "mae_pct"].to_numpy(float)
+    depth_day_codes = day_codes[successful_mask]
+    depth_order = np.argsort(depth_values)
+    ordered_depth = depth_values[depth_order]
+    ordered_depth_codes = depth_day_codes[depth_order]
+
+    probability_estimates = np.full(
+        (BOOTSTRAP_SAMPLES, len(HORIZON_HOURS)), np.nan, dtype=float
+    )
+    depth_estimates = np.full(
+        (BOOTSTRAP_SAMPLES, len(DEPTH_QUANTILES)), np.nan, dtype=float
+    )
+    rng = np.random.default_rng(seed)
+    for sample in range(BOOTSTRAP_SAMPLES):
+        multiplicity = np.bincount(
+            rng.integers(0, block_count, size=block_count), minlength=block_count
+        ).astype(float)
+        totals = horizon_totals @ multiplicity
+        successes = horizon_successes @ multiplicity
+        probability_estimates[sample] = np.divide(
+            successes,
+            totals,
+            out=np.full_like(successes, np.nan),
+            where=totals > 0,
+        )
+        if len(ordered_depth):
+            weights = multiplicity[ordered_depth_codes]
+            cumulative = np.cumsum(weights)
+            total_weight = cumulative[-1]
+            if total_weight > 0:
+                for quantile_index, quantile in enumerate(DEPTH_QUANTILES):
+                    index = min(
+                        int(np.searchsorted(cumulative, quantile * total_weight, side="left")),
+                        len(ordered_depth) - 1,
+                    )
+                    depth_estimates[sample, quantile_index] = ordered_depth[index]
+
+    row = {
+        "event_count": int(len(group)),
+        "activated_count": int(len(activated)),
+        "returned_count": int(successful_mask.sum()),
+        "block_count": int(block_count),
+        "bootstrap_samples": BOOTSTRAP_SAMPLES,
+        "block_unit": "UTC day",
+        "insufficient_data": bool(
+            summary["count_complete"] < MIN_SAMPLE
+            or block_count < BLOCK_BOOTSTRAP_MIN_DAYS
+        ),
+    }
+    for horizon_index, hours in enumerate(HORIZON_HOURS):
+        estimates = probability_estimates[:, horizon_index]
+        estimates = estimates[np.isfinite(estimates)]
+        row[f"return_{hours}h_probability"] = summary[
+            f"return_{hours}h_probability"
+        ]
+        row[f"return_{hours}h_block_ci_low"] = (
+            float(np.quantile(estimates, 0.025)) if len(estimates) else math.nan
+        )
+        row[f"return_{hours}h_block_ci_high"] = (
+            float(np.quantile(estimates, 0.975)) if len(estimates) else math.nan
+        )
+    for quantile_index, quantile in enumerate(DEPTH_QUANTILES):
+        suffix = f"p{round(quantile * 100)}"
+        estimates = depth_estimates[:, quantile_index]
+        estimates = estimates[np.isfinite(estimates)]
+        row[f"depth_success_{suffix}"] = summary[f"depth_success_{suffix}"]
+        row[f"depth_success_{suffix}_block_ci_low"] = (
+            float(np.quantile(estimates, 0.025)) if len(estimates) else math.nan
+        )
+        row[f"depth_success_{suffix}_block_ci_high"] = (
+            float(np.quantile(estimates, 0.975)) if len(estimates) else math.nan
+        )
+    return row
+
+
+def block_bootstrap_statistics(frame: pd.DataFrame) -> pd.DataFrame:
+    """Key all-history and final-OOS uncertainty without assuming events are independent."""
+    rows = []
+    group_seed = SEED
+    for split, source in (
+        ("all", frame),
+        ("final_oos", frame[frame["split"] == "final_oos"]),
+    ):
+        for scope, dimensions in (
+            ("cross_symbol", ["galka_type"]),
+            ("symbol", ["galka_type", "symbol"]),
+        ):
+            for keys, group in source.groupby(dimensions, sort=True):
+                keys = keys if isinstance(keys, tuple) else (keys,)
+                identity = dict(zip(dimensions, keys))
+                identity["symbol"] = identity.get("symbol", "ALL")
+                rows.append(
+                    {
+                        **identity,
+                        "scope": scope,
+                        "split": split,
+                        **_day_block_bootstrap_group(group, seed=group_seed),
+                    }
+                )
+                group_seed += 1
+    return pd.DataFrame(rows)
 
 
 def summarize_group(group: pd.DataFrame) -> dict:
@@ -647,4 +781,5 @@ def build_statistics(frame: pd.DataFrame) -> dict[str, pd.DataFrame]:
         "examples": representative_examples(frame),
         "correlations": correlations,
         "correlation_stability": correlation_stability,
+        "block_bootstrap": block_bootstrap_statistics(frame),
     }
