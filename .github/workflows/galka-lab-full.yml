@@ -6,6 +6,12 @@ on:
       - agent/galka-statistics-engine
     paths:
       - ".github/GALKA_LAB_FULL"
+  pull_request:
+    paths:
+      - ".github/GALKA_LAB_FULL"
+      - ".github/workflows/galka-lab-full.yml"
+      - "research/galka_lab.py"
+      - "research/galka_lab/**"
   workflow_dispatch:
     inputs:
       from_date:
@@ -36,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.head_ref || github.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
@@ -123,7 +129,7 @@ jobs:
           retention-days: 30
 
       - name: Commit verified research outputs
-        if: ${{ github.event_name == 'push' || inputs.commit_results }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' || inputs.commit_results }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -132,5 +138,5 @@ jobs:
             echo "Research outputs unchanged"
           else
             git commit -m "Add Galka Lab interim statistics [skip ci]"
-            git push origin HEAD:${GITHUB_REF_NAME}
+            git push origin HEAD:${{ github.head_ref || github.ref_name }}
           fi
