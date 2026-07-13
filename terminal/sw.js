@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galka-final-integration-shell-v6';
+const CACHE_NAME = 'galka-final-integration-shell-v7';
 const APP_SHELL = [
   './pro.html',
   './pro.css?v=7',
@@ -16,7 +16,7 @@ const APP_SHELL = [
   'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js',
 ];
 
-const PATCH_VERSION = 'final-integration-v2-simple-terminal';
+const PATCH_VERSION = 'final-integration-v2.1-simple-terminal';
 
 function replaceOnce(source, oldText, newText, label) {
   if (!source.includes(oldText)) {
@@ -27,7 +27,7 @@ function replaceOnce(source, oldText, newText, label) {
 }
 
 function simpleUiSource() {
-  return String.raw`
+  return `
 function renderSimpleTradeBar(){
   const root=document.getElementById('simpleTradeBar');if(!root)return;
   const input=document.getElementById('simpleGalkaPrice'),status=document.getElementById('simpleTradeStatus'),launch=document.getElementById('simpleGalkaLaunch');
