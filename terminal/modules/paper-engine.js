@@ -1,5 +1,7 @@
 export const LEGACY_DEPTHS = [0.25, 0.7, 1.25, 1.9, 2.65, 3.5];
 export const LEGACY_WEIGHTS = [0.05, 0.09, 0.14, 0.18, 0.24, 0.3];
+export const MANUAL_DENSE_DEPTHS = [0.15, 0.3, 0.45, 0.6, 0.9, 1.2, 1.5, 2.0];
+export const MANUAL_DENSE_WEIGHTS = [0.42, 0.22, 0.12, 0.08, 0.06, 0.04, 0.03, 0.03];
 export const ACTIVE_CAMPAIGN_STATUSES = new Set(['waiting', 'open', 'trailing']);
 export const RECOVERY_CANDLE_INTERVAL_MS = 60_000;
 export const RECOVERY_PATH_POLICY = 'directional-ohlc-v1';
@@ -11,22 +13,19 @@ const number = (value, fallback = 0) => {
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 export function campaignLadder(settings, pattern) {
-  if (pattern.source !== 'manual') {
-    return { depths: LEGACY_DEPTHS.slice(), weights: LEGACY_WEIGHTS.slice() };
+  if (pattern.source === 'manual') {
+    return {
+      depths: MANUAL_DENSE_DEPTHS.slice(),
+      weights: MANUAL_DENSE_WEIGHTS.slice(),
+    };
   }
-  const step = clamp(number(settings.ladderStepPct, 0.15), 0.05, 2);
-  const depth = clamp(number(settings.manualDepthPct, 1.5), step, 10);
-  const count = Math.max(1, Math.floor(depth / step + 1e-9));
-  const depths = Array.from(
-    { length: count },
-    (_, index) => Number(((index + 1) * step).toFixed(4)),
-  );
-  return { depths, weights: depths.map(() => 1 / depths.length) };
+  return { depths: LEGACY_DEPTHS.slice(), weights: LEGACY_WEIGHTS.slice() };
 }
 
 export function createCampaign(symbol, pattern, settings, nowMs = Date.now()) {
   const maxNotional = settings.symbolNotional;
   const { depths, weights } = campaignLadder(settings, pattern);
+  const manualTarget = pattern.source === 'manual';
   return {
     campaignId: `C-${symbol}-${nowMs}`,
     symbol,
@@ -38,8 +37,10 @@ export function createCampaign(symbol, pattern, settings, nowMs = Date.now()) {
     target: pattern.vLow,
     createdAt: new Date(nowMs).toISOString(),
     expiresAt: nowMs + settings.maxHours * 3_600_000,
-    exitMode: settings.exitMode || 'trail',
-    reclaimPrice: pattern.vLow * (1 + number(settings.reclaimBufferPct, 0.1) / 100),
+    exitMode: manualTarget ? 'target' : settings.exitMode || 'trail',
+    reclaimPrice: manualTarget
+      ? pattern.vLow
+      : pattern.vLow * (1 + number(settings.reclaimBufferPct, 0.1) / 100),
     trailArmed: false,
     trailHigh: null,
     trailStop: null,
@@ -87,7 +88,12 @@ export function moveManualCampaign(campaign, nextLevel, settings) {
   }
   campaign.vLow = nextLevel;
   campaign.target = nextLevel;
-  campaign.reclaimPrice = nextLevel * (1 + number(settings.reclaimBufferPct, 0.1) / 100);
+  campaign.exitMode = 'target';
+  campaign.reclaimPrice = nextLevel;
+  campaign.trailArmed = false;
+  campaign.trailHigh = null;
+  campaign.trailStop = null;
+  campaign.trailActivatedAt = null;
   for (const level of campaign.levels) {
     level.price = nextLevel * (1 - level.depthPct / 100);
   }
