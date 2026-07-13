@@ -21,7 +21,24 @@ jobs:
         with:
           node-version: 20
       - run: node scripts/check-pro-terminal.mjs
-      - run: node scripts/test-final-sw-transform.mjs
+      - name: Capture transformed terminal test
+        shell: bash
+        run: |
+          set +e
+          node scripts/test-final-sw-transform.mjs > transform-test.log 2>&1
+          echo "$?" > transform-test.exit
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galka-transform-test-log
+          path: |
+            transform-test.log
+            transform-test.exit
+      - name: Enforce transformed terminal result
+        shell: bash
+        run: |
+          cat transform-test.log
+          test "$(cat transform-test.exit)" = "0"
 
   store-migration:
     runs-on: ubuntu-latest
