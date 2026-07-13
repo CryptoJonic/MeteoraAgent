@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import {
+  MANUAL_DENSE_DEPTHS,
+  MANUAL_DENSE_WEIGHTS,
   createCampaign,
   moveManualCampaign,
   previewCampaign,
@@ -10,9 +12,9 @@ const settings = {
   symbolNotional: 400,
   maxHours: 72,
   ladderStepPct: 0.15,
-  manualDepthPct: 1.5,
-  exitMode: 'trail',
-  reclaimBufferPct: 0.1,
+  manualDepthPct: 2,
+  exitMode: 'target',
+  reclaimBufferPct: 0,
   trailDistancePct: 0.75,
   makerFee: 0.0002,
 };
@@ -24,10 +26,16 @@ const pattern = {
 };
 
 const campaign = createCampaign('BTCUSDT', pattern, settings, 1_000);
-assert.equal(campaign.levels.length, 10);
+assert.equal(campaign.levels.length, 8);
+assert.deepEqual(campaign.levels.map((level) => level.depthPct), MANUAL_DENSE_DEPTHS);
+assert.deepEqual(campaign.levels.map((level) => level.weight), MANUAL_DENSE_WEIGHTS);
 assert.equal(campaign.levels[0].depthPct, 0.15);
-assert.equal(campaign.levels.at(-1).depthPct, 1.5);
+assert.equal(campaign.levels.at(-1).depthPct, 2);
+assert.equal(campaign.exitMode, 'target');
+assert.equal(campaign.target, 100);
 assert.ok(Math.abs(campaign.levels.reduce((sum, level) => sum + level.notional, 0) - 400) < 1e-9);
+assert.ok(campaign.levels[0].notional > campaign.levels[1].notional);
+assert.ok(campaign.levels[1].notional > campaign.levels.at(-1).notional);
 
 const firstFill = processCampaignQuote(campaign, { bid: 99.55, ask: 99.55 }, settings, 2_000);
 assert.equal(firstFill.events.filter((event) => event.type === 'level_filled').length, 3);
@@ -39,46 +47,52 @@ assert.equal(repeatedQuote.events.filter((event) => event.type === 'level_filled
 assert.equal(campaign.qty, quantityAfterFill, 'the same quote must not fill a level twice');
 assert.equal(moveManualCampaign(campaign, 101, settings), false, 'GALKA locks after first fill');
 
+const targetClose = processCampaignQuote(campaign, { bid: 100, ask: 100.01 }, settings, 3_000);
+assert.equal(targetClose.close.reason, 'v_low_target');
+assert.equal(targetClose.close.price, 100);
+
 const campaigns = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].map((symbol, index) =>
   createCampaign(symbol, { ...pattern, patternId: `M-${symbol}`, vLow: 100 + index * 10 }, settings, 10_000 + index),
 );
 for (const item of campaigns) {
   processCampaignQuote(item, { bid: item.vLow * 0.998, ask: item.vLow * 0.998 }, settings, 11_000);
   assert.ok(item.qty > 0, `${item.symbol} is processed independently`);
+  assert.equal(item.exitMode, 'target');
 }
 assert.equal(new Set(campaigns.map((item) => item.campaignId)).size, 3);
 
-const trailing = createCampaign('SOLUSDT', pattern, settings, 20_000);
-processCampaignQuote(trailing, { bid: 98.4, ask: 98.4 }, settings, 21_000);
+const autoPattern = { ...pattern, patternId: 'A-trailing', source: 'auto', trainingExampleId: null };
+const trailingSettings = { ...settings, exitMode: 'trail', reclaimBufferPct: 0.1 };
+const trailing = createCampaign('SOLUSDT', autoPattern, trailingSettings, 20_000);
+processCampaignQuote(trailing, { bid: 98.4, ask: 98.4 }, trailingSettings, 21_000);
 assert.ok(trailing.qty > 0);
-const armed = processCampaignQuote(trailing, { bid: 100.2, ask: 100.21 }, settings, 22_000);
+const armed = processCampaignQuote(trailing, { bid: 100.2, ask: 100.21 }, trailingSettings, 22_000);
 assert.equal(trailing.trailArmed, true);
 assert.ok(armed.events.some((event) => event.type === 'trailing_armed'));
 assert.ok(trailing.trailStop >= trailing.vLow);
 
-processCampaignQuote(trailing, { bid: 103, ask: 103.01 }, settings, 23_000);
+processCampaignQuote(trailing, { bid: 103, ask: 103.01 }, trailingSettings, 23_000);
 const raisedStop = trailing.trailStop;
 assert.ok(raisedStop > trailing.vLow);
-processCampaignQuote(trailing, { bid: 102.8, ask: 102.81 }, settings, 24_000);
+processCampaignQuote(trailing, { bid: 102.8, ask: 102.81 }, trailingSettings, 24_000);
 assert.equal(trailing.trailStop, raisedStop, 'trailing stop never decreases');
 const closeResult = processCampaignQuote(
   trailing,
   { bid: raisedStop - 0.01, ask: raisedStop },
-  settings,
+  trailingSettings,
   25_000,
 );
 assert.equal(closeResult.close.reason, 'reclaim_trailing_stop');
 
 trailing.status = 'closed';
-const afterClose = processCampaignQuote(trailing, { bid: 90, ask: 90 }, settings, 26_000);
+const afterClose = processCampaignQuote(trailing, { bid: 90, ask: 90 }, trailingSettings, 26_000);
 assert.equal(afterClose.changed, false);
 assert.equal(afterClose.close, null);
 
 const preview = previewCampaign(100, settings);
-assert.equal(preview.count, 10);
+assert.equal(preview.count, 8);
 assert.ok(preview.first.price > preview.last.price);
 assert.ok(preview.averageEntry < 100);
 assert.ok(preview.estimatedPnlAtGalka > 0);
 
-console.log('Paper engine: ladder, three-symbol, idempotency and reclaim/trailing checks passed');
-
+console.log('Paper engine: dense ladder, target exit, three-symbol, idempotency and legacy trailing checks passed');
