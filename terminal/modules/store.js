@@ -1,7 +1,7 @@
 import { createShadowState, normalizeShadowState } from './shadow-engine.js';
 
 export const STORAGE_KEY = 'galka-pro-v1';
-export const STORE_SCHEMA_VERSION = 4;
+export const STORE_SCHEMA_VERSION = 5;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
 export const PAPER_RECOVERY_POLICY = 'closed-1m-directional-v1';
 
@@ -143,6 +143,8 @@ function normalizeSimpleManualCampaign(campaign, settings) {
   campaign.trailHigh = null;
   campaign.trailStop = null;
   campaign.trailActivatedAt = null;
+  campaign.l1Cycles = Math.max(0, Number(campaign.l1Cycles) || 0);
+  campaign.l1CycleRealizedPnl = Number(campaign.l1CycleRealizedPnl) || 0;
   if (campaign.status === 'trailing') campaign.status = campaign.qty ? 'open' : 'waiting';
 
   const hasFill = Number(campaign.qty) > 0 || campaign.levels?.some((level) => level.status === 'filled');
