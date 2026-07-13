@@ -106,7 +106,7 @@ assert.equal(blank.ui.indicators.volume, false);
 assert.equal(blank.ui.lowerIndicator, null);
 assert.equal(blank.ui.onboarding.completed, true);
 
-const snapshot = createBackupSnapshot(migrated, 'test', '2026-07-11T00:00:00.000Z');
+const snapshot = createBackupSnapshot(roundTrip, 'test', '2026-07-11T00:00:00.000Z');
 const summary = summarizeBackupSnapshot(snapshot);
 assert.deepEqual(summary, {
   createdAt: '2026-07-11T00:00:00.000Z',
@@ -117,7 +117,7 @@ assert.deepEqual(summary, {
   manualExamples: 1,
   radarLabels: 0,
   shadowRecords: 1,
-  shadowEnabled: true,
+  shadowEnabled: false,
 });
 assert.equal(validateBackupSnapshot(snapshot).paper.symbols.BTCUSDT.campaign.campaignId, oldCampaign.campaignId);
 assert.throws(() => validateBackupSnapshot({}), /не полный snapshot/);
