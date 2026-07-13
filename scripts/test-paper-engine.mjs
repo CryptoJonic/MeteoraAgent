@@ -33,9 +33,31 @@ assert.equal(campaign.levels[0].depthPct, 0.15);
 assert.equal(campaign.levels.at(-1).depthPct, 2);
 assert.equal(campaign.exitMode, 'target');
 assert.equal(campaign.target, 100);
+assert.equal(campaign.l1Cycles, 0);
 assert.ok(Math.abs(campaign.levels.reduce((sum, level) => sum + level.notional, 0) - 400) < 1e-9);
 assert.ok(campaign.levels[0].notional > campaign.levels[1].notional);
 assert.ok(campaign.levels[1].notional > campaign.levels.at(-1).notional);
+
+const l1Only = createCampaign('BTCUSDT', { ...pattern, patternId: 'M-l1' }, settings, 1_100);
+const l1Fill = processCampaignQuote(l1Only, { bid: 99.85, ask: 99.85 }, settings, 2_000);
+assert.equal(l1Fill.events.filter((event) => event.type === 'level_filled').length, 1);
+assert.equal(l1Only.levels[0].status, 'filled');
+const l1Return = processCampaignQuote(l1Only, { bid: 100, ask: 100.01 }, settings, 3_000);
+const cycle = l1Return.events.find((event) => event.type === 'l1_cycle_closed');
+assert.ok(cycle, 'L1-only return must emit a cycle close');
+assert.equal(l1Return.close, null, 'L1-only cycle keeps the GALKA campaign active');
+assert.ok(cycle.netPnl > 0);
+assert.equal(l1Only.l1Cycles, 1);
+assert.ok(l1Only.l1CycleRealizedPnl > 0);
+assert.equal(l1Only.status, 'waiting');
+assert.equal(l1Only.qty, 0);
+assert.equal(l1Only.levels[0].status, 'pending', 'L1 is rearmed after the cycle');
+assert.equal(l1Only.levels[1].status, 'pending');
+
+processCampaignQuote(l1Only, { bid: 99.85, ask: 99.85 }, settings, 4_000);
+const secondCycleResult = processCampaignQuote(l1Only, { bid: 100, ask: 100.01 }, settings, 5_000);
+assert.ok(secondCycleResult.events.some((event) => event.type === 'l1_cycle_closed'));
+assert.equal(l1Only.l1Cycles, 2, 'L1 can repeat more than once');
 
 const firstFill = processCampaignQuote(campaign, { bid: 99.55, ask: 99.55 }, settings, 2_000);
 assert.equal(firstFill.events.filter((event) => event.type === 'level_filled').length, 3);
@@ -50,6 +72,11 @@ assert.equal(moveManualCampaign(campaign, 101, settings), false, 'GALKA locks af
 const targetClose = processCampaignQuote(campaign, { bid: 100, ask: 100.01 }, settings, 3_000);
 assert.equal(targetClose.close.reason, 'v_low_target');
 assert.equal(targetClose.close.price, 100);
+assert.equal(
+  targetClose.events.some((event) => event.type === 'l1_cycle_closed'),
+  false,
+  'L2 or deeper fill must finish the whole campaign',
+);
 
 const campaigns = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].map((symbol, index) =>
   createCampaign(symbol, { ...pattern, patternId: `M-${symbol}`, vLow: 100 + index * 10 }, settings, 10_000 + index),
@@ -95,4 +122,4 @@ assert.ok(preview.first.price > preview.last.price);
 assert.ok(preview.averageEntry < 100);
 assert.ok(preview.estimatedPnlAtGalka > 0);
 
-console.log('Paper engine: dense ladder, target exit, three-symbol, idempotency and legacy trailing checks passed');
+console.log('Paper engine: repeating L1, deep target finish, dense ladder and legacy trailing checks passed');
