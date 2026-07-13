@@ -1,6 +1,6 @@
 {
-  "activated_event_count": 157499,
-  "analysis_event_count": 168099,
+  "activated_event_count": 157602,
+  "analysis_event_count": 168209,
   "arguments": {
     "build_dataset": true,
     "cache": "research/galka_lab/cache/binance",
@@ -26,14 +26,14 @@
     "synthetic_days": 120,
     "workers": 8
   },
-  "candidate_count": 172657,
+  "candidate_count": 172736,
   "chronological_split": "60% train / 20% validation / 20% final OOS by global timestamp groups",
   "final_oos_used_for_fit": false,
-  "generated_at": "2026-07-13T00:16:48.697828Z",
-  "manifest_hash": "1090e8455c6ee488c8a217efc96aca52dca16253f820b0f454c5ba75368be51e",
-  "model_hash": "b572451d8e65411f64bd9ad2dba18dfc78fa9bf23a3d9eef92373e9fc85db1de",
+  "generated_at": "2026-07-13T13:35:00.042345Z",
+  "manifest_hash": "7ffa9e16d492a5bea4ffd0e099a667b89c4d13f223dbea1d4da500fee59eea5b",
+  "model_hash": "3599937fcd0bfe6b584cb3f41531be549027db405c7463330b13e062a0cf17a2",
   "model_version": "galka-lab-v0.3.0",
-  "purged_event_count": 1155,
+  "purged_event_count": 1119,
   "seed": 20260712,
   "walk_forward_folds": 4
 }
