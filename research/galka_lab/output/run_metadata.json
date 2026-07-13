@@ -29,7 +29,7 @@
   "candidate_count": 172736,
   "chronological_split": "60% train / 20% validation / 20% final OOS by global timestamp groups",
   "final_oos_used_for_fit": false,
-  "generated_at": "2026-07-13T13:35:00.042345Z",
+  "generated_at": "2026-07-13T20:40:06.597540Z",
   "manifest_hash": "7ffa9e16d492a5bea4ffd0e099a667b89c4d13f223dbea1d4da500fee59eea5b",
   "model_hash": "3599937fcd0bfe6b584cb3f41531be549027db405c7463330b13e062a0cf17a2",
   "model_version": "galka-lab-v0.3.0",
