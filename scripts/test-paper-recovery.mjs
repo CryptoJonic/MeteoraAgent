@@ -10,9 +10,9 @@ const settings = {
   symbolNotional: 400,
   maxHours: 72,
   ladderStepPct: 0.15,
-  manualDepthPct: 1.5,
-  exitMode: 'trail',
-  reclaimBufferPct: 0.1,
+  manualDepthPct: 2,
+  exitMode: 'target',
+  reclaimBufferPct: 0,
   trailDistancePct: 0.75,
   makerFee: 0.0002,
 };
@@ -55,17 +55,18 @@ assert.deepEqual(
   'the overlapping boundary minute must not speculate about pre-gap high/low order',
 );
 
-const campaign = createCampaign('BTCUSDT', pattern, settings, BASE - 1_000);
 const candles = [
   minute(0, { open: 100, high: 105, low: 95, close: 100.1 }),
   minute(1, { open: 100.1, high: 100.2, low: 99.4, close: 99.6 }),
   minute(2, { open: 99.6, high: 100.4, low: 99.5, close: 100.3 }),
   minute(3, { open: 101.5, high: 102, low: 100.5, close: 100.8 }),
 ];
+
+const campaign = createCampaign('BTCUSDT', pattern, settings, BASE - 1_000);
 const replay = replayCampaignCandles(campaign, candles, settings, { afterMs: BASE + 30_000 });
 
 assert.equal(replay.policy, RECOVERY_PATH_POLICY);
-assert.equal(replay.candlesReplayed, 4);
+assert.equal(replay.candlesReplayed, 3, 'manual target closes before later candles are replayed');
 assert.equal(replay.boundaryCandles, 1);
 assert.equal(
   replay.events.filter((event) => event.type === 'level_filled').length,
@@ -73,11 +74,10 @@ assert.equal(
   'only fully missed candles may use their extrema for restored fills',
 );
 assert.ok(replay.events.every((event) => event.recovered));
-assert.ok(replay.events.some((event) => event.type === 'trailing_armed'));
-assert.ok(replay.events.some((event) => event.type === 'trailing_raised'));
-assert.equal(replay.close.reason, 'reclaim_trailing_stop');
-assert.equal(replay.close.price, campaign.trailStop, 'recovered stop exits at the stop, not the 1m low');
-assert.ok(replay.close.atMs > candles[3].openTime && replay.close.atMs < candles[3].closeTime);
+assert.equal(replay.events.some((event) => event.type === 'trailing_armed'), false);
+assert.equal(replay.close.reason, 'v_low_target');
+assert.equal(replay.close.price, 100, 'manual recovery exits exactly at GALKA');
+assert.ok(replay.close.atMs > candles[2].openTime && replay.close.atMs < candles[2].closeTime);
 
 const quantityAfterReplay = campaign.qty;
 const duplicate = replayCampaignCandles(campaign, candles, settings, {
@@ -86,6 +86,21 @@ const duplicate = replayCampaignCandles(campaign, candles, settings, {
 assert.equal(duplicate.candlesReplayed, 0);
 assert.equal(duplicate.events.length, 0);
 assert.equal(campaign.qty, quantityAfterReplay, 'a durable close-time cursor prevents duplicate replay');
+
+const trailingSettings = { ...settings, exitMode: 'trail', reclaimBufferPct: 0.1 };
+const autoCampaign = createCampaign(
+  'SOLUSDT',
+  { ...pattern, patternId: 'A-recovery', source: 'auto', trainingExampleId: null },
+  trailingSettings,
+  BASE - 1_000,
+);
+const autoReplay = replayCampaignCandles(autoCampaign, candles, trailingSettings, {
+  afterMs: BASE + 30_000,
+});
+assert.ok(autoReplay.events.some((event) => event.type === 'trailing_armed'));
+assert.ok(autoReplay.events.some((event) => event.type === 'trailing_raised'));
+assert.equal(autoReplay.close.reason, 'reclaim_trailing_stop');
+assert.equal(autoReplay.close.price, autoCampaign.trailStop, 'recovered auto stop exits at the stored stop');
 
 const expiring = createCampaign(
   'ETHUSDT',
@@ -102,4 +117,4 @@ const expiryReplay = replayCampaignCandles(
 assert.equal(expiryReplay.expiredWithoutFill, true);
 assert.equal(expiring.qty, 0);
 
-console.log('Paper recovery: boundary safety, deterministic 1m replay, stop and cursor checks passed');
+console.log('Paper recovery: boundary safety, manual target, legacy trailing and cursor checks passed');
