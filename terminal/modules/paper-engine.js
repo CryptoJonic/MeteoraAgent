@@ -45,6 +45,8 @@ export function createCampaign(symbol, pattern, settings, nowMs = Date.now()) {
     trailHigh: null,
     trailStop: null,
     trailActivatedAt: null,
+    l1Cycles: 0,
+    l1CycleRealizedPnl: 0,
     levels: depths.map((depthPct, index) => ({
       index: index + 1,
       depthPct,
@@ -75,6 +77,49 @@ export function recalculateCampaign(campaign) {
   campaign.averageEntry = campaign.qty ? campaign.filledNotional / campaign.qty : null;
   campaign.entryFees = filled.reduce((sum, level) => sum + number(level.fee), 0);
   return campaign;
+}
+
+function closeAndRearmL1(campaign, settings, nowMs) {
+  const level = campaign.levels.find((item) => item.status === 'filled');
+  if (!level || level.index !== 1) return null;
+
+  const exitPrice = campaign.target;
+  const qty = campaign.qty;
+  const averageEntry = campaign.averageEntry;
+  const filledNotional = campaign.filledNotional;
+  const entryFees = campaign.entryFees;
+  const exitNotional = qty * exitPrice;
+  const exitFee = exitNotional * number(settings.makerFee);
+  const grossPnl = qty * (exitPrice - averageEntry);
+  const netPnl = grossPnl - entryFees - exitFee;
+  const cycle = number(campaign.l1Cycles) + 1;
+
+  const event = {
+    type: 'l1_cycle_closed',
+    cycle,
+    price: exitPrice,
+    qty,
+    averageEntry,
+    filledNotional,
+    entryFees,
+    exitFee,
+    grossPnl,
+    netPnl,
+    fillTime: level.fillTime,
+    exitTime: new Date(nowMs).toISOString(),
+  };
+
+  campaign.l1Cycles = cycle;
+  campaign.l1CycleRealizedPnl = number(campaign.l1CycleRealizedPnl) + netPnl;
+  level.status = 'pending';
+  level.fillPrice = null;
+  level.fillTime = null;
+  level.qty = 0;
+  level.fee = 0;
+  campaign.status = 'waiting';
+  campaign.unrealizedPnl = 0;
+  recalculateCampaign(campaign);
+  return event;
 }
 
 export function moveManualCampaign(campaign, nextLevel, settings) {
@@ -125,7 +170,20 @@ export function processCampaignQuote(campaign, quote, settings, nowMs = Date.now
     const mode = campaign.exitMode || settings.exitMode || 'trail';
     if (mode === 'target') {
       if (quote.bid >= campaign.target) {
-        result.close = { price: campaign.target, reason: 'v_low_target' };
+        const filled = campaign.levels.filter((level) => level.status === 'filled');
+        const repeatL1 =
+          campaign.source === 'manual' &&
+          filled.length === 1 &&
+          filled[0].index === 1;
+        if (repeatL1) {
+          const event = closeAndRearmL1(campaign, settings, nowMs);
+          if (event) {
+            result.changed = true;
+            result.events.push(event);
+          }
+        } else {
+          result.close = { price: campaign.target, reason: 'v_low_target' };
+        }
       }
     } else {
       const reclaimPrice =
