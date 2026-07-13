@@ -5,6 +5,7 @@ on:
     paths:
       - 'terminal/**'
       - 'scripts/check-pro-terminal.mjs'
+      - 'scripts/test-final-sw-transform.mjs'
       - 'scripts/test-galka-store.mjs'
       - 'scripts/test-paper-engine.mjs'
       - 'scripts/test-paper-recovery.mjs'
@@ -20,6 +21,7 @@ jobs:
         with:
           node-version: 20
       - run: node scripts/check-pro-terminal.mjs
+      - run: node scripts/test-final-sw-transform.mjs
 
   store-migration:
     runs-on: ubuntu-latest
