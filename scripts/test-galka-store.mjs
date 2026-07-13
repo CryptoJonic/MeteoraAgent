@@ -59,6 +59,7 @@ assert.deepEqual(migrated.ui.drawings, legacyStore.ui.drawings);
 assert.deepEqual(migrated.paper.trades, legacyStore.paper.trades);
 assert.deepEqual(migrated.training.manualExamples, legacyStore.training.manualExamples);
 assert.deepEqual(migrated.unknownFutureSection, legacyStore.unknownFutureSection);
+assert.equal(migrated.ui.radar.enabled, false);
 assert.equal(migrated.ui.radar.filter, 'all');
 assert.deepEqual(migrated.training.radarLabels, []);
 assert.equal(migrated.paper.recovery.policy, 'closed-1m-directional-v1');
@@ -69,6 +70,9 @@ assert.equal(migrated.shadow.profile, 'Balanced');
 assert.deepEqual(migrated.shadow.records, []);
 assert.equal(migrated.ui.lab.window, 'all');
 assert.equal(migrated.ui.lab.regime, 'all');
+assert.equal(migrated.paper.settings.signalMode, 'manual');
+assert.equal(migrated.paper.settings.manualDepthPct, 2);
+assert.equal(migrated.paper.settings.exitMode, 'target');
 
 const paperBeforeShadow = JSON.stringify(migrated.paper);
 migrated.shadow.enabled = true;
@@ -84,10 +88,14 @@ assert.deepEqual(roundTrip.paper.symbols, migrated.paper.symbols);
 assert.deepEqual(roundTrip.ui.drawings, migrated.ui.drawings);
 assert.deepEqual(roundTrip.training.manualExamples, migrated.training.manualExamples);
 assert.deepEqual(roundTrip.paper.recovery, migrated.paper.recovery);
-assert.deepEqual(roundTrip.shadow, migrated.shadow);
+assert.equal(roundTrip.shadow.enabled, false, 'simple terminal disables shadow on every load');
+assert.deepEqual(roundTrip.shadow.records, migrated.shadow.records, 'shadow records are preserved');
+assert.equal(roundTrip.shadow.startedAt, migrated.shadow.startedAt, 'shadow history metadata is preserved');
 
 const blank = createDefaultStore();
 assert.deepEqual(Object.keys(blank.paper.symbols), ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']);
+assert.equal(blank.paper.settings.manualDepthPct, 2);
+assert.equal(blank.paper.settings.exitMode, 'target');
 
 const snapshot = createBackupSnapshot(migrated, 'test', '2026-07-11T00:00:00.000Z');
 const summary = summarizeBackupSnapshot(snapshot);
@@ -105,4 +113,4 @@ assert.deepEqual(summary, {
 assert.deepEqual(validateBackupSnapshot(snapshot).paper.symbols, migrated.paper.symbols);
 assert.throws(() => validateBackupSnapshot({}), /не полный snapshot/);
 
-console.log('Galka store: migration, localStorage round-trip and backup checks passed');
+console.log('Galka store: simple migration, localStorage round-trip and backup checks passed');
