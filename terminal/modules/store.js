@@ -1,5 +1,7 @@
+import { createShadowState, normalizeShadowState } from './shadow-engine.js';
+
 export const STORAGE_KEY = 'galka-pro-v1';
-export const STORE_SCHEMA_VERSION = 3;
+export const STORE_SCHEMA_VERSION = 4;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
 export const PAPER_RECOVERY_POLICY = 'closed-1m-directional-v1';
 
@@ -61,6 +63,14 @@ export function createDefaultStore() {
         filter: 'all',
         visibleOnly: false,
       },
+      lab: {
+        symbol: 'BTCUSDT',
+        interval: '15m',
+        type: 'Deep capitulation',
+        window: 'all',
+        profile: 'Balanced',
+        regime: 'all',
+      },
       onboarding: {
         completed: false,
         version: 1,
@@ -100,6 +110,7 @@ export function createDefaultStore() {
       radarLabels: [],
       replayExamples: [],
     },
+    shadow: createShadowState(),
     activity: [],
   };
 }
@@ -155,6 +166,11 @@ export function migrateStore(rawStore) {
   migrated.training.replayExamples = Array.isArray(migrated.training.replayExamples)
     ? migrated.training.replayExamples
     : [];
+  if (migrated.ui.radar.filter === 'medium') migrated.ui.radar.filter = 'strong';
+  if (!['all', 'strong', 'mine', 'profitable', 'losing'].includes(migrated.ui.radar.filter)) {
+    migrated.ui.radar.filter = 'all';
+  }
+  migrated.shadow = normalizeShadowState(migrated.shadow);
   migrated.activity = Array.isArray(migrated.activity) ? migrated.activity : [];
   migrated.schemaVersion = STORE_SCHEMA_VERSION;
   return migrated;

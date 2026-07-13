@@ -1603,6 +1603,22 @@ summary::-webkit-details-marker {
   color: var(--text);
 }
 
+#radarFilters {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+#radarFilters::-webkit-scrollbar {
+  display: none;
+}
+
+#radarFilters button {
+  min-width: max-content;
+  flex: 1 0 auto;
+  padding-inline: 11px;
+}
+
 .range-field {
   display: grid;
   gap: 5px;
@@ -1738,6 +1754,441 @@ summary::-webkit-details-marker {
   margin: 10px 2px 0;
   color: var(--muted);
   font-size: 10px;
+}
+
+.radar-stats-evidence {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  font-size: 10px;
+}
+
+.radar-stats-evidence b {
+  color: var(--text);
+}
+
+.radar-stats-evidence .type-chip {
+  justify-self: start;
+}
+
+.lab-panel {
+  --lab-accent: #7c6cff;
+}
+
+.lab-hero,
+.shadow-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: radial-gradient(circle at 0 0, color-mix(in srgb, var(--lab-accent) 18%, transparent), transparent 50%), var(--panel-2);
+}
+
+.lab-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 15px;
+}
+
+.lab-hero h2,
+.shadow-head h2 {
+  margin: 2px 0 4px;
+  font-size: 18px;
+}
+
+.lab-hero p,
+.shadow-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.lab-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin: 10px 0;
+}
+
+.lab-controls label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.lab-controls .span-2 {
+  grid-column: span 2;
+}
+
+.lab-controls select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  background: var(--panel-2);
+}
+
+.lab-safety,
+.lab-data-meta,
+.lab-note,
+.shadow-status {
+  padding: 10px 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.lab-safety {
+  border-color: color-mix(in srgb, var(--red) 38%, var(--line));
+  background: var(--red-dim);
+  color: var(--red);
+  font-weight: 700;
+}
+
+.lab-safety.caution {
+  border-color: color-mix(in srgb, var(--orange) 42%, var(--line));
+  background: color-mix(in srgb, var(--orange) 11%, var(--panel-2));
+  color: var(--orange);
+}
+
+.lab-data-meta {
+  margin-top: 7px;
+}
+
+.lab-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.lab-metric-grid.compact {
+  margin-top: 10px;
+}
+
+.lab-metric-grid > span,
+.lab-percentiles > span,
+.lab-compare-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--panel-2);
+}
+
+.lab-metric-grid small,
+.lab-percentiles small,
+.lab-compare-card small {
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.lab-metric-grid b,
+.lab-percentiles b,
+.lab-compare-card b {
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+}
+
+.lab-metric-grid .negative b,
+.lab-compare-card.negative b {
+  color: var(--red);
+}
+
+.lab-metric-grid .positive b,
+.lab-compare-card.positive b {
+  color: var(--green);
+}
+
+.lab-percentiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.lab-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+}
+
+.lab-mini-chart {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 13px;
+  background: var(--panel-2);
+}
+
+.lab-mini-chart > b,
+.lab-mini-chart > small {
+  display: block;
+}
+
+.lab-mini-chart > b {
+  font-size: 11px;
+}
+
+.lab-mini-chart > small {
+  margin: 2px 0 9px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.lab-bars {
+  display: grid;
+  gap: 5px;
+}
+
+.lab-bar-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-bar-row > span:first-child {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-bar-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-soft);
+}
+
+.lab-bar-track i {
+  display: block;
+  width: max(2px, calc(var(--bar) * 1%));
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lab-accent);
+}
+
+.lab-bar-row.negative .lab-bar-track i {
+  background: var(--red);
+}
+
+.lab-bar-row.positive .lab-bar-track i {
+  background: var(--green);
+}
+
+.lab-bar-row > b {
+  overflow: hidden;
+  font-size: 8px;
+  text-align: right;
+  text-overflow: ellipsis;
+}
+
+.lab-survival {
+  min-height: 108px;
+}
+
+.lab-survival svg {
+  display: block;
+  width: 100%;
+  height: 108px;
+  overflow: visible;
+}
+
+.lab-survival .curve-line {
+  fill: none;
+  stroke: var(--lab-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.lab-survival .curve-area {
+  fill: color-mix(in srgb, var(--lab-accent) 14%, transparent);
+}
+
+.lab-survival text {
+  fill: var(--muted);
+  font-size: 8px;
+}
+
+.lab-heatmap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: 13px;
+  background: var(--panel-2);
+}
+
+.lab-heatmap table {
+  width: 100%;
+  min-width: 350px;
+  border-collapse: collapse;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-heatmap th,
+.lab-heatmap td {
+  min-width: 43px;
+  padding: 7px 5px;
+  border-right: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  text-align: center;
+}
+
+.lab-heatmap th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel-3);
+  color: var(--muted);
+}
+
+.lab-heatmap td:first-child,
+.lab-heatmap th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--panel-3);
+  font-weight: 750;
+}
+
+.lab-heatmap td.heat {
+  background: color-mix(in srgb, var(--green) calc(var(--heat) * 42%), var(--panel-2));
+}
+
+.lab-heatmap td.insufficient {
+  color: var(--muted);
+  background-image: repeating-linear-gradient(135deg, transparent 0 5px, var(--line-soft) 5px 6px);
+}
+
+.lab-level-strip {
+  display: flex;
+  gap: 5px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+}
+
+.lab-level-strip span,
+.type-chip {
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  border: 1px solid color-mix(in srgb, var(--lab-accent) 38%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lab-accent) 10%, var(--panel-2));
+  color: var(--text-soft);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.lab-compare-card.active {
+  border-color: color-mix(in srgb, var(--lab-accent) 55%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lab-accent) 18%, transparent);
+}
+
+.lab-ranking {
+  display: grid;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.lab-rank-row,
+.shadow-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 11px;
+  background: var(--panel-2);
+  font-size: 10px;
+}
+
+.lab-rank-row span,
+.shadow-record span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.lab-rank-row small,
+.shadow-record small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-note {
+  margin-top: 6px;
+  background: var(--panel-2);
+}
+
+.shadow-card {
+  margin-top: 18px;
+  padding: 13px;
+}
+
+.shadow-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.shadow-status {
+  margin-top: 10px;
+}
+
+.shadow-status.on {
+  border-color: color-mix(in srgb, var(--green) 36%, var(--line));
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.shadow-records {
+  display: grid;
+  gap: 6px;
+}
+
+.shadow-records:empty::after {
+  padding: 14px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  content: "Live-forward записей пока нет.";
+  font-size: 10px;
+  text-align: center;
+}
+
+.shadow-record b[data-status="closed"] {
+  color: var(--green);
+}
+
+.shadow-record b[data-status="expired"] {
+  color: var(--muted);
 }
 
 .label-actions {

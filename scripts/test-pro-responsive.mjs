@@ -32,7 +32,7 @@ for (const viewport of viewportContracts) {
 
 const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
 assert.equal(ids.length, new Set(ids).size, 'no duplicated interactive IDs');
-for (const panel of ['paper', 'radar', 'watchlist', 'objects', 'more']) {
+for (const panel of ['paper', 'radar', 'lab', 'watchlist', 'objects', 'more']) {
   assert.ok(html.includes(`data-panel-id="${panel}"`));
 }
 assert.ok(/\.sidebar \{[\s\S]*transform: translateY\(calc\(100% \+ 12px\)\)/.test(css), 'mobile panel is closed by default');

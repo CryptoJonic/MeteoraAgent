@@ -39,6 +39,7 @@ export function summarizeBackupSnapshot(snapshot) {
     drawings,
     manualExamples: store.training.manualExamples.length,
     radarLabels: store.training.radarLabels.length,
+    shadowRecords: store.shadow.records.length,
+    shadowEnabled: store.shadow.enabled,
   };
 }
-

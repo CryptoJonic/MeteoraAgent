@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -13,6 +14,7 @@ const currentRoot = path.resolve(argument('--current-root', '.'));
 const baselineRoot = path.resolve(argument('--baseline-root', currentRoot));
 const outputRoot = path.resolve(argument('--output', 'artifacts/galka-visuals'));
 await fs.mkdir(outputRoot, { recursive: true });
+const chartBundle = await fs.readFile(path.resolve('node_modules/lightweight-charts/dist/lightweight-charts.standalone.production.js'));
 
 function serve(root, port) {
   return spawn('python3', ['-m', 'http.server', String(port), '--bind', '127.0.0.1', '--directory', root], {
@@ -135,6 +137,9 @@ async function preparePage(browser, baseUrl, viewport) {
     }
     window.WebSocket = VisualWebSocket;
   }, { snapshot: seed });
+  await context.route('https://unpkg.com/lightweight-charts@5.2.0/**', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/javascript', body: chartBundle });
+  });
   await context.route('https://fapi.binance.com/**', async (route) => {
     const symbol = new URL(route.request().url()).searchParams.get('symbol') || 'BTCUSDT';
     await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'cache-control': 'no-store' }, body: JSON.stringify(marketRows(symbol)) });
@@ -156,6 +161,86 @@ async function preparePage(browser, baseUrl, viewport) {
   return { context, page };
 }
 
+async function openAndVerifyLab(page, viewport) {
+  const mobileLab = page.locator('[data-mobile-panel="lab"]');
+  const openSheet = await page.locator('.sidebar.open').count();
+  if (openSheet || !(await mobileLab.isVisible())) await page.locator('.side-tabs [data-panel="lab"]').click();
+  else await mobileLab.click();
+  await page.waitForFunction(() => document.querySelector('#labPackStatus')?.textContent === 'Verified', null, { timeout: 15_000 });
+  await page.waitForFunction(() => /Candidates/.test(document.querySelector('#labOosMetrics')?.textContent || ''), null, { timeout: 5_000 });
+  await page.waitForTimeout(450);
+  const state = await page.evaluate(() => {
+    const panel = document.querySelector('[data-panel-id="lab"]');
+    const rect = panel.getBoundingClientRect();
+    return {
+      status: document.querySelector('#labPackStatus')?.textContent,
+      safety: document.querySelector('#labSafetyBanner')?.textContent,
+      shadowEnabled: document.querySelector('#shadowToggle')?.checked,
+      shadowImpact: document.querySelector('#shadowMetrics')?.textContent,
+      metrics: document.querySelector('#labOosMetrics')?.textContent,
+      heatmapRows: document.querySelectorAll('#labHeatmap tbody tr').length,
+      panel: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
+      viewport: { width: innerWidth, height: innerHeight },
+      bodyOverflow: document.documentElement.scrollWidth - innerWidth,
+    };
+  });
+  console.log(`[lab state] ${viewport.width}x${viewport.height}: ${JSON.stringify(state)}`);
+  assert.equal(state.status, 'Verified');
+  assert.match(state.safety, /PROMOTION BLOCKED/);
+  assert.match(state.safety, /auto-paper остаётся выключен/);
+  assert.equal(state.shadowEnabled, false);
+  assert.match(state.shadowImpact, /Paper impact\$0\.00/);
+  assert.ok(state.heatmapRows >= 4);
+  assert.ok(state.panel.left >= -1 && state.panel.right <= viewport.width + 1);
+  assert.ok(state.bodyOverflow <= 2, `body overflow ${state.bodyOverflow}px at ${viewport.width}x${viewport.height}`);
+}
+
+async function verifyLabInteractions(page) {
+  const paperBefore = await page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem('galka-pro-v1')).paper));
+  await page.locator('.shadow-card .switch').click();
+  await page.waitForFunction(() => document.querySelector('#shadowToggle')?.checked === true && /Включён с/.test(document.querySelector('#shadowStatus')?.textContent || ''));
+  const enabled = await page.evaluate(() => {
+    const store = JSON.parse(localStorage.getItem('galka-pro-v1'));
+    return { paper: JSON.stringify(store.paper), shadow: store.shadow, radarEnabled: store.ui.radar.enabled };
+  });
+  assert.equal(enabled.paper, paperBefore, 'browser shadow toggle must not mutate paper');
+  assert.equal(enabled.shadow.enabled, true);
+  assert.equal(enabled.shadow.records.length, 0, 'historical Radar candidates must not be backfilled');
+  assert.equal(enabled.radarEnabled, true);
+  await page.locator('.shadow-card .switch').click();
+  await page.waitForFunction(() => document.querySelector('#shadowToggle')?.checked === false);
+
+  await page.locator('#labSymbol').selectOption('SOLUSDT');
+  await page.locator('#labInterval').selectOption('5m');
+  await page.locator('#labType').selectOption('Multi-test');
+  await page.locator('#labWindow').selectOption('90d');
+  const filtered = await page.evaluate(() => {
+    const store = JSON.parse(localStorage.getItem('galka-pro-v1'));
+    return {
+      lab: store.ui.lab,
+      heatmapRows: document.querySelectorAll('#labHeatmap tbody tr').length,
+      safety: document.querySelector('#labSafetyBanner')?.textContent,
+    };
+  });
+  assert.deepEqual(filtered.lab, { symbol: 'SOLUSDT', interval: '5m', type: 'Multi-test', window: '90d', profile: 'Balanced', regime: 'all' });
+  assert.ok(filtered.heatmapRows >= 4);
+  assert.match(filtered.safety, /PROMOTION BLOCKED/);
+
+  await page.locator('.side-tabs [data-panel="radar"]').click();
+  const candidates = page.locator('#radarCandidatesList [data-radar-id]');
+  assert.ok(await candidates.count() > 0, 'Radar fixture must expose candidates');
+  const classified = candidates.filter({ hasText: /Deep capitulation|Fast V|Multi-test|Rounded recovery/ });
+  assert.ok(await classified.count() > 0, 'Radar fixture must expose a research-classified candidate');
+  await classified.first().click();
+  const evidence = await page.locator('#radarStatsEvidence').textContent();
+  assert.match(evidence, /Final OOS/);
+  assert.match(evidence, /depth p50\/p75\/p90/);
+  await page.locator('#radarFilters [data-radar-filter="profitable"]').click();
+  assert.equal(await candidates.count(), 0, 'no Balanced type passes final OOS profitability');
+  await page.locator('#radarFilters [data-radar-filter="losing"]').click();
+  assert.ok(await candidates.count() > 0, 'OOS-losing filter must retain classified candidates');
+}
+
 const baselineServer = serve(baselineRoot, 4174);
 const currentServer = serve(currentRoot, 4175);
 let browser;
@@ -175,10 +260,26 @@ try {
   await after.page.locator('[data-mobile-panel="paper"]').click();
   await after.page.waitForTimeout(450);
   await after.page.screenshot({ path: path.join(outputRoot, 'after-s24-paper.png') });
+  await openAndVerifyLab(after.page, { width: 390, height: 844 });
+  await after.page.screenshot({ path: path.join(outputRoot, 'after-s24-lab.png') });
+  await after.page.locator('#labDepthHistogram').scrollIntoViewIfNeeded();
+  await after.page.waitForTimeout(180);
+  await after.page.screenshot({ path: path.join(outputRoot, 'after-s24-lab-data.png') });
+  await verifyLabInteractions(after.page);
   await after.context.close();
+
+  const landscape = await preparePage(browser, 'http://127.0.0.1:4175', { width: 844, height: 390 });
+  await openAndVerifyLab(landscape.page, { width: 844, height: 390 });
+  await landscape.page.screenshot({ path: path.join(outputRoot, 'after-landscape-lab.png') });
+  await landscape.context.close();
 
   const desktop = await preparePage(browser, 'http://127.0.0.1:4175', { width: 1440, height: 900 });
   await desktop.page.screenshot({ path: path.join(outputRoot, 'after-desktop.png') });
+  await openAndVerifyLab(desktop.page, { width: 1440, height: 900 });
+  await desktop.page.screenshot({ path: path.join(outputRoot, 'after-desktop-lab.png') });
+  await desktop.page.locator('#labDepthHistogram').scrollIntoViewIfNeeded();
+  await desktop.page.waitForTimeout(180);
+  await desktop.page.screenshot({ path: path.join(outputRoot, 'after-desktop-lab-data.png') });
   await desktop.context.close();
 } finally {
   await browser?.close();

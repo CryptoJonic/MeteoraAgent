@@ -10,7 +10,7 @@
   <title>Galka Pro · Paper Terminal</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/galka-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="pro.css?v=6">
+  <link rel="stylesheet" href="pro.css?v=7">
   <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body data-theme="dark">
@@ -153,6 +153,7 @@
       <nav class="side-tabs" aria-label="Разделы терминала">
         <button data-panel="paper" class="active" type="button">Paper</button>
         <button data-panel="radar" type="button">Radar</button>
+        <button data-panel="lab" type="button">Lab</button>
         <button data-panel="watchlist" type="button">Watchlist</button>
         <button data-panel="objects" type="button">Draw</button>
         <button data-panel="more" type="button">More</button>
@@ -239,7 +240,9 @@
             <div class="segmented" id="radarFilters" aria-label="Сила кандидатов">
               <button data-radar-filter="all" class="active" type="button">Все</button>
               <button data-radar-filter="strong" type="button">Сильные</button>
-              <button data-radar-filter="medium" type="button">Средние+</button>
+              <button data-radar-filter="mine" type="button">Мои</button>
+              <button data-radar-filter="profitable" type="button">Прибыльные</button>
+              <button data-radar-filter="losing" type="button">Убыточные</button>
             </div>
             <label class="range-field"><span>Минимальный score <b id="radarMinScoreValue">45</b></span><input id="radarMinScore" type="range" min="25" max="90" step="1" value="45"></label>
             <label class="check-row"><input id="radarVisibleOnly" type="checkbox"><span>Только видимый участок</span></label>
@@ -259,8 +262,69 @@
               <span><small>Совпадение</small><b id="radarManualMatch">—</b></span>
             </div>
             <p id="radarExplanation">Radar использует только свечи вокруг V-образной точки и показывает вклад понятных признаков.</p>
+            <div id="radarStatsEvidence" class="radar-stats-evidence muted">Galka Lab загрузит тип и историческую статистику без изменения Radar score.</div>
             <div class="label-actions"><button id="radarPositive" class="positive" type="button">Это галка</button><button id="radarNegative" class="negative" type="button">Не галка</button></div>
           </article>
+        </section>
+
+        <section class="side-panel lab-panel" data-panel-id="lab">
+          <div class="lab-hero">
+            <div><span class="eyebrow">VERIFIED RESEARCH PACK</span><h2>Galka Lab</h2><p>Историческая статистика и отдельный live-forward shadow. Только paper.</p></div>
+            <span id="labPackStatus" class="stream-badge">Не загружен</span>
+          </div>
+
+          <div class="lab-controls">
+            <label>Рынок<select id="labSymbol"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option></select></label>
+            <label>Таймфрейм<select id="labInterval"><option>5m</option><option>15m</option><option>30m</option><option>1h</option></select></label>
+            <label class="span-2">Тип<select id="labType"><option>Deep capitulation</option><option>Fast V</option><option>Multi-test</option><option>Rounded recovery</option></select></label>
+            <label>Период<select id="labWindow"><option value="7d">7 дней</option><option value="30d">30 дней</option><option value="90d">90 дней</option><option value="180d">180 дней</option><option value="365d">365 дней</option><option value="all">Вся история</option></select></label>
+            <label>Сетка<select id="labProfile"><option>Conservative</option><option selected>Balanced</option><option>Aggressive</option></select></label>
+            <label class="span-2">Режим<select id="labRegime"><option value="all">Все режимы</option><option value="uptrend">Uptrend</option><option value="range">Range</option><option value="downtrend">Downtrend</option></select></label>
+          </div>
+
+          <div id="labSafetyBanner" class="lab-safety">История не является разрешением на auto-paper. Реальные ордера отсутствуют.</div>
+          <div id="labDataMeta" class="lab-data-meta muted">Пакет загружается только при открытии Lab.</div>
+
+          <div class="section-head compact"><div><span class="eyebrow">FINAL OOS · ALL MARKETS</span><h2>Вероятность и глубина</h2></div><span class="paper-only">OOS</span></div>
+          <div id="labOosMetrics" class="lab-metric-grid"></div>
+          <div id="labDepthMetrics" class="lab-percentiles"></div>
+
+          <div class="section-head compact"><div><h2>Distribution и curves</h2><small>Depth, conditional return, survival, type mix</small></div></div>
+          <div class="lab-chart-grid">
+            <article class="lab-mini-chart"><b>Depth histogram</b><small id="labHistogramCaption">—</small><div id="labDepthHistogram" class="lab-bars"></div></article>
+            <article class="lab-mini-chart"><b>Return by depth · 24h</b><small>conditional probability</small><div id="labDepthCurve" class="lab-bars"></div></article>
+            <article class="lab-mini-chart"><b>Time to reclaim</b><small>cumulative return curve</small><div id="labSurvival" class="lab-survival"></div></article>
+            <article class="lab-mini-chart"><b>Frequency by type</b><small>final OOS candidates</small><div id="labTypeFrequency" class="lab-bars"></div></article>
+            <article class="lab-mini-chart"><b>Performance by type</b><small>final OOS Balanced EV</small><div id="labTypePerformance" class="lab-bars"></div></article>
+          </div>
+
+          <div class="section-head compact"><div><h2>Depth × horizon</h2><small>Выбранные рынок, ТФ и период · n&lt;40 помечается</small></div></div>
+          <div id="labHeatmap" class="lab-heatmap muted">Ожидание пакета…</div>
+
+          <div class="section-head compact"><div><h2>Плотная лестница</h2><small>Профиль из train; результат проверяется отдельно</small></div></div>
+          <div id="labProfileLevels" class="lab-level-strip"></div>
+          <div id="labGridCards" class="lab-compare-grid"></div>
+
+          <div class="section-head compact"><div><h2>Stops и exits</h2><small>Историческое сравнение; лучший ≠ одобренный</small></div></div>
+          <div id="labStopCards" class="lab-ranking"></div>
+          <div id="labExitCards" class="lab-ranking"></div>
+
+          <div class="section-head compact"><div><h2>Drift и probability cliff</h2><small>Недавние данные против всей истории</small></div></div>
+          <div id="labDrift" class="lab-note"></div>
+          <div id="labCliff" class="lab-note"></div>
+          <div id="labRegimes" class="lab-note"></div>
+          <div id="labPortability" class="lab-note"></div>
+
+          <div class="shadow-card">
+            <div class="shadow-head">
+              <div><span class="eyebrow">LIVE FORWARD · ISOLATED</span><h2>Shadow mode</h2><p>Фиксирует новые подтверждённые Radar-кандидаты. Paper balance impact = 0.</p></div>
+              <label class="switch"><input id="shadowToggle" type="checkbox"><span></span><span class="sr-only">Включить shadow mode</span></label>
+            </div>
+            <div id="shadowStatus" class="shadow-status muted">Выключен по умолчанию.</div>
+            <div id="shadowMetrics" class="lab-metric-grid compact"></div>
+            <div class="section-head compact"><div><h2>Live records</h2><small>Только после момента включения</small></div><button id="exportShadow" type="button">JSON</button></div>
+            <div id="shadowRecords" class="shadow-records"></div>
+          </div>
         </section>
 
         <section class="side-panel" data-panel-id="watchlist">
@@ -309,6 +373,7 @@
             <button id="alertBtn" type="button"><span><b>Алерты</b><small>Локальные уведомления цены</small></span><span>›</span></button>
             <button id="replayBtn" type="button"><span><b>Replay для обучения</b><small>Будущее скрыто до проверки</small></span><span>›</span></button>
             <button id="snapshotBtn" type="button"><span><b>Снимок графика</b><small>PNG со свечами и рисунками</small></span><span>›</span></button>
+            <button id="openWatchlist" type="button"><span><b>Watchlist</b><small>BTC, ETH и SOL</small></span><span>›</span></button>
           </div>
 
           <details class="settings-details">
@@ -360,7 +425,7 @@
     <button data-mobile-panel="chart" class="active" type="button"><span>⌁</span><small>Chart</small></button>
     <button data-mobile-panel="paper" type="button"><span>▤</span><small>Paper</small><i id="paperNavBadge"></i></button>
     <button data-mobile-panel="radar" type="button"><span>⌖</span><small>Radar</small></button>
-    <button data-mobile-panel="watchlist" type="button"><span>≡</span><small>Watchlist</small></button>
+    <button data-mobile-panel="lab" type="button"><span>⌬</span><small>Lab</small></button>
     <button data-mobile-panel="more" type="button"><span>•••</span><small>More</small></button>
   </nav>
 </div>
@@ -428,6 +493,6 @@
   </div>
 </div>
 
-<script type="module" src="pro.js?v=7"></script>
+<script type="module" src="pro.js?v=8"></script>
 </body>
 </html>
