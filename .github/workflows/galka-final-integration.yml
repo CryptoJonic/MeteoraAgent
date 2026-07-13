@@ -1,0 +1,58 @@
+name: Galka Final Integration
+
+on:
+  pull_request:
+    paths:
+      - 'terminal/**'
+      - 'scripts/check-pro-terminal.mjs'
+      - 'scripts/test-galka-store.mjs'
+      - 'scripts/test-paper-engine.mjs'
+      - 'scripts/test-paper-recovery.mjs'
+      - 'scripts/test-pro-responsive.mjs'
+      - '.github/workflows/galka-final-integration.yml'
+
+jobs:
+  terminal-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-pro-terminal.mjs
+
+  store-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/test-galka-store.mjs
+
+  paper-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/test-paper-engine.mjs
+
+  paper-recovery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/test-paper-recovery.mjs
+
+  responsive-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/test-pro-responsive.mjs
