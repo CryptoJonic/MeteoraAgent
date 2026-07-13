@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galka-final-integration-shell-v8';
+const CACHE_NAME = 'galka-final-integration-shell-v9';
 const APP_SHELL = [
   './pro.html',
   './pro.css?v=7',
@@ -16,7 +16,7 @@ const APP_SHELL = [
   'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js',
 ];
 
-const PATCH_VERSION = 'final-integration-v3-l1-cycle-tools';
+const PATCH_VERSION = 'final-integration-v3.1-l1-cycle-tools';
 
 function replaceOnce(source, oldText, newText, label) {
   if (!source.includes(oldText)) {
@@ -124,7 +124,7 @@ function patchProSource(originalSource) {
 
   source = replaceOnce(source, oldMarketSwitch, newMarketSwitch, 'symbol and interval auto-center');
   source = replaceOnce(source,"els.fitBtn.onclick=()=>runtime.mainChart.timeScale().fitContent();els.latestBtn.onclick=()=>runtime.mainChart.timeScale().scrollToRealTime();","els.fitBtn.onclick=()=>autoCenterActiveMarket({fitTime:true});els.latestBtn.onclick=()=>autoCenterActiveMarket();",'fit and latest autoscale');
-  source = replaceOnce(source,"  tool:'cursor',drawingStart:null,drawingPreview:null,selectedDrawing:null,drawingEdit:null,longPressTimer:null,undo:[],redo:[],","  tool:'cursor',drawingStart:null,drawingPreview:null,drawingAwaitSecond:false,selectedDrawing:null,drawingEdit:null,longPressTimer:null,undo:[],redo:[]",'two-tap drawing state');
+  source = replaceOnce(source,"  tool:'cursor',drawingStart:null,drawingPreview:null,selectedDrawing:null,drawingEdit:null,longPressTimer:null,undo:[],redo:[],","  tool:'cursor',drawingStart:null,drawingPreview:null,drawingAwaitSecond:false,selectedDrawing:null,drawingEdit:null,longPressTimer:null,undo:[],redo:[],",'two-tap drawing state');
   source = replaceOnce(source,`function setTool(tool){
   runtime.tool=tool;runtime.drawingStart=null;runtime.drawingPreview=null;
   if(tool!=='cursor')runtime.selectedDrawing=null;
