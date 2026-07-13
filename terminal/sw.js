@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galka-final-integration-shell-v9';
+const CACHE_NAME = 'galka-final-integration-shell-v10';
 const APP_SHELL = [
   './pro.html',
   './pro.css?v=7',
@@ -16,7 +16,7 @@ const APP_SHELL = [
   'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js',
 ];
 
-const PATCH_VERSION = 'final-integration-v3.1-l1-cycle-tools';
+const PATCH_VERSION = 'final-integration-v3.2-l1-cycle-tools';
 
 function replaceOnce(source, oldText, newText, label) {
   if (!source.includes(oldText)) {
@@ -190,7 +190,7 @@ function patchProSource(originalSource) {
   const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime,averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,levelsTotal:c.levels.length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow,exitMode:c.exitMode||'target',trailActivatedAt:c.trailActivatedAt||null,trailHigh:c.trailHigh||null,trailStop:c.trailStop||null,executionSource:recovered?'recovery':'live',recoveryPolicy:recovered?RECOVERY_PATH_POLICY:null};
   if(c.trainingExampleId){const x=store.training.manualExamples.find(v=>v.id===c.trainingExampleId);if(x)Object.assign(x,{status:'closed',exitTime:trade.exitTime,exitPrice:trade.exitPrice,netPnl:trade.netPnl,reason:trade.reason,levelsFilled:trade.levelsFilled,levelsTotal:trade.levelsTotal,trailHigh:trade.trailHigh});}
   store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=trade.fees;ss.campaign=null;if(ss.pattern?.patternId===c.patternId)ss.pattern.status=reason;
-  logActivity(net>=0?'paper':'risk',\`${symbol.replace('USDT','')}: paper-сделка закрыта ${signedMoney(net)}\`,{reason,tradeId:trade.tradeId,recovered},trade.exitTime);save();if(!deferRender){renderPaper();renderActivity();updateMarkers();}
+  logActivity(net>=0?'paper':'risk',\`\${symbol.replace('USDT','')}: paper-сделка закрыта \${signedMoney(net)}\`,{reason,tradeId:trade.tradeId,recovered},trade.exitTime);save();if(!deferRender){renderPaper();renderActivity();updateMarkers();}
 }`;
   const newCloseCampaign = `function recordL1Cycle(symbol,event,{atMs=Date.now(),recovered=false,deferRender=false}={}){
   const ss=store.paper.symbols[symbol],c=ss.campaign;if(!c||!event)return null;
@@ -198,7 +198,7 @@ function patchProSource(originalSource) {
   const exitTime=new Date(num(atMs,Date.now())).toISOString(),fees=num(event.entryFees)+num(event.exitFee),net=num(event.netPnl);
   const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,cycleKey,cycleOnly:true,finalCampaign:false,l1Cycle:cycle,symbol,side:'long',entryTime:event.fillTime||c.createdAt,exitTime,averageEntry:event.averageEntry,exitPrice:event.price,qty:event.qty,filledNotional:event.filledNotional,levelsFilled:1,levelsTotal:c.levels.length,grossPnl:event.grossPnl,fees,netPnl:net,reason:'l1_cycle_target',vLow:c.vLow,exitMode:'target',executionSource:recovered?'recovery':'live',recoveryPolicy:recovered?RECOVERY_PATH_POLICY:null};
   if(c.trainingExampleId){const x=store.training.manualExamples.find(v=>v.id===c.trainingExampleId);if(x){x.l1Cycles=cycle;x.l1CyclePnl=num(x.l1CyclePnl)+net;x.updatedAt=exitTime;}}
-  store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=fees;logActivity('paper',\`${symbol.replace('USDT','')}: L1 цикл ${cycle} закрыт ${signedMoney(net)} и перезаряжен\`,{reason:trade.reason,tradeId:trade.tradeId,recovered,cycle},trade.exitTime);save();if(!deferRender){renderPaper();renderActivity();updateMarkers();renderSimpleTradeBar();}return trade;
+  store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=fees;logActivity('paper',\`\${symbol.replace('USDT','')}: L1 цикл \${cycle} закрыт \${signedMoney(net)} и перезаряжен\`,{reason:trade.reason,tradeId:trade.tradeId,recovered,cycle},trade.exitTime);save();if(!deferRender){renderPaper();renderActivity();updateMarkers();renderSimpleTradeBar();}return trade;
 }
 function closeCampaign(symbol,rawExit,reason,{atMs=Date.now(),recovered=false,deferRender=false}={}){
   const ss=store.paper.symbols[symbol],c=ss.campaign;if(!c?.qty)return;
@@ -206,7 +206,7 @@ function closeCampaign(symbol,rawExit,reason,{atMs=Date.now(),recovered=false,de
   const st=store.paper.settings,exit=reason==='v_low_target'?rawExit:rawExit*(1-st.slippage),exitNotional=c.qty*exit,exitFee=exitNotional*(reason==='v_low_target'?st.makerFee:st.takerFee),gross=c.qty*(exit-c.averageEntry),net=gross-c.entryFees-exitFee;const exitTime=new Date(num(atMs,Date.now())).toISOString();
   const trade={tradeId:'P'+String(store.paper.trades.length+1).padStart(6,'0'),campaignId:c.campaignId,patternId:c.patternId,cycleOnly:false,finalCampaign:true,symbol,side:'long',entryTime:c.levels.find(x=>x.status==='filled')?.fillTime||c.createdAt,exitTime,averageEntry:c.averageEntry,exitPrice:exit,qty:c.qty,filledNotional:c.filledNotional,levelsFilled:c.levels.filter(x=>x.status==='filled').length,levelsTotal:c.levels.length,grossPnl:gross,fees:c.entryFees+exitFee,netPnl:net,reason,vLow:c.vLow,exitMode:c.exitMode||'target',l1Cycles:num(c.l1Cycles),l1CycleRealizedPnl:num(c.l1CycleRealizedPnl),trailActivatedAt:c.trailActivatedAt||null,trailHigh:c.trailHigh||null,trailStop:c.trailStop||null,executionSource:recovered?'recovery':'live',recoveryPolicy:recovered?RECOVERY_PATH_POLICY:null};
   if(c.trainingExampleId){const x=store.training.manualExamples.find(v=>v.id===c.trainingExampleId);if(x)Object.assign(x,{status:'closed',exitTime:trade.exitTime,exitPrice:trade.exitPrice,netPnl:num(x.l1CyclePnl)+trade.netPnl,reason:trade.reason,levelsFilled:trade.levelsFilled,levelsTotal:trade.levelsTotal,l1Cycles:trade.l1Cycles,trailHigh:trade.trailHigh});}
-  store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=trade.fees;ss.campaign=null;if(ss.pattern?.patternId===c.patternId)ss.pattern.status=reason;logActivity(net>=0?'paper':'risk',\`${symbol.replace('USDT','')}: GALKA завершена ${signedMoney(net)} · L1 циклов ${num(c.l1Cycles)}\`,{reason,tradeId:trade.tradeId,recovered,l1Cycles:num(c.l1Cycles)},trade.exitTime);save();if(!deferRender){renderPaper();renderActivity();updateMarkers();renderSimpleTradeBar();}
+  store.paper.trades.push(trade);store.paper.realizedPnl+=net;store.paper.fees+=trade.fees;ss.campaign=null;if(ss.pattern?.patternId===c.patternId)ss.pattern.status=reason;logActivity(net>=0?'paper':'risk',\`\${symbol.replace('USDT','')}: GALKA завершена \${signedMoney(net)} · L1 циклов \${num(c.l1Cycles)}\`,{reason,tradeId:trade.tradeId,recovered,l1Cycles:num(c.l1Cycles)},trade.exitTime);save();if(!deferRender){renderPaper();renderActivity();updateMarkers();renderSimpleTradeBar();}
 }`;
   source = replaceOnce(source,oldCloseCampaign,newCloseCampaign,'L1 cycle ledger and final close');
   source = replaceOnce(source,"const summary={reason,policy:RECOVERY_PATH_POLICY,symbols:symbols.length,candles:0,boundaryCandles:0,fills:0,trailingArmed:0,trailingRaised:0,closed:0,expired:0,truncated:0,failures:[]};","const summary={reason,policy:RECOVERY_PATH_POLICY,symbols:symbols.length,candles:0,boundaryCandles:0,fills:0,l1Cycles:0,trailingArmed:0,trailingRaised:0,closed:0,expired:0,truncated:0,failures:[]};",'recovery L1 cycle summary');
