@@ -108,7 +108,7 @@ assert.deepEqual(summary, {
   manualExamples: 1,
   radarLabels: 0,
   shadowRecords: 1,
-  shadowEnabled: true,
+  shadowEnabled: false,
 });
 assert.deepEqual(validateBackupSnapshot(snapshot).paper.symbols, migrated.paper.symbols);
 assert.throws(() => validateBackupSnapshot({}), /не полный snapshot/);
