@@ -69,7 +69,7 @@ const checks = [
   ['idempotent fills', /level\.status !== 'pending'/.test(paper)],
   ['safe pre-trade preview', /previewCampaign/.test(app) && /PAPER PREVIEW/.test(html)],
   ['simple bottom entry UI', /simpleTradeBar/.test(sw) && /simpleGalkaPrice/.test(sw) && /simpleGalkaLaunch/.test(sw)],
-  ['essential drawing UI', /data-tool=\\"ray\\"/.test(sw) && /data-tool=\\"measure\\"/.test(sw) && /#deleteBtn/.test(sw) && /#clearBtn/.test(sw)],
+  ['essential drawing UI', /data-tool="ray"/.test(sw) && /data-tool="measure"/.test(sw) && /#deleteBtn/.test(sw) && /#clearBtn/.test(sw)],
   ['manual marker hidden', /p&&p\.source!=='manual'/.test(sw)],
   ['Radar visual only', !/createCampaign|paper\.symbols/.test(radar) && /EXPLAINABLE SCORE/.test(html)],
   ['positive and negative labels', /labelRadarCandidate\('positive'\)/.test(app) && /labelRadarCandidate\('negative'\)/.test(app)],
