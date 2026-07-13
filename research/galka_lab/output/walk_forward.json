@@ -2,117 +2,117 @@
   {
     "depth_success_p75": 0.44827586206896547,
     "fold": 1,
-    "model_hash": "e8194e407b442234e8eed2d0cf09e5b79ceeace356932e238e2501976c9a1d79",
+    "model_hash": "286735ab9af35fe0b1184fd2606c7636f4f96ee920591997728ef3163165e97e",
     "return_24h_probability": 0.9793876932403759,
-    "train_count": 51575,
+    "train_count": 51632,
     "train_end": "2022-02-25T22:35:00+00:00",
     "types": {
       "Deep capitulation": {
-        "n": 1575,
-        "return_24h": 0.9898412698412699
+        "n": 1578,
+        "return_24h": 0.9892268694550064
       },
       "Fast V": {
-        "n": 2675,
-        "return_24h": 0.971588785046729
+        "n": 2644,
+        "return_24h": 0.9720121028744326
       },
       "Multi-test": {
-        "n": 9763,
-        "return_24h": 0.9796169210283724
+        "n": 9767,
+        "return_24h": 0.9795228831780485
       },
       "Rounded recovery": {
-        "n": 5781,
-        "return_24h": 0.9797612869745719
+        "n": 5805,
+        "return_24h": 0.9798449612403101
       }
     },
-    "validation_count": 20635,
-    "validation_end": "2022-12-04T02:35:00+00:00",
-    "validation_start": "2022-02-27T06:30:00+00:00"
+    "validation_count": 20633,
+    "validation_end": "2022-12-04T16:10:00+00:00",
+    "validation_start": "2022-02-27T23:30:00+00:00"
   },
   {
-    "depth_success_p75": 0.35340070680142693,
+    "depth_success_p75": 0.3545534876317933,
     "fold": 2,
-    "model_hash": "a8f76e0cb22a2a4fdc529b5a141e84576d25e19a8c60150c0bc01e523ffbf535",
-    "return_24h_probability": 0.9782113131527329,
-    "train_count": 72532,
-    "train_end": "2022-12-04T06:10:00+00:00",
+    "model_hash": "46f35af029f213c7b72d55c510619d1f1e1143cfa7a5e2247fd29f045f2afdb8",
+    "return_24h_probability": 0.9781985996180776,
+    "train_count": 72559,
+    "train_end": "2022-12-04T16:10:00+00:00",
     "types": {
       "Deep capitulation": {
-        "n": 3770,
-        "return_24h": 0.9641909814323607
+        "n": 3789,
+        "return_24h": 0.9643705463182898
       },
       "Fast V": {
-        "n": 1497,
-        "return_24h": 0.9846359385437542
+        "n": 1468,
+        "return_24h": 0.9843324250681199
       },
       "Multi-test": {
-        "n": 8844,
-        "return_24h": 0.9796472184531886
+        "n": 8839,
+        "return_24h": 0.9796357053965381
       },
       "Rounded recovery": {
-        "n": 4752,
-        "return_24h": 0.9846380471380471
+        "n": 4756,
+        "return_24h": 0.9846509671993272
       }
     },
-    "validation_count": 19886,
-    "validation_end": "2023-08-30T19:55:00+00:00",
-    "validation_start": "2022-12-10T07:15:00+00:00"
+    "validation_count": 19883,
+    "validation_end": "2023-08-31T11:25:00+00:00",
+    "validation_start": "2022-12-10T20:15:00+00:00"
   },
   {
-    "depth_success_p75": 0.3315654575532367,
+    "depth_success_p75": 0.33217796140351513,
     "fold": 3,
-    "model_hash": "37ef1b6a0fad16aebce6bdc6ce55fb7d0f3dc923cff5fda6c366938f206a6911",
-    "return_24h_probability": 0.9884843353090601,
-    "train_count": 92956,
-    "train_end": "2023-08-30T19:55:00+00:00",
+    "model_hash": "764c22551e31840605abe8f0e4d5ebd1963b28f575d3e608c486adfaab6e1b03",
+    "return_24h_probability": 0.9884921306481638,
+    "train_count": 93006,
+    "train_end": "2023-08-31T11:25:00+00:00",
     "types": {
       "Deep capitulation": {
-        "n": 2046,
-        "return_24h": 0.987781036168133
+        "n": 2043,
+        "return_24h": 0.9877630934899657
       },
       "Fast V": {
-        "n": 1031,
-        "return_24h": 0.9941804073714839
+        "n": 1033,
+        "return_24h": 0.9941916747337851
       },
       "Multi-test": {
-        "n": 9644,
-        "return_24h": 0.9877644131065948
+        "n": 9657,
+        "return_24h": 0.9877808843326085
       },
       "Rounded recovery": {
         "n": 4994,
         "return_24h": 0.9889867841409692
       }
     },
-    "validation_count": 19302,
-    "validation_end": "2024-06-03T14:00:00+00:00",
-    "validation_start": "2023-09-05T21:05:00+00:00"
+    "validation_count": 19314,
+    "validation_end": "2024-06-04T20:05:00+00:00",
+    "validation_start": "2023-09-06T12:30:00+00:00"
   },
   {
-    "depth_success_p75": 0.26673606141434947,
+    "depth_success_p75": 0.2666722352659392,
     "fold": 4,
-    "model_hash": "c48f670b74fb9d89cb73e1a8d0ec5082d5a770bef2e7d155a69cc1a1044bb03e",
-    "return_24h_probability": 0.984451762673433,
-    "train_count": 112808,
-    "train_end": "2024-06-03T14:00:00+00:00",
+    "model_hash": "4fa8f3fb6e89c18e497a26be248cf6b1f3af6ba2cf25669fde692dc9646411d5",
+    "return_24h_probability": 0.9851835829773428,
+    "train_count": 112868,
+    "train_end": "2024-06-04T23:15:00+00:00",
     "types": {
       "Deep capitulation": {
-        "n": 1609,
-        "return_24h": 0.9801118707271598
+        "n": 1598,
+        "return_24h": 0.9824780976220275
       },
       "Fast V": {
-        "n": 1121,
-        "return_24h": 0.9928635147190009
+        "n": 1108,
+        "return_24h": 0.9945848375451264
       },
       "Multi-test": {
-        "n": 10232,
-        "return_24h": 0.9845582486317436
+        "n": 10197,
+        "return_24h": 0.9848975188781014
       },
       "Rounded recovery": {
-        "n": 5561,
-        "return_24h": 0.9838158604567524
+        "n": 5590,
+        "return_24h": 0.9846153846153847
       }
     },
-    "validation_count": 19550,
-    "validation_end": "2025-03-09T22:20:00+00:00",
-    "validation_start": "2024-06-09T17:20:00+00:00"
+    "validation_count": 19520,
+    "validation_end": "2025-03-10T17:40:00+00:00",
+    "validation_start": "2024-06-10T23:45:00+00:00"
   }
 ]

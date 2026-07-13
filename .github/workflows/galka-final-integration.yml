@@ -1,0 +1,94 @@
+name: Galka Final Integration
+
+on:
+  pull_request:
+    paths:
+      - 'terminal/**'
+      - 'scripts/check-pro-terminal.mjs'
+      - 'scripts/test-final-sw-transform.mjs'
+      - 'scripts/test-galka-store.mjs'
+      - 'scripts/test-paper-engine.mjs'
+      - 'scripts/test-paper-recovery.mjs'
+      - 'scripts/test-pro-responsive.mjs'
+      - '.github/workflows/galka-final-integration.yml'
+
+jobs:
+  terminal-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-pro-terminal.mjs
+      - name: Capture transformed terminal test
+        shell: bash
+        run: |
+          set +e
+          node scripts/test-final-sw-transform.mjs > transform-test.log 2>&1
+          echo "$?" > transform-test.exit
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galka-transform-test-log
+          path: |
+            transform-test.log
+            transform-test.exit
+      - name: Enforce transformed terminal result
+        shell: bash
+        run: |
+          cat transform-test.log
+          test "$(cat transform-test.exit)" = "0"
+
+  store-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Capture store migration test
+        shell: bash
+        run: |
+          set +e
+          node scripts/test-galka-store.mjs > store-test.log 2>&1
+          echo "$?" > store-test.exit
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galka-store-test-log
+          path: |
+            store-test.log
+            store-test.exit
+      - name: Enforce store migration result
+        shell: bash
+        run: |
+          cat store-test.log
+          test "$(cat store-test.exit)" = "0"
+
+  paper-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/test-paper-engine.mjs
+
+  paper-recovery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/test-paper-recovery.mjs
+
+  responsive-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/test-pro-responsive.mjs

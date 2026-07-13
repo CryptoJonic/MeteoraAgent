@@ -1,9 +1,12 @@
 import { createShadowState, normalizeShadowState } from './shadow-engine.js';
 
 export const STORAGE_KEY = 'galka-pro-v1';
-export const STORE_SCHEMA_VERSION = 4;
+export const STORE_SCHEMA_VERSION = 5;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
 export const PAPER_RECOVERY_POLICY = 'closed-1m-directional-v1';
+
+const SIMPLE_MANUAL_DEPTHS = [0.15, 0.3, 0.45, 0.6, 0.9, 1.2, 1.5, 2.0];
+const SIMPLE_MANUAL_WEIGHTS = [0.42, 0.22, 0.12, 0.08, 0.06, 0.04, 0.03, 0.03];
 
 export function createPaperRecoveryState() {
   return {
@@ -47,9 +50,9 @@ export function createDefaultStore() {
         ema50: false,
         bollinger: false,
         vwap: false,
-        volume: true,
+        volume: false,
       },
-      lowerIndicator: 'rsi',
+      lowerIndicator: null,
       magnet: true,
       drawingsLocked: false,
       drawingsHidden: false,
@@ -72,7 +75,7 @@ export function createDefaultStore() {
         regime: 'all',
       },
       onboarding: {
-        completed: false,
+        completed: true,
         version: 1,
       },
       sheet: {
@@ -88,9 +91,9 @@ export function createDefaultStore() {
         maxHours: 72,
         signalMode: 'manual',
         ladderStepPct: 0.15,
-        manualDepthPct: 1.5,
-        exitMode: 'trail',
-        reclaimBufferPct: 0.1,
+        manualDepthPct: 2.0,
+        exitMode: 'target',
+        reclaimBufferPct: 0,
         trailDistancePct: 0.75,
         makerFee: 0.0002,
         takerFee: 0.0005,
@@ -131,6 +134,43 @@ function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
+function normalizeSimpleManualCampaign(campaign, settings) {
+  if (!campaign || campaign.source !== 'manual') return campaign;
+  campaign.target = campaign.vLow;
+  campaign.exitMode = 'target';
+  campaign.reclaimPrice = campaign.vLow;
+  campaign.trailArmed = false;
+  campaign.trailHigh = null;
+  campaign.trailStop = null;
+  campaign.trailActivatedAt = null;
+  campaign.l1Cycles = Math.max(0, Number(campaign.l1Cycles) || 0);
+  campaign.l1CycleRealizedPnl = Number(campaign.l1CycleRealizedPnl) || 0;
+  if (campaign.status === 'trailing') campaign.status = campaign.qty ? 'open' : 'waiting';
+
+  const hasFill = Number(campaign.qty) > 0 || campaign.levels?.some((level) => level.status === 'filled');
+  if (!hasFill) {
+    const notional = Math.max(0, Number(settings.symbolNotional) || 0);
+    campaign.levels = SIMPLE_MANUAL_DEPTHS.map((depthPct, index) => ({
+      index: index + 1,
+      depthPct,
+      weight: SIMPLE_MANUAL_WEIGHTS[index],
+      price: campaign.vLow * (1 - depthPct / 100),
+      notional: notional * SIMPLE_MANUAL_WEIGHTS[index],
+      status: 'pending',
+      fillPrice: null,
+      fillTime: null,
+      qty: 0,
+      fee: 0,
+    }));
+    campaign.qty = 0;
+    campaign.filledNotional = 0;
+    campaign.averageEntry = null;
+    campaign.entryFees = 0;
+    campaign.unrealizedPnl = 0;
+  }
+  return campaign;
+}
+
 export function migrateStore(rawStore) {
   const source = rawStore && typeof rawStore === 'object' ? clone(rawStore) : {};
   const migrated = deepMerge(createDefaultStore(), source);
@@ -141,6 +181,18 @@ export function migrateStore(rawStore) {
     migrated.paper.symbols[symbol] = deepMerge(
       { pattern: null, campaign: null },
       migrated.paper.symbols[symbol],
+    );
+  }
+
+  migrated.paper.settings.signalMode = 'manual';
+  migrated.paper.settings.ladderStepPct = 0.15;
+  migrated.paper.settings.manualDepthPct = 2.0;
+  migrated.paper.settings.exitMode = 'target';
+  migrated.paper.settings.reclaimBufferPct = 0;
+  for (const symbol of SYMBOLS) {
+    migrated.paper.symbols[symbol].campaign = normalizeSimpleManualCampaign(
+      migrated.paper.symbols[symbol].campaign,
+      migrated.paper.settings,
     );
   }
 
@@ -170,7 +222,13 @@ export function migrateStore(rawStore) {
   if (!['all', 'strong', 'mine', 'profitable', 'losing'].includes(migrated.ui.radar.filter)) {
     migrated.ui.radar.filter = 'all';
   }
+  migrated.ui.radar.enabled = false;
+  migrated.ui.indicators.volume = false;
+  migrated.ui.lowerIndicator = null;
+  migrated.ui.onboarding.completed = true;
+  migrated.ui.sheet.panel = 'chart';
   migrated.shadow = normalizeShadowState(migrated.shadow);
+  migrated.shadow.enabled = false;
   migrated.activity = Array.isArray(migrated.activity) ? migrated.activity : [];
   migrated.schemaVersion = STORE_SCHEMA_VERSION;
   return migrated;

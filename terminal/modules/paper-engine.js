@@ -1,5 +1,7 @@
 export const LEGACY_DEPTHS = [0.25, 0.7, 1.25, 1.9, 2.65, 3.5];
 export const LEGACY_WEIGHTS = [0.05, 0.09, 0.14, 0.18, 0.24, 0.3];
+export const MANUAL_DENSE_DEPTHS = [0.15, 0.3, 0.45, 0.6, 0.9, 1.2, 1.5, 2.0];
+export const MANUAL_DENSE_WEIGHTS = [0.42, 0.22, 0.12, 0.08, 0.06, 0.04, 0.03, 0.03];
 export const ACTIVE_CAMPAIGN_STATUSES = new Set(['waiting', 'open', 'trailing']);
 export const RECOVERY_CANDLE_INTERVAL_MS = 60_000;
 export const RECOVERY_PATH_POLICY = 'directional-ohlc-v1';
@@ -11,22 +13,19 @@ const number = (value, fallback = 0) => {
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 export function campaignLadder(settings, pattern) {
-  if (pattern.source !== 'manual') {
-    return { depths: LEGACY_DEPTHS.slice(), weights: LEGACY_WEIGHTS.slice() };
+  if (pattern.source === 'manual') {
+    return {
+      depths: MANUAL_DENSE_DEPTHS.slice(),
+      weights: MANUAL_DENSE_WEIGHTS.slice(),
+    };
   }
-  const step = clamp(number(settings.ladderStepPct, 0.15), 0.05, 2);
-  const depth = clamp(number(settings.manualDepthPct, 1.5), step, 10);
-  const count = Math.max(1, Math.floor(depth / step + 1e-9));
-  const depths = Array.from(
-    { length: count },
-    (_, index) => Number(((index + 1) * step).toFixed(4)),
-  );
-  return { depths, weights: depths.map(() => 1 / depths.length) };
+  return { depths: LEGACY_DEPTHS.slice(), weights: LEGACY_WEIGHTS.slice() };
 }
 
 export function createCampaign(symbol, pattern, settings, nowMs = Date.now()) {
   const maxNotional = settings.symbolNotional;
   const { depths, weights } = campaignLadder(settings, pattern);
+  const manualTarget = pattern.source === 'manual';
   return {
     campaignId: `C-${symbol}-${nowMs}`,
     symbol,
@@ -38,12 +37,16 @@ export function createCampaign(symbol, pattern, settings, nowMs = Date.now()) {
     target: pattern.vLow,
     createdAt: new Date(nowMs).toISOString(),
     expiresAt: nowMs + settings.maxHours * 3_600_000,
-    exitMode: settings.exitMode || 'trail',
-    reclaimPrice: pattern.vLow * (1 + number(settings.reclaimBufferPct, 0.1) / 100),
+    exitMode: manualTarget ? 'target' : settings.exitMode || 'trail',
+    reclaimPrice: manualTarget
+      ? pattern.vLow
+      : pattern.vLow * (1 + number(settings.reclaimBufferPct, 0.1) / 100),
     trailArmed: false,
     trailHigh: null,
     trailStop: null,
     trailActivatedAt: null,
+    l1Cycles: 0,
+    l1CycleRealizedPnl: 0,
     levels: depths.map((depthPct, index) => ({
       index: index + 1,
       depthPct,
@@ -76,6 +79,49 @@ export function recalculateCampaign(campaign) {
   return campaign;
 }
 
+function closeAndRearmL1(campaign, settings, nowMs) {
+  const level = campaign.levels.find((item) => item.status === 'filled');
+  if (!level || level.index !== 1) return null;
+
+  const exitPrice = campaign.target;
+  const qty = campaign.qty;
+  const averageEntry = campaign.averageEntry;
+  const filledNotional = campaign.filledNotional;
+  const entryFees = campaign.entryFees;
+  const exitNotional = qty * exitPrice;
+  const exitFee = exitNotional * number(settings.makerFee);
+  const grossPnl = qty * (exitPrice - averageEntry);
+  const netPnl = grossPnl - entryFees - exitFee;
+  const cycle = number(campaign.l1Cycles) + 1;
+
+  const event = {
+    type: 'l1_cycle_closed',
+    cycle,
+    price: exitPrice,
+    qty,
+    averageEntry,
+    filledNotional,
+    entryFees,
+    exitFee,
+    grossPnl,
+    netPnl,
+    fillTime: level.fillTime,
+    exitTime: new Date(nowMs).toISOString(),
+  };
+
+  campaign.l1Cycles = cycle;
+  campaign.l1CycleRealizedPnl = number(campaign.l1CycleRealizedPnl) + netPnl;
+  level.status = 'pending';
+  level.fillPrice = null;
+  level.fillTime = null;
+  level.qty = 0;
+  level.fee = 0;
+  campaign.status = 'waiting';
+  campaign.unrealizedPnl = 0;
+  recalculateCampaign(campaign);
+  return event;
+}
+
 export function moveManualCampaign(campaign, nextLevel, settings) {
   if (
     !campaign ||
@@ -87,7 +133,12 @@ export function moveManualCampaign(campaign, nextLevel, settings) {
   }
   campaign.vLow = nextLevel;
   campaign.target = nextLevel;
-  campaign.reclaimPrice = nextLevel * (1 + number(settings.reclaimBufferPct, 0.1) / 100);
+  campaign.exitMode = 'target';
+  campaign.reclaimPrice = nextLevel;
+  campaign.trailArmed = false;
+  campaign.trailHigh = null;
+  campaign.trailStop = null;
+  campaign.trailActivatedAt = null;
   for (const level of campaign.levels) {
     level.price = nextLevel * (1 - level.depthPct / 100);
   }
@@ -119,7 +170,20 @@ export function processCampaignQuote(campaign, quote, settings, nowMs = Date.now
     const mode = campaign.exitMode || settings.exitMode || 'trail';
     if (mode === 'target') {
       if (quote.bid >= campaign.target) {
-        result.close = { price: campaign.target, reason: 'v_low_target' };
+        const filled = campaign.levels.filter((level) => level.status === 'filled');
+        const repeatL1 =
+          campaign.source === 'manual' &&
+          filled.length === 1 &&
+          filled[0].index === 1;
+        if (repeatL1) {
+          const event = closeAndRearmL1(campaign, settings, nowMs);
+          if (event) {
+            result.changed = true;
+            result.events.push(event);
+          }
+        } else {
+          result.close = { price: campaign.target, reason: 'v_low_target' };
+        }
       }
     } else {
       const reclaimPrice =

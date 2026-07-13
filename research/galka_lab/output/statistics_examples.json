@@ -9,7 +9,7 @@
     "recovery_ratio": 0.6654993433806534,
     "split": "final_oos",
     "symbol": "BTCUSDT",
-    "type_distance": 1.2284109742078657
+    "type_distance": 1.2406349612387753
   },
   {
     "candidate_id": "G-BTCUSDT-5m-1748356200",
@@ -21,19 +21,19 @@
     "recovery_ratio": 0.6443119091428186,
     "split": "final_oos",
     "symbol": "BTCUSDT",
-    "type_distance": 1.351584683677298
+    "type_distance": 1.3601749645002361
   },
   {
-    "candidate_id": "G-SOLUSDT-15m-1773007200",
-    "confirmation_time_iso": "2026-03-08T23:30:00Z",
-    "drop_atr": 4.935897435897447,
+    "candidate_id": "G-ETHUSDT-1h-1779631200",
+    "confirmation_time_iso": "2026-05-24T20:00:00Z",
+    "drop_atr": 5.012256483034477,
     "galka_type": "Deep capitulation",
-    "interval": "15m",
-    "pivot_time_iso": "2026-03-08T22:00:00Z",
-    "recovery_ratio": 0.8327272727272699,
+    "interval": "1h",
+    "pivot_time_iso": "2026-05-24T14:00:00Z",
+    "recovery_ratio": 0.5944144144144187,
     "split": "final_oos",
-    "symbol": "SOLUSDT",
-    "type_distance": 1.4154961039008858
+    "symbol": "ETHUSDT",
+    "type_distance": 1.4111254798640638
   },
   {
     "candidate_id": "G-SOLUSDT-15m-1685542500",
@@ -45,7 +45,7 @@
     "recovery_ratio": 0.7375328083989465,
     "split": "train",
     "symbol": "SOLUSDT",
-    "type_distance": 1.0954445187611919
+    "type_distance": 1.0996562707686584
   },
   {
     "candidate_id": "G-BTCUSDT-5m-1592666700",
@@ -57,7 +57,7 @@
     "recovery_ratio": 0.7264770240700226,
     "split": "train",
     "symbol": "BTCUSDT",
-    "type_distance": 1.2814173386212284
+    "type_distance": 1.2905614147564335
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1637024700",
@@ -69,7 +69,7 @@
     "recovery_ratio": 0.694042553191489,
     "split": "train",
     "symbol": "SOLUSDT",
-    "type_distance": 1.3298520442360826
+    "type_distance": 1.3346135004479018
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1711401900",
@@ -81,7 +81,7 @@
     "recovery_ratio": 0.6120468170139871,
     "split": "validation",
     "symbol": "SOLUSDT",
-    "type_distance": 1.1146330544597756
+    "type_distance": 1.1159503951140821
   },
   {
     "candidate_id": "G-ETHUSDT-5m-1712407500",
@@ -93,7 +93,7 @@
     "recovery_ratio": 0.7483403741701852,
     "split": "validation",
     "symbol": "ETHUSDT",
-    "type_distance": 1.3864243003521495
+    "type_distance": 1.3815289306142735
   },
   {
     "candidate_id": "G-ETHUSDT-5m-1730554500",
@@ -105,7 +105,7 @@
     "recovery_ratio": 0.7283715012722662,
     "split": "validation",
     "symbol": "ETHUSDT",
-    "type_distance": 1.4413746076135998
+    "type_distance": 1.4512091296441756
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1782010800",
@@ -117,7 +117,7 @@
     "recovery_ratio": 2.7777777777778185,
     "split": "final_oos",
     "symbol": "SOLUSDT",
-    "type_distance": 1.5106094628775952
+    "type_distance": 1.5016570746804172
   },
   {
     "candidate_id": "G-ETHUSDT-30m-1773230400",
@@ -129,7 +129,7 @@
     "recovery_ratio": 3.185201997276438,
     "split": "final_oos",
     "symbol": "ETHUSDT",
-    "type_distance": 1.5269346794971181
+    "type_distance": 1.530008688889516
   },
   {
     "candidate_id": "G-SOLUSDT-15m-1770534900",
@@ -141,7 +141,7 @@
     "recovery_ratio": 2.571428571428557,
     "split": "final_oos",
     "symbol": "SOLUSDT",
-    "type_distance": 1.543156466330881
+    "type_distance": 1.534336154140956
   },
   {
     "candidate_id": "G-ETHUSDT-5m-1629833400",
@@ -153,7 +153,7 @@
     "recovery_ratio": 2.3666175386882946,
     "split": "train",
     "symbol": "ETHUSDT",
-    "type_distance": 1.4353722501726247
+    "type_distance": 1.4301689145734446
   },
   {
     "candidate_id": "G-BTCUSDT-5m-1700476200",
@@ -165,7 +165,7 @@
     "recovery_ratio": 3.0629011553273604,
     "split": "train",
     "symbol": "BTCUSDT",
-    "type_distance": 1.5009801389632498
+    "type_distance": 1.501818928487985
   },
   {
     "candidate_id": "G-ETHUSDT-5m-1606577700",
@@ -177,7 +177,7 @@
     "recovery_ratio": 2.7509433962263876,
     "split": "train",
     "symbol": "ETHUSDT",
-    "type_distance": 1.5748561449679255
+    "type_distance": 1.5728810250648506
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1708273500",
@@ -189,7 +189,7 @@
     "recovery_ratio": 2.4022988505747156,
     "split": "validation",
     "symbol": "SOLUSDT",
-    "type_distance": 1.5021405255346683
+    "type_distance": 1.4953348719926067
   },
   {
     "candidate_id": "G-ETHUSDT-5m-1719110700",
@@ -201,7 +201,7 @@
     "recovery_ratio": 2.469352014010476,
     "split": "validation",
     "symbol": "ETHUSDT",
-    "type_distance": 1.56087218691396
+    "type_distance": 1.555943063070049
   },
   {
     "candidate_id": "G-BTCUSDT-5m-1731909300",
@@ -213,7 +213,7 @@
     "recovery_ratio": 2.3018433179723794,
     "split": "validation",
     "symbol": "BTCUSDT",
-    "type_distance": 1.670950880358049
+    "type_distance": 1.6667420287247985
   },
   {
     "candidate_id": "G-ETHUSDT-15m-1763621100",
@@ -225,7 +225,7 @@
     "recovery_ratio": 0.8735341457806386,
     "split": "final_oos",
     "symbol": "ETHUSDT",
-    "type_distance": 0.9858352651669184
+    "type_distance": 0.9828928991792429
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1744666500",
@@ -237,7 +237,7 @@
     "recovery_ratio": 0.662420382165603,
     "split": "final_oos",
     "symbol": "SOLUSDT",
-    "type_distance": 1.048659545867562
+    "type_distance": 1.0501724526493972
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1754146200",
@@ -249,7 +249,7 @@
     "recovery_ratio": 1.0999999999999899,
     "split": "final_oos",
     "symbol": "SOLUSDT",
-    "type_distance": 1.0562135132425388
+    "type_distance": 1.0624950949745873
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1605059400",
@@ -261,7 +261,7 @@
     "recovery_ratio": 0.928374655647379,
     "split": "train",
     "symbol": "SOLUSDT",
-    "type_distance": 0.8865357664921081
+    "type_distance": 0.8819230014658277
   },
   {
     "candidate_id": "G-ETHUSDT-5m-1586328600",
@@ -273,7 +273,7 @@
     "recovery_ratio": 0.9202898550724544,
     "split": "train",
     "symbol": "ETHUSDT",
-    "type_distance": 0.9046239657492571
+    "type_distance": 0.9057666274532127
   },
   {
     "candidate_id": "G-ETHUSDT-15m-1588647600",
@@ -285,7 +285,7 @@
     "recovery_ratio": 1.0994152046783638,
     "split": "train",
     "symbol": "ETHUSDT",
-    "type_distance": 0.9487767164079765
+    "type_distance": 0.9469884707403603
   },
   {
     "candidate_id": "G-ETHUSDT-15m-1732497300",
@@ -297,7 +297,7 @@
     "recovery_ratio": 0.7613636363636362,
     "split": "validation",
     "symbol": "ETHUSDT",
-    "type_distance": 0.9358636096785972
+    "type_distance": 0.9268849717687422
   },
   {
     "candidate_id": "G-SOLUSDT-15m-1733670000",
@@ -309,7 +309,7 @@
     "recovery_ratio": 1.0185185185185193,
     "split": "validation",
     "symbol": "SOLUSDT",
-    "type_distance": 0.9461635362328279
+    "type_distance": 0.9445900208376568
   },
   {
     "candidate_id": "G-SOLUSDT-15m-1740849300",
@@ -321,7 +321,7 @@
     "recovery_ratio": 0.8215613382899665,
     "split": "validation",
     "symbol": "SOLUSDT",
-    "type_distance": 1.0192005077906685
+    "type_distance": 1.017325483310296
   },
   {
     "candidate_id": "G-ETHUSDT-15m-1766036700",
@@ -333,19 +333,7 @@
     "recovery_ratio": 0.8826315789473674,
     "split": "final_oos",
     "symbol": "ETHUSDT",
-    "type_distance": 1.0004514309763117
-  },
-  {
-    "candidate_id": "G-ETHUSDT-30m-1742655600",
-    "confirmation_time_iso": "2025-03-22T18:00:00Z",
-    "drop_atr": 2.1172094711058826,
-    "galka_type": "Rounded recovery",
-    "interval": "30m",
-    "pivot_time_iso": "2025-03-22T15:00:00Z",
-    "recovery_ratio": 1.1547690461907567,
-    "split": "final_oos",
-    "symbol": "ETHUSDT",
-    "type_distance": 1.0749893010351272
+    "type_distance": 1.0031004946425608
   },
   {
     "candidate_id": "G-ETHUSDT-15m-1774238400",
@@ -357,7 +345,19 @@
     "recovery_ratio": 0.9722966934763232,
     "split": "final_oos",
     "symbol": "ETHUSDT",
-    "type_distance": 1.0892652269888825
+    "type_distance": 1.0933005319867144
+  },
+  {
+    "candidate_id": "G-SOLUSDT-5m-1765793700",
+    "confirmation_time_iso": "2025-12-15T10:45:00Z",
+    "drop_atr": 2.7146814404432265,
+    "galka_type": "Rounded recovery",
+    "interval": "5m",
+    "pivot_time_iso": "2025-12-15T10:15:00Z",
+    "recovery_ratio": 1.0428571428571434,
+    "split": "final_oos",
+    "symbol": "SOLUSDT",
+    "type_distance": 1.1242465084737654
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1611130800",
@@ -369,7 +369,7 @@
     "recovery_ratio": 0.9172749391727479,
     "split": "train",
     "symbol": "SOLUSDT",
-    "type_distance": 0.7869678544192199
+    "type_distance": 0.7909972566068988
   },
   {
     "candidate_id": "G-ETHUSDT-15m-1651930200",
@@ -381,7 +381,7 @@
     "recovery_ratio": 1.0485584218512918,
     "split": "train",
     "symbol": "ETHUSDT",
-    "type_distance": 0.8833544300091464
+    "type_distance": 0.8863560375628181
   },
   {
     "candidate_id": "G-ETHUSDT-30m-1676716200",
@@ -393,7 +393,7 @@
     "recovery_ratio": 1.38811881188119,
     "split": "train",
     "symbol": "ETHUSDT",
-    "type_distance": 0.9818303957490326
+    "type_distance": 0.9872984438423534
   },
   {
     "candidate_id": "G-SOLUSDT-15m-1722026700",
@@ -405,7 +405,7 @@
     "recovery_ratio": 1.0112781954887147,
     "split": "validation",
     "symbol": "SOLUSDT",
-    "type_distance": 0.8016802455463414
+    "type_distance": 0.8080548669520095
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1724004000",
@@ -417,7 +417,7 @@
     "recovery_ratio": 1.1206896551724113,
     "split": "validation",
     "symbol": "SOLUSDT",
-    "type_distance": 0.9751386995413006
+    "type_distance": 0.9791774899342965
   },
   {
     "candidate_id": "G-SOLUSDT-5m-1727069100",
@@ -429,6 +429,6 @@
     "recovery_ratio": 1.08520599250937,
     "split": "validation",
     "symbol": "SOLUSDT",
-    "type_distance": 1.0117084288776508
+    "type_distance": 1.0166844870052443
   }
 ]

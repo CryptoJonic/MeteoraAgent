@@ -17,6 +17,7 @@ import {
 const oldCampaign = {
   campaignId: 'C-BTC-legacy',
   symbol: 'BTCUSDT',
+  source: 'manual',
   status: 'trailing',
   vLow: 60_000,
   trailArmed: true,
@@ -54,12 +55,23 @@ const legacyStore = {
 
 const migrated = migrateStore(legacyStore);
 assert.equal(migrated.schemaVersion, STORE_SCHEMA_VERSION);
-assert.deepEqual(migrated.paper.symbols.BTCUSDT.campaign, oldCampaign);
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.campaignId, oldCampaign.campaignId);
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.futureField.preserve, true);
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.exitMode, 'target');
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.reclaimPrice, 60_000);
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.trailArmed, false);
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.status, 'open');
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.l1Cycles, 0);
+assert.equal(migrated.paper.symbols.BTCUSDT.campaign.l1CycleRealizedPnl, 0);
 assert.deepEqual(migrated.ui.drawings, legacyStore.ui.drawings);
 assert.deepEqual(migrated.paper.trades, legacyStore.paper.trades);
 assert.deepEqual(migrated.training.manualExamples, legacyStore.training.manualExamples);
 assert.deepEqual(migrated.unknownFutureSection, legacyStore.unknownFutureSection);
 assert.equal(migrated.ui.radar.filter, 'all');
+assert.equal(migrated.ui.radar.enabled, false);
+assert.equal(migrated.ui.indicators.volume, false);
+assert.equal(migrated.ui.lowerIndicator, null);
+assert.equal(migrated.ui.onboarding.completed, true);
 assert.deepEqual(migrated.training.radarLabels, []);
 assert.equal(migrated.paper.recovery.policy, 'closed-1m-directional-v1');
 assert.deepEqual(Object.keys(migrated.paper.recovery.symbols), ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']);
@@ -84,12 +96,17 @@ assert.deepEqual(roundTrip.paper.symbols, migrated.paper.symbols);
 assert.deepEqual(roundTrip.ui.drawings, migrated.ui.drawings);
 assert.deepEqual(roundTrip.training.manualExamples, migrated.training.manualExamples);
 assert.deepEqual(roundTrip.paper.recovery, migrated.paper.recovery);
-assert.deepEqual(roundTrip.shadow, migrated.shadow);
+assert.equal(roundTrip.shadow.enabled, false, 'simple terminal always disables Shadow on load');
+assert.deepEqual(roundTrip.shadow.records, migrated.shadow.records);
 
 const blank = createDefaultStore();
 assert.deepEqual(Object.keys(blank.paper.symbols), ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']);
+assert.equal(blank.paper.settings.exitMode, 'target');
+assert.equal(blank.ui.indicators.volume, false);
+assert.equal(blank.ui.lowerIndicator, null);
+assert.equal(blank.ui.onboarding.completed, true);
 
-const snapshot = createBackupSnapshot(migrated, 'test', '2026-07-11T00:00:00.000Z');
+const snapshot = createBackupSnapshot(roundTrip, 'test', '2026-07-11T00:00:00.000Z');
 const summary = summarizeBackupSnapshot(snapshot);
 assert.deepEqual(summary, {
   createdAt: '2026-07-11T00:00:00.000Z',
@@ -100,9 +117,9 @@ assert.deepEqual(summary, {
   manualExamples: 1,
   radarLabels: 0,
   shadowRecords: 1,
-  shadowEnabled: true,
+  shadowEnabled: false,
 });
-assert.deepEqual(validateBackupSnapshot(snapshot).paper.symbols, migrated.paper.symbols);
+assert.equal(validateBackupSnapshot(snapshot).paper.symbols.BTCUSDT.campaign.campaignId, oldCampaign.campaignId);
 assert.throws(() => validateBackupSnapshot({}), /не полный snapshot/);
 
-console.log('Galka store: migration, localStorage round-trip and backup checks passed');
+console.log('Galka store: simple migration, L1 cycle fields, round-trip and backup checks passed');

@@ -1,9 +1,9 @@
 {
-  "analysis_event_count": 168099,
-  "candidate_count": 172657,
+  "analysis_event_count": 168209,
+  "candidate_count": 172736,
   "datasets": [
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 394395,
@@ -627,26 +627,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/5m/BTCUSDT-5m-2026-07-11.zip",
           "sha256": "b817f60117a855d9d9b440ea26152f0318ba1654e3d69e2c481fd2f746343833",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/5m/BTCUSDT-5m-2026-07-11.zip"
+        },
+        {
+          "bytes": 13257,
+          "name": "BTCUSDT-5m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/5m/BTCUSDT-5m-2026-07-12.zip",
+          "sha256": "108a7ae6d48a03a9330dc82b5f459fb3f06fad1231b0bdbf2d97fb578a428506",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/5m/BTCUSDT-5m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:55:00Z",
+      "end": "2026-07-12T23:55:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "f79a97a4a3cae2ea4dc3324e124bb8416144ccd8e920f0bada15312b2a34555d",
+      "hash": "8c4d82b28c487c23c84caa8359761d252fc89b1201a1034e6cde50add90ff87d",
       "interval": "5m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 686592,
+      "row_count": 686880,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "BTCUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 355707,
@@ -1270,26 +1277,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/5m/ETHUSDT-5m-2026-07-11.zip",
           "sha256": "4cb760ed5f8e2fb996acfa8bb26f050d886f59c87eea145cb24f7d2bb6566ec4",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/5m/ETHUSDT-5m-2026-07-11.zip"
+        },
+        {
+          "bytes": 13727,
+          "name": "ETHUSDT-5m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/5m/ETHUSDT-5m-2026-07-12.zip",
+          "sha256": "543de2036ffe8bcd8ebb9fe5fc8153848d82cedbb12bfb5e15877d7cc22bce3b",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/5m/ETHUSDT-5m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:55:00Z",
+      "end": "2026-07-12T23:55:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "8f0326c808279b5f72cf88a30c6ea675aeb3a5623ad7f3006e4b1bd1e803b41c",
+      "hash": "7dd4cb469326c51e34521dec911e602534ba1e208099064ddfb838d2de4a6422",
       "interval": "5m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 686592,
+      "row_count": 686880,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "ETHUSDT"
     },
     {
-      "archive_count": 81,
+      "archive_count": 82,
       "archives": [
         {
           "bytes": 175124,
@@ -1857,12 +1871,19 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/5m/SOLUSDT-5m-2026-07-11.zip",
           "sha256": "02be07beebba4f99c965482b7a79bd35af1d3210ca59f4a810546fa50d488a23",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/5m/SOLUSDT-5m-2026-07-11.zip"
+        },
+        {
+          "bytes": 12318,
+          "name": "SOLUSDT-5m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/5m/SOLUSDT-5m-2026-07-12.zip",
+          "sha256": "e0b642bb2c276b21a00f8bf5e04448fcd208bd2446f86648de09652d5b882023",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/5m/SOLUSDT-5m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:55:00Z",
+      "end": "2026-07-12T23:55:00Z",
       "gap_ranges": [
         {
           "after": "2022-02-25T23:55:00Z",
@@ -1876,18 +1897,18 @@
         }
       ],
       "gaps": 2,
-      "hash": "0120595dba9c5f880328e66b4d51a10a1d1a266d72b4dd58175dbb59face5e0d",
+      "hash": "fa4d317bc10ec0f266837b6df910ca9084a58f64a9d77b719ef751866dc75b84",
       "interval": "5m",
       "invalid_ohlc": 0,
       "missing_bars": 1440,
-      "row_count": 611052,
+      "row_count": 611340,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-09-14T07:00:00Z",
       "symbol": "SOLUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 139485,
@@ -2511,26 +2532,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/15m/BTCUSDT-15m-2026-07-11.zip",
           "sha256": "e13c513b56dfab5d3905ba897fac0384ddc90ac89aac9fcbd357eec007dd4b55",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/15m/BTCUSDT-15m-2026-07-11.zip"
+        },
+        {
+          "bytes": 4919,
+          "name": "BTCUSDT-15m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/15m/BTCUSDT-15m-2026-07-12.zip",
+          "sha256": "4bd08216f8f5b7c3b37b2a2ceba068e399f0e7092bdee87168d18295b9de1641",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/15m/BTCUSDT-15m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:45:00Z",
+      "end": "2026-07-12T23:45:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "9dd18b819e6d07fb3febbb813ba5f3b6dfc9f8ccc51e4cc33fdc5d4e944531c8",
+      "hash": "137f9062bc28837c5f340f4258ea35dacb414c7124b5ab7dbde1701ad139d389",
       "interval": "15m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 228864,
+      "row_count": 228960,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "BTCUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 127343,
@@ -3154,26 +3182,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/15m/ETHUSDT-15m-2026-07-11.zip",
           "sha256": "d51cb0ec0f396709476dd2dade7d16fedcdcd19d317b742a76e34cb61fdc7df2",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/15m/ETHUSDT-15m-2026-07-11.zip"
+        },
+        {
+          "bytes": 5064,
+          "name": "ETHUSDT-15m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/15m/ETHUSDT-15m-2026-07-12.zip",
+          "sha256": "8e8f4aeeb1161b87de0f7a6c2214c94a9f2ab67789863f4d92ffa68759de188c",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/15m/ETHUSDT-15m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:45:00Z",
+      "end": "2026-07-12T23:45:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "53d5ab6bbda15086fd8ebbd1b478d2e0504b2db5774b1110cdd10cfccefe6312",
+      "hash": "91a8d4743c1ee735240a98254bd6575da1d85c9a5d80f09ef935c54261538e28",
       "interval": "15m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 228864,
+      "row_count": 228960,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "ETHUSDT"
     },
     {
-      "archive_count": 81,
+      "archive_count": 82,
       "archives": [
         {
           "bytes": 62974,
@@ -3741,12 +3776,19 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/15m/SOLUSDT-15m-2026-07-11.zip",
           "sha256": "22dbcb09de71f26112666948d638e84a4f8bd476b9d6d852634ade940cd40dd4",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/15m/SOLUSDT-15m-2026-07-11.zip"
+        },
+        {
+          "bytes": 4582,
+          "name": "SOLUSDT-15m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/15m/SOLUSDT-15m-2026-07-12.zip",
+          "sha256": "d132c67e045d5caee45f7cacadc9acbf78063f7e92653e881ffd6fa9a0d14081",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/15m/SOLUSDT-15m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:45:00Z",
+      "end": "2026-07-12T23:45:00Z",
       "gap_ranges": [
         {
           "after": "2022-02-25T23:45:00Z",
@@ -3760,18 +3802,18 @@
         }
       ],
       "gaps": 2,
-      "hash": "973ac30045beedfe1264333eb422231bf24f2b8c64a522c9af47821f735ec737",
+      "hash": "fa92a7d6c32442bcf17372439560a4211ea736c4d0e1d5cd4f4262783142dda8",
       "interval": "15m",
       "invalid_ohlc": 0,
       "missing_bars": 480,
-      "row_count": 203684,
+      "row_count": 203780,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-09-14T07:00:00Z",
       "symbol": "SOLUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 72106,
@@ -4395,26 +4437,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/30m/BTCUSDT-30m-2026-07-11.zip",
           "sha256": "ac7d10247c0be4648a5438e894234480d56f42703835f35b5b0a02c0b9ef58d8",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/30m/BTCUSDT-30m-2026-07-11.zip"
+        },
+        {
+          "bytes": 2663,
+          "name": "BTCUSDT-30m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/30m/BTCUSDT-30m-2026-07-12.zip",
+          "sha256": "45133233d7b328172de9a64ef64e4da6a4bfeb5373d8d612e1e4d21f3557160a",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/30m/BTCUSDT-30m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:30:00Z",
+      "end": "2026-07-12T23:30:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "fa9d35ebaa1f7e77fbd8ca9054fe6bf4f74ae885f792be3ed758971435b85e1e",
+      "hash": "348c414ed5c0bd069e9b3279d10448cb9fde698d5b64052037470829fbb8dabd",
       "interval": "30m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 114432,
+      "row_count": 114480,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "BTCUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 66174,
@@ -5038,26 +5087,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/30m/ETHUSDT-30m-2026-07-11.zip",
           "sha256": "29ca193054023a5cc486dfb946596c54dacda6bb78d0cb85cf1d51d9e5b4ea18",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/30m/ETHUSDT-30m-2026-07-11.zip"
+        },
+        {
+          "bytes": 2751,
+          "name": "ETHUSDT-30m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/30m/ETHUSDT-30m-2026-07-12.zip",
+          "sha256": "a268f1416d420a0bc1e80723aca52a6ac4a5872266482fe1806ab6a2b71f02c7",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/30m/ETHUSDT-30m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:30:00Z",
+      "end": "2026-07-12T23:30:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "64618fba16c7dd65dec931172ac36cc5fa638b5a46570c84447c75f70d16678e",
+      "hash": "b8fa9a1a4bd27eba87ab8eecd1bc2e1880dcfdc2a228458c6457a60d3afb8e5f",
       "interval": "30m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 114432,
+      "row_count": 114480,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "ETHUSDT"
     },
     {
-      "archive_count": 81,
+      "archive_count": 82,
       "archives": [
         {
           "bytes": 32777,
@@ -5625,12 +5681,19 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/30m/SOLUSDT-30m-2026-07-11.zip",
           "sha256": "3a92867fd9a6e3459de2ad6ee827f66c12b100b516533af9ef9dac8cc4169b26",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/30m/SOLUSDT-30m-2026-07-11.zip"
+        },
+        {
+          "bytes": 2531,
+          "name": "SOLUSDT-30m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/30m/SOLUSDT-30m-2026-07-12.zip",
+          "sha256": "f33634ebc16e075156faec1cc4cfdd50f523685256f0b5ca1d4662f51f9ba7e4",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/30m/SOLUSDT-30m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:30:00Z",
+      "end": "2026-07-12T23:30:00Z",
       "gap_ranges": [
         {
           "after": "2022-02-25T23:30:00Z",
@@ -5644,18 +5707,18 @@
         }
       ],
       "gaps": 2,
-      "hash": "50773b133420a5122d170fbf3ee7fca55db3c53b6dc5a12c0a59ab0ae33f7696",
+      "hash": "909a961951548e963abc5a8f4b0cfb9a27bee20759c2fc798ae347247a94fbd8",
       "interval": "30m",
       "invalid_ohlc": 0,
       "missing_bars": 240,
-      "row_count": 101842,
+      "row_count": 101890,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-09-14T07:00:00Z",
       "symbol": "SOLUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 37271,
@@ -6279,26 +6342,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/1h/BTCUSDT-1h-2026-07-11.zip",
           "sha256": "0c686960c03e936a4393213736a78e50b8256ad2a82e81946448fe4ce681434a",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1h/BTCUSDT-1h-2026-07-11.zip"
+        },
+        {
+          "bytes": 1527,
+          "name": "BTCUSDT-1h-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/1h/BTCUSDT-1h-2026-07-12.zip",
+          "sha256": "984ca9241d3869a4edebdf8aad3cacd59ed3fff18661b5df4b13e1fbe68b5e6d",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1h/BTCUSDT-1h-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:00:00Z",
+      "end": "2026-07-12T23:00:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "dfc3ee0639c0389b58ee9e06e17108113e2246f9a79c5ba574c6ccb1db1906d9",
+      "hash": "d2ed22bf8a5f3b36b3ccf1e04f16fb3488670e61ab3542639f83e1fe127d10e4",
       "interval": "1h",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 57216,
+      "row_count": 57240,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "BTCUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 34389,
@@ -6922,26 +6992,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/1h/ETHUSDT-1h-2026-07-11.zip",
           "sha256": "bf398533ba11bb8930b9cab649e6fc87020e4619c977b818df20af8c95b83968",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/1h/ETHUSDT-1h-2026-07-11.zip"
+        },
+        {
+          "bytes": 1557,
+          "name": "ETHUSDT-1h-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/1h/ETHUSDT-1h-2026-07-12.zip",
+          "sha256": "32b49fbdb0da5d458d7b1db1d6dbd82be3742a94d6c5f8f438f4d3ac999f5f41",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/1h/ETHUSDT-1h-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:00:00Z",
+      "end": "2026-07-12T23:00:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "dc85d9efd882c7234d487ed1cf46bbd974c71f3e38da0db7a3260fd3273e61a5",
+      "hash": "12aafc4670bae31b2d5f3de59d00050a539aaed174e34d8006b16abd14803902",
       "interval": "1h",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 57216,
+      "row_count": 57240,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "ETHUSDT"
     },
     {
-      "archive_count": 81,
+      "archive_count": 82,
       "archives": [
         {
           "bytes": 17124,
@@ -7509,12 +7586,19 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/1h/SOLUSDT-1h-2026-07-11.zip",
           "sha256": "6e9e2f4832e20d0131fa664462757d4af4e7dc68c5481bea1daf8c4990698b20",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/1h/SOLUSDT-1h-2026-07-11.zip"
+        },
+        {
+          "bytes": 1442,
+          "name": "SOLUSDT-1h-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/1h/SOLUSDT-1h-2026-07-12.zip",
+          "sha256": "a33fd2ec548da1d09ac858a096b5f978cfcf250087435e3b38a786ac21f873bf",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/1h/SOLUSDT-1h-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:00:00Z",
+      "end": "2026-07-12T23:00:00Z",
       "gap_ranges": [
         {
           "after": "2022-02-25T23:00:00Z",
@@ -7528,18 +7612,18 @@
         }
       ],
       "gaps": 2,
-      "hash": "d4342139ae8381d9f9ef2f5ac2066825ba4faaf7358e6602fcb64dc581d8217a",
+      "hash": "00d98b5c50578bd5604a0dc3bdb75e6299af26036aa006b3bd9921f07413325d",
       "interval": "1h",
       "invalid_ohlc": 0,
       "missing_bars": 120,
-      "row_count": 50921,
+      "row_count": 50945,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-09-14T07:00:00Z",
       "symbol": "SOLUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 1829116,
@@ -8163,26 +8247,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-07-11.zip",
           "sha256": "67ddb703c65eb79af314eae173a008fc390419c6d35bba1e19ae2d336cfc3ce2",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-07-11.zip"
+        },
+        {
+          "bytes": 58280,
+          "name": "BTCUSDT-1m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-07-12.zip",
+          "sha256": "143874cf2f1599221d2095bf7d297a84e991cbf4307a222210e31ec7ac1b4572",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:59:00Z",
+      "end": "2026-07-12T23:59:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "c2ffa0bf5aa5dfbfb45566fe64996b9f477f5994c71b6bd494cfbec9d014bd77",
+      "hash": "0fbdd18d627ec3c4375efeb574b98a167b238bf7ad09d38c80cb93a733c34435",
       "interval": "1m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 3432960,
+      "row_count": 3434400,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "BTCUSDT"
     },
     {
-      "archive_count": 89,
+      "archive_count": 90,
       "archives": [
         {
           "bytes": 1606210,
@@ -8806,26 +8897,33 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-07-11.zip",
           "sha256": "62d63fc4cc05c1b72395a82f6512245beba2a4c3c328dd81b736800e54b2f346",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-07-11.zip"
+        },
+        {
+          "bytes": 61287,
+          "name": "ETHUSDT-1m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-07-12.zip",
+          "sha256": "dd4c155ab92acc20cc50e5c7c300cac5f849ce04ca74d7134a5b8ec416f8bf1f",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:59:00Z",
+      "end": "2026-07-12T23:59:00Z",
       "gap_ranges": [],
       "gaps": 0,
-      "hash": "fead5e9e78c261381941bc65dbdcb42fae6981fd07d8b2dbe243bb683e18bb7b",
+      "hash": "251ce6790c7b0d52a7550c013235449a4aa21689edf17df276ce87e3f16626b1",
       "interval": "1m",
       "invalid_ohlc": 0,
       "missing_bars": 0,
-      "row_count": 3432960,
+      "row_count": 3434400,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-01-01T00:00:00Z",
       "symbol": "ETHUSDT"
     },
     {
-      "archive_count": 81,
+      "archive_count": 82,
       "archives": [
         {
           "bytes": 776713,
@@ -9393,12 +9491,19 @@
           "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/1m/SOLUSDT-1m-2026-07-11.zip",
           "sha256": "1208583f2020e9abb75d03398289b76737115d543b6c9da2e7505b6c73d92f42",
           "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/1m/SOLUSDT-1m-2026-07-11.zip"
+        },
+        {
+          "bytes": 54452,
+          "name": "SOLUSDT-1m-2026-07-12.zip",
+          "path": "research/galka_lab/cache/binance/raw/daily/klines/SOLUSDT/1m/SOLUSDT-1m-2026-07-12.zip",
+          "sha256": "6cf3c2b313ade7cc6c5d02bae8499c4d8e2d4d1aec794d30eecbe406834d7d96",
+          "url": "https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/1m/SOLUSDT-1m-2026-07-12.zip"
         }
       ],
       "backwards": 0,
       "duplicates": 0,
       "duplicates_removed": 0,
-      "end": "2026-07-11T23:59:00Z",
+      "end": "2026-07-12T23:59:00Z",
       "gap_ranges": [
         {
           "after": "2022-02-25T23:59:00Z",
@@ -9412,27 +9517,27 @@
         }
       ],
       "gaps": 2,
-      "hash": "b51e15cfd63643eb99dfd3e10cf493a751885ddf34460eb56ad946988c025375",
+      "hash": "3e802bfdebb34ae9222c6f403e2b8c6948b705c3179017784a456f75dcaff3b6",
       "interval": "1m",
       "invalid_ohlc": 0,
       "missing_bars": 7200,
-      "row_count": 3055260,
+      "row_count": 3056700,
       "source": "Binance USD-M Futures public archive",
       "source_backwards": 0,
       "start": "2020-09-14T07:00:00Z",
       "symbol": "SOLUSDT"
     }
   ],
-  "end": "2026-07-11T23:59:00Z",
+  "end": "2026-07-12T23:59:00Z",
   "execution_interval": "1m",
-  "family_representative_count": 169235,
+  "family_representative_count": 169310,
   "intervals": [
     "5m",
     "15m",
     "30m",
     "1h"
   ],
-  "manifest_hash": "1090e8455c6ee488c8a217efc96aca52dca16253f820b0f454c5ba75368be51e",
+  "manifest_hash": "7ffa9e16d492a5bea4ffd0e099a667b89c4d13f223dbea1d4da500fee59eea5b",
   "schema_version": "1.2",
   "source": "Binance USD-M Futures public OHLCV",
   "start": "2020-01-01T00:00:00Z",

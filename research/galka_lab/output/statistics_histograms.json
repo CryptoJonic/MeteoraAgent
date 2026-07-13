@@ -1,7 +1,7 @@
 [
   {
-    "count_all_complete": 667,
-    "count_returned": 667,
+    "count_all_complete": 652,
+    "count_returned": 652,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -10,8 +10,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 320,
-    "count_returned": 320,
+    "count_all_complete": 316,
+    "count_returned": 316,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -20,8 +20,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 176,
-    "count_returned": 176,
+    "count_all_complete": 175,
+    "count_returned": 175,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -30,8 +30,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 95,
-    "count_returned": 95,
+    "count_all_complete": 94,
+    "count_returned": 94,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -50,8 +50,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 82,
-    "count_returned": 82,
+    "count_all_complete": 81,
+    "count_returned": 81,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Deep capitulation",
@@ -60,8 +60,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 27,
-    "count_returned": 27,
+    "count_all_complete": 26,
+    "count_returned": 26,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Deep capitulation",
@@ -140,8 +140,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 388,
-    "count_returned": 388,
+    "count_all_complete": 393,
+    "count_returned": 393,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -150,8 +150,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 116,
-    "count_returned": 116,
+    "count_all_complete": 117,
+    "count_returned": 117,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -270,8 +270,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 8,
-    "count_returned": 4,
+    "count_all_complete": 9,
+    "count_returned": 5,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Fast V",
@@ -280,8 +280,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 3205,
-    "count_returned": 3205,
+    "count_all_complete": 3219,
+    "count_returned": 3219,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -290,8 +290,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1104,
-    "count_returned": 1104,
+    "count_all_complete": 1105,
+    "count_returned": 1105,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -300,8 +300,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 501,
-    "count_returned": 501,
+    "count_all_complete": 503,
+    "count_returned": 503,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -310,8 +310,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 291,
-    "count_returned": 291,
+    "count_all_complete": 292,
+    "count_returned": 292,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -340,8 +340,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 118,
-    "count_returned": 118,
+    "count_all_complete": 119,
+    "count_returned": 119,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -360,8 +360,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 114,
-    "count_returned": 114,
+    "count_all_complete": 112,
+    "count_returned": 112,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Multi-test",
@@ -410,8 +410,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 115,
-    "count_returned": 83,
+    "count_all_complete": 114,
+    "count_returned": 82,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Multi-test",
@@ -420,8 +420,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1747,
-    "count_returned": 1747,
+    "count_all_complete": 1749,
+    "count_returned": 1749,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -430,8 +430,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 504,
-    "count_returned": 504,
+    "count_all_complete": 506,
+    "count_returned": 506,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -470,8 +470,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 80,
-    "count_returned": 80,
+    "count_all_complete": 81,
+    "count_returned": 81,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -500,8 +500,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 37,
-    "count_returned": 37,
+    "count_all_complete": 39,
+    "count_returned": 39,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Rounded recovery",
@@ -560,8 +560,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 142,
-    "count_returned": 142,
+    "count_all_complete": 141,
+    "count_returned": 141,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -590,8 +590,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 33,
-    "count_returned": 33,
+    "count_all_complete": 32,
+    "count_returned": 32,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -620,8 +620,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 12,
-    "count_returned": 12,
+    "count_all_complete": 11,
+    "count_returned": 11,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Deep capitulation",
@@ -640,8 +640,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 12,
-    "count_returned": 12,
+    "count_all_complete": 11,
+    "count_returned": 11,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -710,8 +710,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 38,
-    "count_returned": 38,
+    "count_all_complete": 39,
+    "count_returned": 39,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -740,8 +740,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 10,
-    "count_returned": 10,
+    "count_all_complete": 11,
+    "count_returned": 11,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Fast V",
@@ -840,8 +840,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 537,
-    "count_returned": 537,
+    "count_all_complete": 540,
+    "count_returned": 540,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -850,8 +850,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 266,
-    "count_returned": 266,
+    "count_all_complete": 264,
+    "count_returned": 264,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -870,8 +870,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 97,
-    "count_returned": 97,
+    "count_all_complete": 98,
+    "count_returned": 98,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -880,8 +880,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 62,
-    "count_returned": 62,
+    "count_all_complete": 61,
+    "count_returned": 61,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -900,8 +900,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 36,
-    "count_returned": 36,
+    "count_all_complete": 37,
+    "count_returned": 37,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -920,8 +920,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 40,
-    "count_returned": 40,
+    "count_all_complete": 41,
+    "count_returned": 41,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Multi-test",
@@ -980,8 +980,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 251,
-    "count_returned": 251,
+    "count_all_complete": 253,
+    "count_returned": 253,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -990,8 +990,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 115,
-    "count_returned": 115,
+    "count_all_complete": 116,
+    "count_returned": 116,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -1000,8 +1000,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 68,
-    "count_returned": 68,
+    "count_all_complete": 67,
+    "count_returned": 67,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -1120,8 +1120,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 309,
-    "count_returned": 309,
+    "count_all_complete": 308,
+    "count_returned": 308,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -1130,8 +1130,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 164,
-    "count_returned": 164,
+    "count_all_complete": 162,
+    "count_returned": 162,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -1140,8 +1140,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 92,
-    "count_returned": 92,
+    "count_all_complete": 90,
+    "count_returned": 90,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -1150,8 +1150,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 53,
-    "count_returned": 53,
+    "count_all_complete": 52,
+    "count_returned": 52,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -1160,8 +1160,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 38,
-    "count_returned": 38,
+    "count_all_complete": 37,
+    "count_returned": 37,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -1180,8 +1180,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 20,
-    "count_returned": 20,
+    "count_all_complete": 19,
+    "count_returned": 19,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Deep capitulation",
@@ -1260,8 +1260,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 192,
-    "count_returned": 192,
+    "count_all_complete": 195,
+    "count_returned": 195,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -1400,8 +1400,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1370,
-    "count_returned": 1370,
+    "count_all_complete": 1371,
+    "count_returned": 1371,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -1410,8 +1410,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 550,
-    "count_returned": 550,
+    "count_all_complete": 548,
+    "count_returned": 548,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -1420,8 +1420,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 308,
-    "count_returned": 308,
+    "count_all_complete": 309,
+    "count_returned": 309,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -1430,8 +1430,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 180,
-    "count_returned": 180,
+    "count_all_complete": 181,
+    "count_returned": 181,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -1440,8 +1440,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 102,
-    "count_returned": 102,
+    "count_all_complete": 103,
+    "count_returned": 103,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -1550,8 +1550,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 249,
-    "count_returned": 249,
+    "count_all_complete": 253,
+    "count_returned": 253,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -1560,8 +1560,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 117,
-    "count_returned": 117,
+    "count_all_complete": 119,
+    "count_returned": 119,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -1600,8 +1600,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 28,
-    "count_returned": 28,
+    "count_all_complete": 29,
+    "count_returned": 29,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Rounded recovery",
@@ -1680,8 +1680,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 2281,
-    "count_returned": 2281,
+    "count_all_complete": 2248,
+    "count_returned": 2248,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -1690,8 +1690,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 756,
-    "count_returned": 756,
+    "count_all_complete": 745,
+    "count_returned": 745,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -1700,8 +1700,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 357,
-    "count_returned": 357,
+    "count_all_complete": 354,
+    "count_returned": 354,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -1710,8 +1710,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 205,
-    "count_returned": 205,
+    "count_all_complete": 203,
+    "count_returned": 203,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -1760,8 +1760,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 53,
-    "count_returned": 53,
+    "count_all_complete": 52,
+    "count_returned": 52,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -1780,8 +1780,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 20,
-    "count_returned": 20,
+    "count_all_complete": 19,
+    "count_returned": 19,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Deep capitulation",
@@ -1810,7 +1810,7 @@
     "window": "all"
   },
   {
-    "count_all_complete": 67,
+    "count_all_complete": 66,
     "count_returned": 44,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
@@ -1820,8 +1820,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1298,
-    "count_returned": 1298,
+    "count_all_complete": 1304,
+    "count_returned": 1304,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -1840,8 +1840,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 115,
-    "count_returned": 115,
+    "count_all_complete": 116,
+    "count_returned": 116,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Fast V",
@@ -1960,8 +1960,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 12205,
-    "count_returned": 12205,
+    "count_all_complete": 12215,
+    "count_returned": 12215,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -1970,8 +1970,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 2852,
-    "count_returned": 2852,
+    "count_all_complete": 2859,
+    "count_returned": 2859,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -1990,8 +1990,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 641,
-    "count_returned": 641,
+    "count_all_complete": 642,
+    "count_returned": 642,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -2010,8 +2010,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 442,
-    "count_returned": 442,
+    "count_all_complete": 440,
+    "count_returned": 440,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -2020,8 +2020,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 239,
-    "count_returned": 239,
+    "count_all_complete": 240,
+    "count_returned": 240,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -2030,8 +2030,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 182,
-    "count_returned": 182,
+    "count_all_complete": 181,
+    "count_returned": 181,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Multi-test",
@@ -2050,8 +2050,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 135,
-    "count_returned": 135,
+    "count_all_complete": 133,
+    "count_returned": 133,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -2060,8 +2060,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 74,
-    "count_returned": 74,
+    "count_all_complete": 75,
+    "count_returned": 75,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -2080,8 +2080,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 92,
-    "count_returned": 92,
+    "count_all_complete": 91,
+    "count_returned": 91,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Multi-test",
@@ -2090,7 +2090,7 @@
     "window": "all"
   },
   {
-    "count_all_complete": 215,
+    "count_all_complete": 216,
     "count_returned": 149,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
@@ -2100,8 +2100,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 6964,
-    "count_returned": 6964,
+    "count_all_complete": 6989,
+    "count_returned": 6989,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -2110,8 +2110,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1372,
-    "count_returned": 1372,
+    "count_all_complete": 1377,
+    "count_returned": 1377,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -2120,8 +2120,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 535,
-    "count_returned": 535,
+    "count_all_complete": 539,
+    "count_returned": 539,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -2130,8 +2130,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 331,
-    "count_returned": 331,
+    "count_all_complete": 332,
+    "count_returned": 332,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Rounded recovery",
@@ -2150,8 +2150,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 169,
-    "count_returned": 169,
+    "count_all_complete": 171,
+    "count_returned": 171,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -2170,8 +2170,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 70,
-    "count_returned": 70,
+    "count_all_complete": 71,
+    "count_returned": 71,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Rounded recovery",
@@ -2180,8 +2180,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 97,
-    "count_returned": 97,
+    "count_all_complete": 99,
+    "count_returned": 99,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Rounded recovery",
@@ -2190,8 +2190,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 58,
-    "count_returned": 58,
+    "count_all_complete": 61,
+    "count_returned": 61,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Rounded recovery",
@@ -2220,8 +2220,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 49,
-    "count_returned": 49,
+    "count_all_complete": 50,
+    "count_returned": 50,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Rounded recovery",
@@ -2240,8 +2240,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 525,
-    "count_returned": 525,
+    "count_all_complete": 518,
+    "count_returned": 518,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -2250,8 +2250,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 309,
-    "count_returned": 309,
+    "count_all_complete": 301,
+    "count_returned": 301,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -2270,8 +2270,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 126,
-    "count_returned": 126,
+    "count_all_complete": 123,
+    "count_returned": 123,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -2280,8 +2280,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 84,
-    "count_returned": 84,
+    "count_all_complete": 81,
+    "count_returned": 81,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -2290,8 +2290,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 85,
-    "count_returned": 85,
+    "count_all_complete": 84,
+    "count_returned": 84,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Deep capitulation",
@@ -2300,8 +2300,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 69,
-    "count_returned": 69,
+    "count_all_complete": 67,
+    "count_returned": 67,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Deep capitulation",
@@ -2310,8 +2310,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 33,
-    "count_returned": 33,
+    "count_all_complete": 31,
+    "count_returned": 31,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Deep capitulation",
@@ -2320,8 +2320,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 51,
-    "count_returned": 51,
+    "count_all_complete": 50,
+    "count_returned": 50,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -2330,8 +2330,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 25,
-    "count_returned": 25,
+    "count_all_complete": 24,
+    "count_returned": 24,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Deep capitulation",
@@ -2360,8 +2360,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 22,
-    "count_returned": 22,
+    "count_all_complete": 21,
+    "count_returned": 21,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Deep capitulation",
@@ -2390,8 +2390,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 136,
-    "count_returned": 136,
+    "count_all_complete": 137,
+    "count_returned": 137,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -2400,8 +2400,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 82,
-    "count_returned": 82,
+    "count_all_complete": 83,
+    "count_returned": 83,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Fast V",
@@ -2430,8 +2430,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 18,
-    "count_returned": 18,
+    "count_all_complete": 20,
+    "count_returned": 20,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Fast V",
@@ -2520,8 +2520,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 2811,
-    "count_returned": 2811,
+    "count_all_complete": 2812,
+    "count_returned": 2812,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -2530,8 +2530,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1190,
-    "count_returned": 1190,
+    "count_all_complete": 1196,
+    "count_returned": 1196,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -2540,8 +2540,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 619,
-    "count_returned": 619,
+    "count_all_complete": 617,
+    "count_returned": 617,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -2550,8 +2550,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 372,
-    "count_returned": 372,
+    "count_all_complete": 376,
+    "count_returned": 376,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -2560,8 +2560,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 225,
-    "count_returned": 225,
+    "count_all_complete": 227,
+    "count_returned": 227,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -2570,8 +2570,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 255,
-    "count_returned": 255,
+    "count_all_complete": 254,
+    "count_returned": 254,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -2580,8 +2580,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 173,
-    "count_returned": 173,
+    "count_all_complete": 175,
+    "count_returned": 175,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -2590,8 +2590,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 113,
-    "count_returned": 113,
+    "count_all_complete": 115,
+    "count_returned": 115,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Multi-test",
@@ -2600,8 +2600,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 145,
-    "count_returned": 145,
+    "count_all_complete": 146,
+    "count_returned": 146,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Multi-test",
@@ -2610,8 +2610,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 75,
-    "count_returned": 75,
+    "count_all_complete": 76,
+    "count_returned": 76,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -2640,8 +2640,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 48,
-    "count_returned": 48,
+    "count_all_complete": 49,
+    "count_returned": 49,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Multi-test",
@@ -2660,8 +2660,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1489,
-    "count_returned": 1489,
+    "count_all_complete": 1500,
+    "count_returned": 1500,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -2670,8 +2670,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 517,
-    "count_returned": 517,
+    "count_all_complete": 520,
+    "count_returned": 520,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -2680,8 +2680,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 242,
-    "count_returned": 242,
+    "count_all_complete": 243,
+    "count_returned": 243,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -2690,8 +2690,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 163,
-    "count_returned": 163,
+    "count_all_complete": 162,
+    "count_returned": 162,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Rounded recovery",
@@ -2700,8 +2700,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 113,
-    "count_returned": 113,
+    "count_all_complete": 114,
+    "count_returned": 114,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Rounded recovery",
@@ -2800,8 +2800,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 101,
-    "count_returned": 101,
+    "count_all_complete": 98,
+    "count_returned": 98,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -2810,8 +2810,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 67,
-    "count_returned": 67,
+    "count_all_complete": 66,
+    "count_returned": 66,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -2820,8 +2820,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 52,
-    "count_returned": 52,
+    "count_all_complete": 53,
+    "count_returned": 53,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -2840,8 +2840,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 31,
-    "count_returned": 31,
+    "count_all_complete": 30,
+    "count_returned": 30,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -2850,8 +2850,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 25,
-    "count_returned": 25,
+    "count_all_complete": 24,
+    "count_returned": 24,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Deep capitulation",
@@ -2930,8 +2930,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 21,
-    "count_returned": 15,
+    "count_all_complete": 20,
+    "count_returned": 14,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Deep capitulation",
@@ -3080,8 +3080,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 419,
-    "count_returned": 419,
+    "count_all_complete": 421,
+    "count_returned": 421,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -3090,8 +3090,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 295,
-    "count_returned": 295,
+    "count_all_complete": 297,
+    "count_returned": 297,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -3110,8 +3110,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 125,
-    "count_returned": 125,
+    "count_all_complete": 126,
+    "count_returned": 126,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -3120,8 +3120,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 69,
-    "count_returned": 69,
+    "count_all_complete": 70,
+    "count_returned": 70,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -3130,8 +3130,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 86,
-    "count_returned": 86,
+    "count_all_complete": 87,
+    "count_returned": 87,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -3210,8 +3210,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 52,
-    "count_returned": 37,
+    "count_all_complete": 53,
+    "count_returned": 38,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Multi-test",
@@ -3220,8 +3220,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 178,
-    "count_returned": 178,
+    "count_all_complete": 180,
+    "count_returned": 180,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -3360,8 +3360,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 241,
-    "count_returned": 241,
+    "count_all_complete": 238,
+    "count_returned": 238,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -3380,8 +3380,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 113,
-    "count_returned": 113,
+    "count_all_complete": 110,
+    "count_returned": 110,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -3390,8 +3390,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 71,
-    "count_returned": 71,
+    "count_all_complete": 70,
+    "count_returned": 70,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -3400,8 +3400,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 46,
-    "count_returned": 46,
+    "count_all_complete": 45,
+    "count_returned": 45,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -3410,8 +3410,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 44,
-    "count_returned": 44,
+    "count_all_complete": 41,
+    "count_returned": 41,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Deep capitulation",
@@ -3440,8 +3440,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 35,
-    "count_returned": 35,
+    "count_all_complete": 34,
+    "count_returned": 34,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -3480,8 +3480,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 17,
-    "count_returned": 17,
+    "count_all_complete": 16,
+    "count_returned": 16,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Deep capitulation",
@@ -3490,8 +3490,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 33,
-    "count_returned": 24,
+    "count_all_complete": 32,
+    "count_returned": 23,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Deep capitulation",
@@ -3510,8 +3510,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 71,
-    "count_returned": 71,
+    "count_all_complete": 72,
+    "count_returned": 72,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -3530,8 +3530,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 27,
-    "count_returned": 27,
+    "count_all_complete": 28,
+    "count_returned": 28,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Fast V",
@@ -3640,8 +3640,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1104,
-    "count_returned": 1104,
+    "count_all_complete": 1108,
+    "count_returned": 1108,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -3650,8 +3650,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 613,
-    "count_returned": 613,
+    "count_all_complete": 612,
+    "count_returned": 612,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -3660,8 +3660,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 320,
-    "count_returned": 320,
+    "count_all_complete": 323,
+    "count_returned": 323,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -3670,8 +3670,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 222,
-    "count_returned": 222,
+    "count_all_complete": 223,
+    "count_returned": 223,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -3680,8 +3680,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 132,
-    "count_returned": 132,
+    "count_all_complete": 133,
+    "count_returned": 133,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -3690,8 +3690,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 156,
-    "count_returned": 156,
+    "count_all_complete": 158,
+    "count_returned": 158,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -3700,8 +3700,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 109,
-    "count_returned": 109,
+    "count_all_complete": 108,
+    "count_returned": 108,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -3720,8 +3720,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 79,
-    "count_returned": 79,
+    "count_all_complete": 80,
+    "count_returned": 80,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Multi-test",
@@ -3760,8 +3760,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 29,
-    "count_returned": 29,
+    "count_all_complete": 30,
+    "count_returned": 30,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Multi-test",
@@ -3771,7 +3771,7 @@
   },
   {
     "count_all_complete": 96,
-    "count_returned": 64,
+    "count_returned": 65,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Multi-test",
@@ -3780,8 +3780,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 497,
-    "count_returned": 497,
+    "count_all_complete": 500,
+    "count_returned": 500,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -3790,8 +3790,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 252,
-    "count_returned": 252,
+    "count_all_complete": 253,
+    "count_returned": 253,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -3810,8 +3810,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 72,
-    "count_returned": 72,
+    "count_all_complete": 71,
+    "count_returned": 71,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Rounded recovery",
@@ -3830,8 +3830,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 66,
-    "count_returned": 66,
+    "count_all_complete": 67,
+    "count_returned": 67,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -3840,8 +3840,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 44,
-    "count_returned": 44,
+    "count_all_complete": 45,
+    "count_returned": 45,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Rounded recovery",
@@ -3920,8 +3920,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1818,
-    "count_returned": 1818,
+    "count_all_complete": 1790,
+    "count_returned": 1790,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -3930,8 +3930,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 760,
-    "count_returned": 760,
+    "count_all_complete": 751,
+    "count_returned": 751,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -3940,8 +3940,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 415,
-    "count_returned": 415,
+    "count_all_complete": 412,
+    "count_returned": 412,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -3950,8 +3950,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 255,
-    "count_returned": 255,
+    "count_all_complete": 252,
+    "count_returned": 252,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -3960,8 +3960,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 163,
-    "count_returned": 163,
+    "count_all_complete": 161,
+    "count_returned": 161,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -3970,8 +3970,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 179,
-    "count_returned": 179,
+    "count_all_complete": 175,
+    "count_returned": 175,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Deep capitulation",
@@ -4000,8 +4000,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 77,
-    "count_returned": 77,
+    "count_all_complete": 76,
+    "count_returned": 76,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -4010,8 +4010,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 48,
-    "count_returned": 48,
+    "count_all_complete": 47,
+    "count_returned": 47,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Deep capitulation",
@@ -4020,8 +4020,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 29,
-    "count_returned": 29,
+    "count_all_complete": 28,
+    "count_returned": 28,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Deep capitulation",
@@ -4040,8 +4040,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 37,
-    "count_returned": 37,
+    "count_all_complete": 36,
+    "count_returned": 36,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Deep capitulation",
@@ -4050,7 +4050,7 @@
     "window": "all"
   },
   {
-    "count_all_complete": 100,
+    "count_all_complete": 98,
     "count_returned": 62,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
@@ -4060,8 +4060,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1154,
-    "count_returned": 1154,
+    "count_all_complete": 1161,
+    "count_returned": 1161,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -4100,8 +4100,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 60,
-    "count_returned": 60,
+    "count_all_complete": 59,
+    "count_returned": 59,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Fast V",
@@ -4110,8 +4110,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 55,
-    "count_returned": 55,
+    "count_all_complete": 56,
+    "count_returned": 56,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Fast V",
@@ -4200,8 +4200,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 10976,
-    "count_returned": 10976,
+    "count_all_complete": 10963,
+    "count_returned": 10963,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -4210,8 +4210,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 3259,
-    "count_returned": 3259,
+    "count_all_complete": 3262,
+    "count_returned": 3262,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -4220,8 +4220,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1434,
-    "count_returned": 1434,
+    "count_all_complete": 1433,
+    "count_returned": 1433,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -4230,8 +4230,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 852,
-    "count_returned": 852,
+    "count_all_complete": 855,
+    "count_returned": 855,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -4240,8 +4240,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 519,
-    "count_returned": 519,
+    "count_all_complete": 520,
+    "count_returned": 520,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -4250,8 +4250,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 556,
-    "count_returned": 556,
+    "count_all_complete": 560,
+    "count_returned": 560,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -4260,8 +4260,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 361,
-    "count_returned": 361,
+    "count_all_complete": 360,
+    "count_returned": 360,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -4290,8 +4290,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 149,
-    "count_returned": 149,
+    "count_all_complete": 151,
+    "count_returned": 151,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -4300,8 +4300,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 109,
-    "count_returned": 109,
+    "count_all_complete": 110,
+    "count_returned": 110,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -4320,8 +4320,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 127,
-    "count_returned": 127,
+    "count_all_complete": 128,
+    "count_returned": 128,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Multi-test",
@@ -4330,7 +4330,7 @@
     "window": "all"
   },
   {
-    "count_all_complete": 318,
+    "count_all_complete": 320,
     "count_returned": 240,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
@@ -4340,8 +4340,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 6281,
-    "count_returned": 6281,
+    "count_all_complete": 6327,
+    "count_returned": 6327,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -4350,8 +4350,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1510,
-    "count_returned": 1510,
+    "count_all_complete": 1521,
+    "count_returned": 1521,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -4360,8 +4360,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 608,
-    "count_returned": 608,
+    "count_all_complete": 611,
+    "count_returned": 611,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -4370,8 +4370,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 386,
-    "count_returned": 386,
+    "count_all_complete": 387,
+    "count_returned": 387,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Rounded recovery",
@@ -4380,8 +4380,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 246,
-    "count_returned": 246,
+    "count_all_complete": 247,
+    "count_returned": 247,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Rounded recovery",
@@ -4400,8 +4400,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 142,
-    "count_returned": 142,
+    "count_all_complete": 143,
+    "count_returned": 143,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Rounded recovery",
@@ -4420,8 +4420,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 115,
-    "count_returned": 115,
+    "count_all_complete": 117,
+    "count_returned": 117,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Rounded recovery",
@@ -4470,7 +4470,7 @@
     "window": "all"
   },
   {
-    "count_all_complete": 123,
+    "count_all_complete": 122,
     "count_returned": 94,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
@@ -4480,8 +4480,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 381,
-    "count_returned": 381,
+    "count_all_complete": 373,
+    "count_returned": 373,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -4490,8 +4490,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 163,
-    "count_returned": 163,
+    "count_all_complete": 160,
+    "count_returned": 160,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -4500,8 +4500,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 94,
-    "count_returned": 94,
+    "count_all_complete": 93,
+    "count_returned": 93,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -4620,8 +4620,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 259,
-    "count_returned": 259,
+    "count_all_complete": 261,
+    "count_returned": 261,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -4630,8 +4630,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 112,
-    "count_returned": 112,
+    "count_all_complete": 111,
+    "count_returned": 111,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -4650,8 +4650,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 31,
-    "count_returned": 31,
+    "count_all_complete": 32,
+    "count_returned": 32,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Fast V",
@@ -4690,8 +4690,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 13,
-    "count_returned": 13,
+    "count_all_complete": 14,
+    "count_returned": 14,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Fast V",
@@ -4730,8 +4730,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 5,
+    "count_returned": 5,
     "depth_from_pct": 3.0,
     "depth_to_pct": 3.5,
     "galka_type": "Fast V",
@@ -4760,8 +4760,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 2436,
-    "count_returned": 2436,
+    "count_all_complete": 2440,
+    "count_returned": 2440,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -4770,8 +4770,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 994,
-    "count_returned": 994,
+    "count_all_complete": 995,
+    "count_returned": 995,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -4780,8 +4780,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 476,
-    "count_returned": 476,
+    "count_all_complete": 478,
+    "count_returned": 478,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -4790,8 +4790,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 317,
-    "count_returned": 317,
+    "count_all_complete": 316,
+    "count_returned": 316,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -4810,8 +4810,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 255,
-    "count_returned": 255,
+    "count_all_complete": 254,
+    "count_returned": 254,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -4820,8 +4820,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 126,
-    "count_returned": 126,
+    "count_all_complete": 127,
+    "count_returned": 127,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -4830,8 +4830,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 90,
-    "count_returned": 90,
+    "count_all_complete": 89,
+    "count_returned": 89,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Multi-test",
@@ -4840,8 +4840,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 134,
-    "count_returned": 134,
+    "count_all_complete": 133,
+    "count_returned": 133,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Multi-test",
@@ -4850,8 +4850,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 59,
-    "count_returned": 59,
+    "count_all_complete": 60,
+    "count_returned": 60,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -4860,8 +4860,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 46,
-    "count_returned": 46,
+    "count_all_complete": 47,
+    "count_returned": 47,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -4870,8 +4870,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 46,
-    "count_returned": 46,
+    "count_all_complete": 44,
+    "count_returned": 44,
     "depth_from_pct": 3.0,
     "depth_to_pct": 3.5,
     "galka_type": "Multi-test",
@@ -4900,8 +4900,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1462,
-    "count_returned": 1462,
+    "count_all_complete": 1470,
+    "count_returned": 1470,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -4910,8 +4910,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 570,
-    "count_returned": 570,
+    "count_all_complete": 573,
+    "count_returned": 573,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -4920,8 +4920,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 270,
-    "count_returned": 270,
+    "count_all_complete": 271,
+    "count_returned": 271,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -4930,8 +4930,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 149,
-    "count_returned": 149,
+    "count_all_complete": 150,
+    "count_returned": 150,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Rounded recovery",
@@ -4950,8 +4950,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 119,
-    "count_returned": 119,
+    "count_all_complete": 120,
+    "count_returned": 120,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -4980,8 +4980,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 62,
-    "count_returned": 62,
+    "count_all_complete": 63,
+    "count_returned": 63,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Rounded recovery",
@@ -5040,8 +5040,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 83,
-    "count_returned": 83,
+    "count_all_complete": 82,
+    "count_returned": 82,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -5080,8 +5080,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 14,
-    "count_returned": 14,
+    "count_all_complete": 13,
+    "count_returned": 13,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -5180,8 +5180,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 59,
-    "count_returned": 59,
+    "count_all_complete": 60,
+    "count_returned": 60,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -5320,8 +5320,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 443,
-    "count_returned": 443,
+    "count_all_complete": 444,
+    "count_returned": 444,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -5330,8 +5330,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 202,
-    "count_returned": 202,
+    "count_all_complete": 203,
+    "count_returned": 203,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -5360,8 +5360,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 59,
-    "count_returned": 59,
+    "count_all_complete": 60,
+    "count_returned": 60,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -5370,8 +5370,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 61,
-    "count_returned": 61,
+    "count_all_complete": 62,
+    "count_returned": 62,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -5420,8 +5420,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 14,
-    "count_returned": 14,
+    "count_all_complete": 15,
+    "count_returned": 15,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -5460,8 +5460,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 220,
-    "count_returned": 220,
+    "count_all_complete": 221,
+    "count_returned": 221,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -5600,8 +5600,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 182,
-    "count_returned": 182,
+    "count_all_complete": 177,
+    "count_returned": 177,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -5610,8 +5610,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 91,
-    "count_returned": 91,
+    "count_all_complete": 90,
+    "count_returned": 90,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -5620,8 +5620,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 60,
-    "count_returned": 60,
+    "count_all_complete": 57,
+    "count_returned": 57,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -5680,8 +5680,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 23,
-    "count_returned": 23,
+    "count_all_complete": 22,
+    "count_returned": 22,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -5690,8 +5690,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 10,
-    "count_returned": 10,
+    "count_all_complete": 9,
+    "count_returned": 9,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Deep capitulation",
@@ -5740,8 +5740,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 135,
-    "count_returned": 135,
+    "count_all_complete": 137,
+    "count_returned": 137,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -5750,8 +5750,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 58,
-    "count_returned": 58,
+    "count_all_complete": 57,
+    "count_returned": 57,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -5880,8 +5880,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1033,
-    "count_returned": 1033,
+    "count_all_complete": 1035,
+    "count_returned": 1035,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -5900,8 +5900,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 237,
-    "count_returned": 237,
+    "count_all_complete": 240,
+    "count_returned": 240,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -5920,8 +5920,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 125,
-    "count_returned": 125,
+    "count_all_complete": 124,
+    "count_returned": 124,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -5930,8 +5930,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 120,
-    "count_returned": 120,
+    "count_all_complete": 118,
+    "count_returned": 118,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -5940,8 +5940,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 81,
-    "count_returned": 81,
+    "count_all_complete": 82,
+    "count_returned": 82,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -5960,8 +5960,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 67,
-    "count_returned": 67,
+    "count_all_complete": 68,
+    "count_returned": 68,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Multi-test",
@@ -5970,8 +5970,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 31,
-    "count_returned": 31,
+    "count_all_complete": 33,
+    "count_returned": 33,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -5980,8 +5980,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 25,
-    "count_returned": 25,
+    "count_all_complete": 26,
+    "count_returned": 26,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -6020,8 +6020,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 582,
-    "count_returned": 582,
+    "count_all_complete": 584,
+    "count_returned": 584,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -6030,8 +6030,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 266,
-    "count_returned": 266,
+    "count_all_complete": 268,
+    "count_returned": 268,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -6040,8 +6040,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 132,
-    "count_returned": 132,
+    "count_all_complete": 133,
+    "count_returned": 133,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -6060,8 +6060,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 51,
-    "count_returned": 51,
+    "count_all_complete": 52,
+    "count_returned": 52,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Rounded recovery",
@@ -6070,8 +6070,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 75,
-    "count_returned": 75,
+    "count_all_complete": 76,
+    "count_returned": 76,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -6160,8 +6160,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1060,
-    "count_returned": 1060,
+    "count_all_complete": 1043,
+    "count_returned": 1043,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -6170,8 +6170,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 489,
-    "count_returned": 489,
+    "count_all_complete": 475,
+    "count_returned": 475,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -6180,8 +6180,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 230,
-    "count_returned": 230,
+    "count_all_complete": 225,
+    "count_returned": 225,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -6190,8 +6190,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 164,
-    "count_returned": 164,
+    "count_all_complete": 160,
+    "count_returned": 160,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -6200,8 +6200,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 88,
-    "count_returned": 88,
+    "count_all_complete": 86,
+    "count_returned": 86,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -6210,8 +6210,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 119,
-    "count_returned": 119,
+    "count_all_complete": 117,
+    "count_returned": 117,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Deep capitulation",
@@ -6220,8 +6220,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 67,
-    "count_returned": 67,
+    "count_all_complete": 65,
+    "count_returned": 65,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Deep capitulation",
@@ -6240,8 +6240,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 60,
-    "count_returned": 60,
+    "count_all_complete": 57,
+    "count_returned": 57,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -6250,8 +6250,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 28,
-    "count_returned": 28,
+    "count_all_complete": 26,
+    "count_returned": 26,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Deep capitulation",
@@ -6260,8 +6260,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 18,
-    "count_returned": 18,
+    "count_all_complete": 19,
+    "count_returned": 19,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Deep capitulation",
@@ -6290,8 +6290,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 71,
-    "count_returned": 60,
+    "count_all_complete": 70,
+    "count_returned": 59,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Deep capitulation",
@@ -6300,8 +6300,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 865,
-    "count_returned": 865,
+    "count_all_complete": 877,
+    "count_returned": 877,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -6310,8 +6310,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 306,
-    "count_returned": 306,
+    "count_all_complete": 309,
+    "count_returned": 309,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -6350,8 +6350,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 38,
-    "count_returned": 38,
+    "count_all_complete": 39,
+    "count_returned": 39,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Fast V",
@@ -6360,8 +6360,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 40,
-    "count_returned": 40,
+    "count_all_complete": 41,
+    "count_returned": 41,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Fast V",
@@ -6370,8 +6370,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 21,
-    "count_returned": 21,
+    "count_all_complete": 22,
+    "count_returned": 22,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Fast V",
@@ -6420,8 +6420,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 25,
-    "count_returned": 25,
+    "count_all_complete": 26,
+    "count_returned": 26,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Fast V",
@@ -6440,8 +6440,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 9146,
-    "count_returned": 9146,
+    "count_all_complete": 9122,
+    "count_returned": 9122,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -6450,8 +6450,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 2876,
-    "count_returned": 2876,
+    "count_all_complete": 2872,
+    "count_returned": 2872,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -6460,8 +6460,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1297,
-    "count_returned": 1297,
+    "count_all_complete": 1295,
+    "count_returned": 1295,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -6470,8 +6470,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 765,
-    "count_returned": 765,
+    "count_all_complete": 773,
+    "count_returned": 773,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -6490,8 +6490,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 563,
-    "count_returned": 563,
+    "count_all_complete": 566,
+    "count_returned": 566,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -6500,8 +6500,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 281,
-    "count_returned": 281,
+    "count_all_complete": 282,
+    "count_returned": 282,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -6510,8 +6510,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 186,
-    "count_returned": 186,
+    "count_all_complete": 184,
+    "count_returned": 184,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Multi-test",
@@ -6530,8 +6530,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 147,
-    "count_returned": 147,
+    "count_all_complete": 149,
+    "count_returned": 149,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -6550,8 +6550,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 74,
-    "count_returned": 74,
+    "count_all_complete": 73,
+    "count_returned": 73,
     "depth_from_pct": 3.0,
     "depth_to_pct": 3.5,
     "galka_type": "Multi-test",
@@ -6560,8 +6560,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 136,
-    "count_returned": 136,
+    "count_all_complete": 135,
+    "count_returned": 135,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Multi-test",
@@ -6580,8 +6580,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 5580,
-    "count_returned": 5580,
+    "count_all_complete": 5619,
+    "count_returned": 5619,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -6590,8 +6590,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 1707,
-    "count_returned": 1707,
+    "count_all_complete": 1724,
+    "count_returned": 1724,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -6600,8 +6600,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 715,
-    "count_returned": 715,
+    "count_all_complete": 724,
+    "count_returned": 724,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -6610,8 +6610,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 425,
-    "count_returned": 425,
+    "count_all_complete": 428,
+    "count_returned": 428,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Rounded recovery",
@@ -6620,8 +6620,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 269,
-    "count_returned": 269,
+    "count_all_complete": 270,
+    "count_returned": 270,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Rounded recovery",
@@ -6640,8 +6640,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 174,
-    "count_returned": 174,
+    "count_all_complete": 175,
+    "count_returned": 175,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Rounded recovery",
@@ -6650,8 +6650,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 119,
-    "count_returned": 119,
+    "count_all_complete": 120,
+    "count_returned": 120,
     "depth_from_pct": 1.25,
     "depth_to_pct": 1.5,
     "galka_type": "Rounded recovery",
@@ -6660,8 +6660,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 122,
-    "count_returned": 122,
+    "count_all_complete": 124,
+    "count_returned": 124,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Rounded recovery",
@@ -6670,8 +6670,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 90,
-    "count_returned": 90,
+    "count_all_complete": 91,
+    "count_returned": 91,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Rounded recovery",
@@ -6680,8 +6680,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 54,
-    "count_returned": 54,
+    "count_all_complete": 55,
+    "count_returned": 55,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Rounded recovery",
@@ -6690,8 +6690,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 40,
-    "count_returned": 40,
+    "count_all_complete": 41,
+    "count_returned": 41,
     "depth_from_pct": 3.0,
     "depth_to_pct": 3.5,
     "galka_type": "Rounded recovery",
@@ -6710,8 +6710,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 185,
-    "count_returned": 141,
+    "count_all_complete": 186,
+    "count_returned": 142,
     "depth_from_pct": 5.0,
     "depth_to_pct": null,
     "galka_type": "Rounded recovery",
@@ -6720,8 +6720,8 @@
     "window": "all"
   },
   {
-    "count_all_complete": 26,
-    "count_returned": 26,
+    "count_all_complete": 27,
+    "count_returned": 27,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -6860,8 +6860,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 22,
-    "count_returned": 22,
+    "count_all_complete": 23,
+    "count_returned": 23,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -7000,8 +7000,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 155,
-    "count_returned": 155,
+    "count_all_complete": 157,
+    "count_returned": 157,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -7140,8 +7140,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 77,
-    "count_returned": 77,
+    "count_all_complete": 78,
+    "count_returned": 78,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -7280,8 +7280,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 7,
-    "count_returned": 7,
+    "count_all_complete": 8,
+    "count_returned": 8,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -7560,8 +7560,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 32,
-    "count_returned": 32,
+    "count_all_complete": 33,
+    "count_returned": 33,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -7570,8 +7570,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 19,
-    "count_returned": 19,
+    "count_all_complete": 18,
+    "count_returned": 18,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -7710,8 +7710,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 4,
+    "count_returned": 4,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -7840,8 +7840,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 18,
-    "count_returned": 18,
+    "count_all_complete": 19,
+    "count_returned": 19,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -8120,8 +8120,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 73,
-    "count_returned": 73,
+    "count_all_complete": 75,
+    "count_returned": 75,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -8680,8 +8680,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 547,
-    "count_returned": 547,
+    "count_all_complete": 549,
+    "count_returned": 549,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -8820,8 +8820,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 277,
-    "count_returned": 277,
+    "count_all_complete": 278,
+    "count_returned": 278,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -8990,8 +8990,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 5,
-    "count_returned": 5,
+    "count_all_complete": 4,
+    "count_returned": 4,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -9100,8 +9100,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 20,
-    "count_returned": 20,
+    "count_all_complete": 21,
+    "count_returned": 21,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -9240,8 +9240,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 145,
-    "count_returned": 145,
+    "count_all_complete": 144,
+    "count_returned": 144,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -9270,8 +9270,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 6,
-    "count_returned": 6,
+    "count_all_complete": 7,
+    "count_returned": 7,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -9380,8 +9380,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 70,
-    "count_returned": 70,
+    "count_all_complete": 69,
+    "count_returned": 69,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -9800,8 +9800,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 23,
-    "count_returned": 23,
+    "count_all_complete": 24,
+    "count_returned": 24,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -10200,8 +10200,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 1,
-    "count_returned": 1,
+    "count_all_complete": 0,
+    "count_returned": 0,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Deep capitulation",
@@ -10360,8 +10360,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 56,
-    "count_returned": 56,
+    "count_all_complete": 57,
+    "count_returned": 57,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -10480,8 +10480,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 1,
-    "count_returned": 1,
+    "count_all_complete": 2,
+    "count_returned": 2,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Multi-test",
@@ -10650,8 +10650,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 52,
-    "count_returned": 52,
+    "count_all_complete": 50,
+    "count_returned": 50,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -10780,8 +10780,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 65,
-    "count_returned": 65,
+    "count_all_complete": 66,
+    "count_returned": 66,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -10920,8 +10920,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 480,
-    "count_returned": 480,
+    "count_all_complete": 478,
+    "count_returned": 478,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -10930,8 +10930,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 114,
-    "count_returned": 114,
+    "count_all_complete": 116,
+    "count_returned": 116,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -10960,8 +10960,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 17,
-    "count_returned": 17,
+    "count_all_complete": 16,
+    "count_returned": 16,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -11010,8 +11010,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 4,
-    "count_returned": 4,
+    "count_all_complete": 5,
+    "count_returned": 5,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -11060,8 +11060,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 252,
-    "count_returned": 252,
+    "count_all_complete": 253,
+    "count_returned": 253,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -11070,8 +11070,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 42,
-    "count_returned": 42,
+    "count_all_complete": 41,
+    "count_returned": 41,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -11100,8 +11100,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 10,
-    "count_returned": 10,
+    "count_all_complete": 11,
+    "count_returned": 11,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Rounded recovery",
@@ -11200,8 +11200,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 22,
-    "count_returned": 22,
+    "count_all_complete": 21,
+    "count_returned": 21,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -11480,8 +11480,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 154,
-    "count_returned": 154,
+    "count_all_complete": 158,
+    "count_returned": 158,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -11570,8 +11570,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 2,
-    "count_returned": 2,
+    "count_all_complete": 3,
+    "count_returned": 3,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -11580,8 +11580,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 2,
-    "count_returned": 2,
+    "count_all_complete": 3,
+    "count_returned": 3,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -11670,8 +11670,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 6,
-    "count_returned": 6,
+    "count_all_complete": 7,
+    "count_returned": 7,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -11900,8 +11900,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 5,
-    "count_returned": 5,
+    "count_all_complete": 6,
+    "count_returned": 6,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -12090,8 +12090,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 7,
-    "count_returned": 7,
+    "count_all_complete": 8,
+    "count_returned": 8,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -12140,8 +12140,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 2,
-    "count_returned": 2,
+    "count_all_complete": 3,
+    "count_returned": 3,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -12640,8 +12640,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 4,
-    "count_returned": 4,
+    "count_all_complete": 3,
+    "count_returned": 3,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -12690,8 +12690,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 1,
-    "count_returned": 1,
+    "count_all_complete": 2,
+    "count_returned": 2,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -12700,8 +12700,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 2,
-    "count_returned": 2,
+    "count_all_complete": 3,
+    "count_returned": 3,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -12740,8 +12740,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 31,
-    "count_returned": 31,
+    "count_all_complete": 32,
+    "count_returned": 32,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -12780,8 +12780,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 1,
-    "count_returned": 1,
+    "count_all_complete": 2,
+    "count_returned": 2,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Rounded recovery",
@@ -12790,8 +12790,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 4,
+    "count_returned": 4,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -12880,8 +12880,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 77,
-    "count_returned": 77,
+    "count_all_complete": 75,
+    "count_returned": 75,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -12980,8 +12980,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 0,
-    "count_returned": 0,
+    "count_all_complete": 1,
+    "count_returned": 1,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Deep capitulation",
@@ -13030,8 +13030,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 15,
-    "count_returned": 15,
+    "count_all_complete": 14,
+    "count_returned": 14,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -13160,8 +13160,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 537,
-    "count_returned": 537,
+    "count_all_complete": 544,
+    "count_returned": 544,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -13170,8 +13170,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 116,
-    "count_returned": 116,
+    "count_all_complete": 115,
+    "count_returned": 115,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -13190,8 +13190,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 22,
-    "count_returned": 22,
+    "count_all_complete": 21,
+    "count_returned": 21,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -13210,8 +13210,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 16,
-    "count_returned": 16,
+    "count_all_complete": 17,
+    "count_returned": 17,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -13220,8 +13220,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 7,
-    "count_returned": 7,
+    "count_all_complete": 6,
+    "count_returned": 6,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Multi-test",
@@ -13250,8 +13250,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 4,
+    "count_returned": 4,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -13260,8 +13260,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 4,
+    "count_returned": 4,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -13300,8 +13300,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 302,
-    "count_returned": 302,
+    "count_all_complete": 303,
+    "count_returned": 303,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -13310,8 +13310,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 36,
-    "count_returned": 36,
+    "count_all_complete": 40,
+    "count_returned": 40,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -13360,8 +13360,8 @@
     "window": "90d"
   },
   {
-    "count_all_complete": 4,
-    "count_returned": 4,
+    "count_all_complete": 5,
+    "count_returned": 5,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Rounded recovery",
@@ -13580,8 +13580,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 76,
-    "count_returned": 76,
+    "count_all_complete": 77,
+    "count_returned": 77,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -13720,8 +13720,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 627,
-    "count_returned": 627,
+    "count_all_complete": 626,
+    "count_returned": 626,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -13750,8 +13750,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 20,
-    "count_returned": 20,
+    "count_all_complete": 19,
+    "count_returned": 19,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -13860,8 +13860,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 328,
-    "count_returned": 328,
+    "count_all_complete": 329,
+    "count_returned": 329,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -14000,8 +14000,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 25,
-    "count_returned": 25,
+    "count_all_complete": 26,
+    "count_returned": 26,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -14150,8 +14150,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 4,
-    "count_returned": 4,
+    "count_all_complete": 5,
+    "count_returned": 5,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -14180,8 +14180,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 1,
-    "count_returned": 1,
+    "count_all_complete": 2,
+    "count_returned": 2,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Fast V",
@@ -14290,8 +14290,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 49,
-    "count_returned": 49,
+    "count_all_complete": 47,
+    "count_returned": 47,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -14310,8 +14310,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 7,
-    "count_returned": 7,
+    "count_all_complete": 6,
+    "count_returned": 6,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -14320,8 +14320,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 11,
-    "count_returned": 11,
+    "count_all_complete": 10,
+    "count_returned": 10,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -14430,8 +14430,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 23,
-    "count_returned": 23,
+    "count_all_complete": 24,
+    "count_returned": 24,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -14600,8 +14600,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 4,
-    "count_returned": 4,
+    "count_all_complete": 3,
+    "count_returned": 3,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Deep capitulation",
@@ -14860,8 +14860,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 34,
-    "count_returned": 34,
+    "count_all_complete": 33,
+    "count_returned": 33,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -14870,8 +14870,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 18,
-    "count_returned": 18,
+    "count_all_complete": 17,
+    "count_returned": 17,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -14880,8 +14880,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 11,
-    "count_returned": 11,
+    "count_all_complete": 12,
+    "count_returned": 12,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -14980,8 +14980,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 139,
-    "count_returned": 139,
+    "count_all_complete": 140,
+    "count_returned": 140,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -15000,8 +15000,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 21,
-    "count_returned": 21,
+    "count_all_complete": 22,
+    "count_returned": 22,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -15120,8 +15120,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 403,
-    "count_returned": 403,
+    "count_all_complete": 397,
+    "count_returned": 397,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -15130,8 +15130,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 96,
-    "count_returned": 96,
+    "count_all_complete": 95,
+    "count_returned": 95,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -15150,8 +15150,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 12,
-    "count_returned": 12,
+    "count_all_complete": 11,
+    "count_returned": 11,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -15280,8 +15280,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 14,
-    "count_returned": 14,
+    "count_all_complete": 15,
+    "count_returned": 15,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Fast V",
@@ -15400,8 +15400,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 2141,
-    "count_returned": 2141,
+    "count_all_complete": 2135,
+    "count_returned": 2135,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -15410,8 +15410,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 374,
-    "count_returned": 374,
+    "count_all_complete": 375,
+    "count_returned": 375,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -15540,8 +15540,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 1170,
-    "count_returned": 1170,
+    "count_all_complete": 1179,
+    "count_returned": 1179,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -15560,8 +15560,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 77,
-    "count_returned": 77,
+    "count_all_complete": 76,
+    "count_returned": 76,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -15680,8 +15680,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 82,
-    "count_returned": 82,
+    "count_all_complete": 81,
+    "count_returned": 81,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -15690,8 +15690,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 61,
-    "count_returned": 61,
+    "count_all_complete": 60,
+    "count_returned": 60,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -15710,8 +15710,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 23,
-    "count_returned": 23,
+    "count_all_complete": 21,
+    "count_returned": 21,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -15820,8 +15820,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 63,
-    "count_returned": 63,
+    "count_all_complete": 64,
+    "count_returned": 64,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -15960,8 +15960,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 534,
-    "count_returned": 534,
+    "count_all_complete": 530,
+    "count_returned": 530,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -15970,8 +15970,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 196,
-    "count_returned": 196,
+    "count_all_complete": 197,
+    "count_returned": 197,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -15980,8 +15980,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 106,
-    "count_returned": 106,
+    "count_all_complete": 105,
+    "count_returned": 105,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -15990,8 +15990,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 51,
-    "count_returned": 51,
+    "count_all_complete": 53,
+    "count_returned": 53,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -16100,8 +16100,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 223,
-    "count_returned": 223,
+    "count_all_complete": 227,
+    "count_returned": 227,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -16120,8 +16120,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 35,
-    "count_returned": 35,
+    "count_all_complete": 34,
+    "count_returned": 34,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -16520,8 +16520,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 89,
-    "count_returned": 89,
+    "count_all_complete": 90,
+    "count_returned": 90,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -16540,8 +16540,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 27,
-    "count_returned": 27,
+    "count_all_complete": 26,
+    "count_returned": 26,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -16920,8 +16920,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 2,
+    "count_returned": 2,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Deep capitulation",
@@ -16970,8 +16970,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 4,
+    "count_returned": 4,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Fast V",
@@ -17080,8 +17080,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 220,
-    "count_returned": 220,
+    "count_all_complete": 222,
+    "count_returned": 222,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -17110,8 +17110,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 38,
-    "count_returned": 38,
+    "count_all_complete": 37,
+    "count_returned": 37,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -17200,8 +17200,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 5,
-    "count_returned": 5,
+    "count_all_complete": 6,
+    "count_returned": 6,
     "depth_from_pct": 3.5,
     "depth_to_pct": 5.0,
     "galka_type": "Multi-test",
@@ -17220,8 +17220,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 82,
-    "count_returned": 82,
+    "count_all_complete": 81,
+    "count_returned": 81,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -17240,8 +17240,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 27,
-    "count_returned": 27,
+    "count_all_complete": 26,
+    "count_returned": 26,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -17360,8 +17360,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 316,
-    "count_returned": 316,
+    "count_all_complete": 309,
+    "count_returned": 309,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -17370,8 +17370,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 144,
-    "count_returned": 144,
+    "count_all_complete": 142,
+    "count_returned": 142,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -17390,8 +17390,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 40,
-    "count_returned": 40,
+    "count_all_complete": 38,
+    "count_returned": 38,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -17500,8 +17500,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 223,
-    "count_returned": 223,
+    "count_all_complete": 226,
+    "count_returned": 226,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -17640,8 +17640,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 1836,
-    "count_returned": 1836,
+    "count_all_complete": 1832,
+    "count_returned": 1832,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -17650,8 +17650,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 513,
-    "count_returned": 513,
+    "count_all_complete": 512,
+    "count_returned": 512,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -17660,8 +17660,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 226,
-    "count_returned": 226,
+    "count_all_complete": 225,
+    "count_returned": 225,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -17670,8 +17670,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 126,
-    "count_returned": 126,
+    "count_all_complete": 128,
+    "count_returned": 128,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Multi-test",
@@ -17680,8 +17680,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 62,
-    "count_returned": 62,
+    "count_all_complete": 61,
+    "count_returned": 61,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -17730,8 +17730,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 16,
-    "count_returned": 16,
+    "count_all_complete": 17,
+    "count_returned": 17,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -17780,8 +17780,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 954,
-    "count_returned": 954,
+    "count_all_complete": 960,
+    "count_returned": 960,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -17790,8 +17790,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 217,
-    "count_returned": 217,
+    "count_all_complete": 219,
+    "count_returned": 219,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -17820,8 +17820,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 23,
-    "count_returned": 23,
+    "count_all_complete": 24,
+    "count_returned": 24,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Rounded recovery",
@@ -17920,8 +17920,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 78,
-    "count_returned": 78,
+    "count_all_complete": 74,
+    "count_returned": 74,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -17930,8 +17930,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 39,
-    "count_returned": 39,
+    "count_all_complete": 36,
+    "count_returned": 36,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -18200,8 +18200,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 558,
-    "count_returned": 558,
+    "count_all_complete": 562,
+    "count_returned": 562,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -18210,8 +18210,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 189,
-    "count_returned": 189,
+    "count_all_complete": 191,
+    "count_returned": 191,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -18220,8 +18220,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 77,
-    "count_returned": 77,
+    "count_all_complete": 76,
+    "count_returned": 76,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -18240,8 +18240,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 25,
-    "count_returned": 25,
+    "count_all_complete": 24,
+    "count_returned": 24,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -18290,8 +18290,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 9,
-    "count_returned": 9,
+    "count_all_complete": 10,
+    "count_returned": 10,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -18300,8 +18300,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 8,
-    "count_returned": 8,
+    "count_all_complete": 9,
+    "count_returned": 9,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -18340,8 +18340,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 308,
-    "count_returned": 308,
+    "count_all_complete": 310,
+    "count_returned": 310,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -18390,8 +18390,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 22,
-    "count_returned": 22,
+    "count_all_complete": 23,
+    "count_returned": 23,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -18620,8 +18620,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 19,
-    "count_returned": 19,
+    "count_all_complete": 20,
+    "count_returned": 20,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -18780,8 +18780,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 22,
-    "count_returned": 22,
+    "count_all_complete": 21,
+    "count_returned": 21,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -18800,8 +18800,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 9,
-    "count_returned": 9,
+    "count_all_complete": 8,
+    "count_returned": 8,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -18810,8 +18810,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 11,
-    "count_returned": 11,
+    "count_all_complete": 12,
+    "count_returned": 12,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -18860,8 +18860,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 5,
-    "count_returned": 5,
+    "count_all_complete": 6,
+    "count_returned": 6,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -19060,8 +19060,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 7,
-    "count_returned": 7,
+    "count_all_complete": 6,
+    "count_returned": 6,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -19130,8 +19130,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 3,
-    "count_returned": 3,
+    "count_all_complete": 2,
+    "count_returned": 2,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Deep capitulation",
@@ -19320,8 +19320,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 230,
-    "count_returned": 230,
+    "count_all_complete": 229,
+    "count_returned": 229,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Multi-test",
@@ -19330,8 +19330,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 90,
-    "count_returned": 90,
+    "count_all_complete": 89,
+    "count_returned": 89,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -19360,8 +19360,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 15,
-    "count_returned": 15,
+    "count_all_complete": 14,
+    "count_returned": 14,
     "depth_from_pct": 0.6,
     "depth_to_pct": 0.75,
     "galka_type": "Multi-test",
@@ -19410,8 +19410,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 2,
-    "count_returned": 2,
+    "count_all_complete": 4,
+    "count_returned": 4,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -19420,8 +19420,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 4,
-    "count_returned": 4,
+    "count_all_complete": 5,
+    "count_returned": 5,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Multi-test",
@@ -19460,8 +19460,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 126,
-    "count_returned": 126,
+    "count_all_complete": 127,
+    "count_returned": 127,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -19470,8 +19470,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 55,
-    "count_returned": 55,
+    "count_all_complete": 56,
+    "count_returned": 56,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -19510,8 +19510,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 9,
-    "count_returned": 9,
+    "count_all_complete": 10,
+    "count_returned": 10,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Rounded recovery",
@@ -19600,8 +19600,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 247,
-    "count_returned": 247,
+    "count_all_complete": 239,
+    "count_returned": 239,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Deep capitulation",
@@ -19610,8 +19610,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 96,
-    "count_returned": 96,
+    "count_all_complete": 92,
+    "count_returned": 92,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Deep capitulation",
@@ -19620,8 +19620,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 37,
-    "count_returned": 37,
+    "count_all_complete": 35,
+    "count_returned": 35,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Deep capitulation",
@@ -19630,8 +19630,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 24,
-    "count_returned": 24,
+    "count_all_complete": 23,
+    "count_returned": 23,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Deep capitulation",
@@ -19660,8 +19660,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 9,
-    "count_returned": 9,
+    "count_all_complete": 8,
+    "count_returned": 8,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Deep capitulation",
@@ -19680,8 +19680,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 6,
-    "count_returned": 6,
+    "count_all_complete": 5,
+    "count_returned": 5,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Deep capitulation",
@@ -19700,8 +19700,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 0,
-    "count_returned": 0,
+    "count_all_complete": 1,
+    "count_returned": 1,
     "depth_from_pct": 2.5,
     "depth_to_pct": 3.0,
     "galka_type": "Deep capitulation",
@@ -19740,8 +19740,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 188,
-    "count_returned": 188,
+    "count_all_complete": 193,
+    "count_returned": 193,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Fast V",
@@ -19750,8 +19750,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 49,
-    "count_returned": 49,
+    "count_all_complete": 50,
+    "count_returned": 50,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Fast V",
@@ -19890,8 +19890,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 499,
-    "count_returned": 499,
+    "count_all_complete": 497,
+    "count_returned": 497,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Multi-test",
@@ -19900,8 +19900,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 208,
-    "count_returned": 208,
+    "count_all_complete": 207,
+    "count_returned": 207,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Multi-test",
@@ -19930,8 +19930,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 71,
-    "count_returned": 71,
+    "count_all_complete": 72,
+    "count_returned": 72,
     "depth_from_pct": 0.75,
     "depth_to_pct": 1.0,
     "galka_type": "Multi-test",
@@ -19970,8 +19970,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 19,
-    "count_returned": 19,
+    "count_all_complete": 20,
+    "count_returned": 20,
     "depth_from_pct": 2.0,
     "depth_to_pct": 2.5,
     "galka_type": "Multi-test",
@@ -20020,8 +20020,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 1115,
-    "count_returned": 1115,
+    "count_all_complete": 1118,
+    "count_returned": 1118,
     "depth_from_pct": 0.0,
     "depth_to_pct": 0.15,
     "galka_type": "Rounded recovery",
@@ -20030,8 +20030,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 244,
-    "count_returned": 244,
+    "count_all_complete": 248,
+    "count_returned": 248,
     "depth_from_pct": 0.15,
     "depth_to_pct": 0.3,
     "galka_type": "Rounded recovery",
@@ -20040,8 +20040,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 88,
-    "count_returned": 88,
+    "count_all_complete": 90,
+    "count_returned": 90,
     "depth_from_pct": 0.3,
     "depth_to_pct": 0.45,
     "galka_type": "Rounded recovery",
@@ -20050,8 +20050,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 44,
-    "count_returned": 44,
+    "count_all_complete": 45,
+    "count_returned": 45,
     "depth_from_pct": 0.45,
     "depth_to_pct": 0.6,
     "galka_type": "Rounded recovery",
@@ -20080,8 +20080,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 15,
-    "count_returned": 15,
+    "count_all_complete": 16,
+    "count_returned": 16,
     "depth_from_pct": 1.0,
     "depth_to_pct": 1.25,
     "galka_type": "Rounded recovery",
@@ -20100,8 +20100,8 @@
     "window": "365d"
   },
   {
-    "count_all_complete": 15,
-    "count_returned": 15,
+    "count_all_complete": 16,
+    "count_returned": 16,
     "depth_from_pct": 1.5,
     "depth_to_pct": 2.0,
     "galka_type": "Rounded recovery",
