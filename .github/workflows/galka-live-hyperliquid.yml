@@ -1,0 +1,53 @@
+name: Galka Hyperliquid Live
+
+on:
+  push:
+    branches:
+      - agent/galka-live-hyperliquid
+    paths:
+      - 'live/**'
+      - 'terminal/live.*'
+      - 'scripts/setup-galka-live.sh'
+      - 'scripts/start-galka-live.sh'
+      - 'tests/test_live_*.py'
+      - '.github/workflows/galka-live-hyperliquid.yml'
+  pull_request:
+    paths:
+      - 'live/**'
+      - 'terminal/live.*'
+      - 'scripts/setup-galka-live.sh'
+      - 'scripts/start-galka-live.sh'
+      - 'tests/test_live_*.py'
+      - '.github/workflows/galka-live-hyperliquid.yml'
+  workflow_dispatch:
+
+jobs:
+  python-live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install hyperliquid-python-sdk==0.24.0
+      - run: python -m compileall -q live tests/test_live_ladder.py tests/test_live_engine.py
+      - run: python -m unittest tests.test_live_ladder tests.test_live_engine -v
+
+  browser-live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --check terminal/live.js
+      - name: Check secret isolation and live controls
+        shell: bash
+        run: |
+          grep -q '/api/live/preview' terminal/live.js
+          grep -q 'PLACE_REAL_ORDERS' terminal/live.js
+          grep -q 'HL_API_SECRET_KEY' scripts/setup-galka-live.sh
+          grep -q 'chmod 600' scripts/setup-galka-live.sh
+          ! grep -R --line-number --exclude='setup-galka-live.sh' 'HL_API_SECRET_KEY=' terminal live scripts
+          ! grep -R --line-number '0xPASTE_API_WALLET_PRIVATE_KEY' terminal live
