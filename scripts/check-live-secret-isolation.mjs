@@ -8,8 +8,11 @@ for (const path of browserFiles) {
 }
 
 const server = fs.readFileSync('live/server.py', 'utf8');
-assert.match(server, /127\.0\.0\.1/);
+const config = fs.readFileSync('live/config.py', 'utf8');
+assert.match(server, /ThreadingHTTPServer\(\(config\.host, config\.port\)/);
 assert.match(server, /no-store/);
+assert.match(config, /host="127\.0\.0\.1"/);
+assert.match(config, /Unsafe permissions/);
 
 const setup = fs.readFileSync('scripts/setup-galka-live.sh', 'utf8');
 assert.match(setup, /chmod 600/);
