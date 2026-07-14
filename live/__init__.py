@@ -1,1 +1,1 @@
-"""Galka live paper-trading package."""
+"""Local Hyperliquid live-trading backend for the Galka terminal."""
