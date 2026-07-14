@@ -1,0 +1,8 @@
+.venv-live/
+.env
+*.env
+!*.env.example
+__pycache__/
+*.pyc
+live-state.json
+*.log
