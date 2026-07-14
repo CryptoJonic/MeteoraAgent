@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import signal
 import sys
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -115,7 +114,7 @@ def main() -> int:
         gateway = HyperliquidGateway(config)
         engine = GalkaLiveEngine(config, gateway)
     except (ConfigError, RuntimeError, GatewayError) as exc:
-        print(f"Galka LIVE не запущена: {exc}", file=sys.stderr)
+        print(f"Galka LIVE не запущена: {exc}", file=sys.stderr, flush=True)
         return 2
 
     GalkaRequestHandler.engine = engine
@@ -123,21 +122,18 @@ def main() -> int:
     server.daemon_threads = True
     engine.start()
 
-    def shutdown_handler(_signum, _frame):
-        threading_shutdown = getattr(server, "shutdown", None)
-        if threading_shutdown:
-            threading_shutdown()
-
-    signal.signal(signal.SIGINT, shutdown_handler)
-    signal.signal(signal.SIGTERM, shutdown_handler)
-
-    print(f"Galka LIVE: http://{config.host}:{config.port}/terminal/live.html")
-    print(f"Сеть: {config.network_name} · аккаунт {config.masked_address}")
-    print(f"Режим: {'LIVE ENABLED' if config.live_enabled else 'READ ONLY'}")
-    print(f"Плечо: {config.leverage}x isolated · номинал одной GALKA: ${config.total_notional:.2f}")
-    print("Секретный ключ загружен из локального файла и не передаётся браузеру.")
+    print(f"Galka LIVE: http://{config.host}:{config.port}/terminal/live.html", flush=True)
+    print(f"Сеть: {config.network_name} · аккаунт {config.masked_address}", flush=True)
+    print(f"Режим: {'LIVE ENABLED' if config.live_enabled else 'READ ONLY'}", flush=True)
+    print(
+        f"Плечо: {config.leverage}x isolated · номинал одной GALKA: ${config.total_notional:.2f}",
+        flush=True,
+    )
+    print("Секретный ключ загружен из локального файла и не передаётся браузеру.", flush=True)
     try:
         server.serve_forever(poll_interval=0.5)
+    except KeyboardInterrupt:
+        pass
     finally:
         engine.stop()
         server.server_close()
