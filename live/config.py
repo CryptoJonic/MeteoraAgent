@@ -39,8 +39,6 @@ class LiveConfig:
 
 def _parse_env(path: Path) -> dict[str, str]:
     values: dict[str, str] = {}
-    if not path.exists():
-        raise ConfigError(f"Config file not found: {path}")
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -59,6 +57,8 @@ def _bool(value: str | None, default: bool = False) -> bool:
 
 
 def _check_permissions(path: Path) -> None:
+    if not path.exists():
+        raise ConfigError(f"Config file not found: {path}. Run bash scripts/setup-galka-live.sh")
     mode = stat.S_IMODE(path.stat().st_mode)
     if mode & (stat.S_IRWXG | stat.S_IRWXO):
         raise ConfigError(
