@@ -9,6 +9,7 @@ on:
       - 'terminal/live.*'
       - 'scripts/setup-galka-live.sh'
       - 'scripts/start-galka-live.sh'
+      - 'scripts/check-live-secret-isolation.mjs'
       - 'tests/test_live_*.py'
       - '.github/workflows/galka-live-hyperliquid.yml'
   pull_request:
@@ -17,6 +18,7 @@ on:
       - 'terminal/live.*'
       - 'scripts/setup-galka-live.sh'
       - 'scripts/start-galka-live.sh'
+      - 'scripts/check-live-secret-isolation.mjs'
       - 'tests/test_live_*.py'
       - '.github/workflows/galka-live-hyperliquid.yml'
   workflow_dispatch:
@@ -42,12 +44,10 @@ jobs:
         with:
           node-version: 20
       - run: node --check terminal/live.js
-      - name: Check secret isolation and live controls
+      - run: node scripts/check-live-secret-isolation.mjs
+      - name: Check live API controls
         shell: bash
         run: |
           grep -q '/api/live/preview' terminal/live.js
           grep -q 'PLACE_REAL_ORDERS' terminal/live.js
-          grep -q 'HL_API_SECRET_KEY' scripts/setup-galka-live.sh
-          grep -q 'chmod 600' scripts/setup-galka-live.sh
-          ! grep -R --line-number --exclude='setup-galka-live.sh' 'HL_API_SECRET_KEY=' terminal live scripts
-          ! grep -R --line-number '0xPASTE_API_WALLET_PRIVATE_KEY' terminal live
+          grep -q 'EMERGENCY_CLOSE_REAL_POSITION' terminal/live.js
