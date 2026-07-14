@@ -56,6 +56,12 @@ class PlacedOrder:
         }
 
 
+@dataclass(frozen=True)
+class EntryWithTarget:
+    entry: PlacedOrder
+    target: PlacedOrder
+
+
 class HyperliquidGateway:
     def __init__(self, config: LiveConfig):
         self.config = config
@@ -132,6 +138,9 @@ class HyperliquidGateway:
                     "originalSize": float(row.get("origSz") or row.get("sz") or 0),
                     "reduceOnly": bool(row.get("reduceOnly")),
                     "tif": row.get("tif"),
+                    "orderType": row.get("orderType"),
+                    "isTrigger": bool(row.get("isTrigger")),
+                    "triggerPrice": float(row.get("triggerPx") or 0),
                     "timestamp": int(row.get("timestamp") or 0),
                 }
             )
@@ -194,8 +203,15 @@ class HyperliquidGateway:
         leverage = min(self.config.leverage, self.max_leverage(coin))
         return self.exchange.update_leverage(leverage, coin, self.config.isolated is False)
 
-    def place_entry_ladder(self, coin: str, levels: list[LadderLevel]) -> list[PlacedOrder]:
+    def place_entry_with_target(
+        self,
+        coin: str,
+        level: LadderLevel,
+        galka_price: float,
+    ) -> EntryWithTarget:
+        """Place one ALO entry and its exchange-native limit TP as a normalTpsl pair."""
         coin = self._coin(coin)
+        target = round_perp_price(galka_price, self.sz_decimals(coin))
         requests = [
             {
                 "coin": coin,
@@ -204,17 +220,41 @@ class HyperliquidGateway:
                 "limit_px": level.price,
                 "order_type": {"limit": {"tif": "Alo"}},
                 "reduce_only": False,
-            }
-            for level in levels
+            },
+            {
+                "coin": coin,
+                "is_buy": False,
+                "sz": level.size,
+                "limit_px": target,
+                "order_type": {
+                    "trigger": {
+                        "isMarket": False,
+                        "triggerPx": target,
+                        "tpsl": "tp",
+                    }
+                },
+                "reduce_only": True,
+            },
         ]
-        response = self.exchange.bulk_orders(requests)
-        return self._parse_order_response(response, levels)
-
-    def place_single_entry(self, coin: str, level: LadderLevel) -> PlacedOrder:
-        rows = self.place_entry_ladder(coin, [level])
-        if len(rows) != 1:
-            raise GatewayError("Unexpected single-order response")
-        return rows[0]
+        response = self.exchange.bulk_orders(requests, grouping="normalTpsl")
+        orders = self._parse_order_response(response, [level, None])
+        if len(orders) != 2:
+            raise GatewayError("Hyperliquid did not return both entry and target orders")
+        entry = PlacedOrder(
+            oid=orders[0].oid,
+            status=orders[0].status,
+            level=level.index,
+            price=level.price,
+            size=level.size,
+        )
+        target_order = PlacedOrder(
+            oid=orders[1].oid,
+            status=orders[1].status,
+            level=level.index,
+            price=target,
+            size=level.size,
+        )
+        return EntryWithTarget(entry=entry, target=target_order)
 
     def place_or_replace_target(
         self,
@@ -223,6 +263,7 @@ class HyperliquidGateway:
         galka_price: float,
         existing_oid: int | None = None,
     ) -> PlacedOrder:
+        """Fallback protection if exchange-native child TP coverage is ever missing."""
         coin = self._coin(coin)
         quantity = round_size_down(abs(quantity), self.sz_decimals(coin))
         target = round_perp_price(galka_price, self.sz_decimals(coin))
@@ -246,7 +287,7 @@ class HyperliquidGateway:
                 order_type,
                 reduce_only=True,
             )
-        rows = self._parse_order_response(response, None)
+        rows = self._parse_order_response(response, [None])
         if len(rows) != 1:
             raise GatewayError("Unexpected target-order response")
         return rows[0]
@@ -265,7 +306,7 @@ class HyperliquidGateway:
     def _parse_order_response(
         self,
         response: dict[str, Any],
-        levels: list[LadderLevel] | None,
+        levels: list[LadderLevel | None] | None,
     ) -> list[PlacedOrder]:
         if response.get("status") != "ok":
             raise GatewayError(f"Hyperliquid rejected request: {response}")
@@ -273,10 +314,12 @@ class HyperliquidGateway:
         if not isinstance(statuses, list):
             raise GatewayError(f"Unexpected Hyperliquid response: {response}")
         output: list[PlacedOrder] = []
+        errors: list[str] = []
         for index, status in enumerate(statuses):
             level = levels[index] if levels and index < len(levels) else None
             if "error" in status:
-                raise GatewayError(str(status["error"]))
+                errors.append(str(status["error"]))
+                continue
             if "resting" in status:
                 oid = int(status["resting"]["oid"])
                 state = "resting"
@@ -284,7 +327,8 @@ class HyperliquidGateway:
                 oid = int(status["filled"].get("oid") or 0)
                 state = "filled"
             else:
-                raise GatewayError(f"Unknown order status: {status}")
+                errors.append(f"Unknown order status: {status}")
+                continue
             output.append(
                 PlacedOrder(
                     oid=oid,
@@ -294,6 +338,8 @@ class HyperliquidGateway:
                     size=level.size if level else None,
                 )
             )
+        if errors:
+            raise GatewayError("; ".join(errors))
         if levels is not None and len(output) != len(levels):
             raise GatewayError("Hyperliquid returned an incomplete order-status list")
         return output
