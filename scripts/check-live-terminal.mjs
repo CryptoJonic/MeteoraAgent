@@ -26,7 +26,7 @@ const checks = [
   ['explicit real confirmation', js.includes('PLACE_REAL_ORDERS')],
   ['double-confirmed emergency', js.includes('EMERGENCY_CLOSE_REAL_POSITION')],
   ['no browser secret', !/HL_API_SECRET_KEY|api_secret_key|PASTE_API_WALLET_PRIVATE_KEY/.test(html + css + js)],
-  ['private Termux config', setup.includes('chmod 600') && setup.includes('~/.config')],
+  ['private Termux config', setup.includes('chmod 600') && setup.includes('$HOME/.config') && setup.includes('galka-live.env')],
   ['live launcher', launcher.includes('terminal/live.html') && launcher.includes('127.0.0.1')],
   ['mobile layout', css.includes('.tradebar') && css.includes('100dvh')],
 ];
