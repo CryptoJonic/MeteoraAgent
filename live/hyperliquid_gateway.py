@@ -38,6 +38,37 @@ class GatewayError(RuntimeError):
     pass
 
 
+def _parse_user_abstraction(value: Any) -> str:
+    """Normalize Hyperliquid's userAbstraction response across API versions."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        for key in ("abstraction", "mode", "type"):
+            candidate = value.get(key)
+            if isinstance(candidate, str):
+                return candidate
+    return "default"
+
+
+def _unified_usdc_values(spot_state: dict[str, Any]) -> tuple[float, float]:
+    """Return unified-account USDC equity and free amount from spot balances.
+
+    Hyperliquid keeps collateral on the spot side for Unified Account. The
+    regular perps clearinghouse state therefore reports accountValue=0 and
+    withdrawable=0 even though the collateral is valid for perps trading.
+    """
+    account_value = 0.0
+    available = 0.0
+    for row in spot_state.get("balances", []):
+        if str(row.get("coin") or "").upper() != "USDC":
+            continue
+        total = float(row.get("total") or 0)
+        hold = float(row.get("hold") or 0)
+        account_value += total
+        available += max(0.0, total - hold)
+    return account_value, available
+
+
 @dataclass(frozen=True)
 class PlacedOrder:
     oid: int
@@ -94,6 +125,19 @@ class HyperliquidGateway:
         coin = self._coin(coin)
         return int(self._universe[coin].get("maxLeverage", 1))
 
+    def user_abstraction(self) -> str:
+        try:
+            response = self.info.post(
+                "/info",
+                {"type": "userAbstraction", "user": self.config.account_address},
+            )
+        except Exception:
+            # Fail closed. A standard account still reads correctly from
+            # clearinghouseState; a unified account remains at zero and LIVE
+            # placement is blocked until the mode can be verified.
+            return "default"
+        return _parse_user_abstraction(response)
+
     def account_state(self) -> dict[str, Any]:
         state = self.info.user_state(self.config.account_address)
         positions: dict[str, dict[str, Any]] = {}
@@ -112,13 +156,23 @@ class HyperliquidGateway:
                 "unrealizedPnl": float(position.get("unrealizedPnl") or 0),
                 "leverage": position.get("leverage") or {},
             }
+
         summary = state.get("marginSummary") or {}
+        account_value = float(summary.get("accountValue") or 0)
+        withdrawable = float(state.get("withdrawable") or 0)
+        account_mode = self.user_abstraction()
+
+        if account_mode.lower() == "unifiedaccount":
+            spot_state = self.info.spot_user_state(self.config.account_address)
+            account_value, withdrawable = _unified_usdc_values(spot_state)
+
         return {
-            "accountValue": float(summary.get("accountValue") or 0),
+            "accountValue": account_value,
             "totalMarginUsed": float(summary.get("totalMarginUsed") or 0),
             "totalNotionalPosition": float(summary.get("totalNtlPos") or 0),
-            "withdrawable": float(state.get("withdrawable") or 0),
+            "withdrawable": withdrawable,
             "positions": positions,
+            "accountMode": account_mode,
         }
 
     def open_orders(self, coin: str | None = None) -> list[dict[str, Any]]:
