@@ -58,6 +58,7 @@ const runtime = {
   candleBusy: false,
   statusBusy: false,
   candlesLoaded: false,
+  lastCandleTime: null,
   toastTimer: null,
   lineSignature: '',
   detailsSignature: '',
@@ -173,33 +174,62 @@ function autoCenter() {
 
 function candleRow(row) {
   return {
-    time: row.time,
-    open: row.open,
-    high: row.high,
-    low: row.low,
-    close: row.close,
+    time: Number(row.time),
+    open: Number(row.open),
+    high: Number(row.high),
+    low: Number(row.low),
+    close: Number(row.close),
   };
+}
+
+function normalizeCandles(rows) {
+  const unique = new Map();
+  for (const source of rows || []) {
+    const row = candleRow(source);
+    if (
+      !Number.isFinite(row.time) ||
+      !Number.isFinite(row.open) ||
+      !Number.isFinite(row.high) ||
+      !Number.isFinite(row.low) ||
+      !Number.isFinite(row.close)
+    ) {
+      continue;
+    }
+    unique.set(row.time, row);
+  }
+  return [...unique.values()].sort((left, right) => left.time - right.time);
 }
 
 async function loadCandles({ initial = false } = {}) {
   if (runtime.candleBusy) return;
   runtime.candleBusy = true;
   const fullReload = initial || !runtime.candlesLoaded;
+  const requestedCoin = runtime.coin;
+  const requestedInterval = runtime.interval;
   if (fullReload) els.loading.classList.remove('hidden');
 
   try {
     const limit = fullReload ? 600 : 3;
     const rows = await api(
-      `/api/live/candles?coin=${encodeURIComponent(runtime.coin)}` +
-      `&interval=${encodeURIComponent(runtime.interval)}&limit=${limit}`,
+      `/api/live/candles?coin=${encodeURIComponent(requestedCoin)}` +
+      `&interval=${encodeURIComponent(requestedInterval)}&limit=${limit}`,
     );
 
+    if (requestedCoin !== runtime.coin || requestedInterval !== runtime.interval) return;
+    const candles = normalizeCandles(rows);
+    if (!candles.length) return;
+
     if (fullReload) {
-      runtime.series.setData(rows.map(candleRow));
+      runtime.series.setData(candles);
       runtime.candlesLoaded = true;
+      runtime.lastCandleTime = candles.at(-1).time;
       autoCenter();
     } else {
-      for (const row of rows) runtime.series.update(candleRow(row));
+      for (const row of candles) {
+        if (runtime.lastCandleTime != null && row.time < runtime.lastCandleTime) continue;
+        runtime.series.update(row);
+        runtime.lastCandleTime = Math.max(runtime.lastCandleTime ?? row.time, row.time);
+      }
     }
   } catch (error) {
     toast(error.message, 'error');
@@ -532,6 +562,7 @@ async function emergencyClose() {
 els.symbol.onchange = async () => {
   runtime.coin = els.symbol.value;
   runtime.candlesLoaded = false;
+  runtime.lastCandleTime = null;
   runtime.lineSignature = '';
   runtime.detailsSignature = '';
   els.input.value = '';
@@ -542,6 +573,7 @@ els.symbol.onchange = async () => {
 els.interval.onchange = async () => {
   runtime.interval = els.interval.value;
   runtime.candlesLoaded = false;
+  runtime.lastCandleTime = null;
   await loadCandles({ initial: true });
   renderStatus();
 };
