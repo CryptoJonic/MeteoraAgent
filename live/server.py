@@ -8,14 +8,15 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from .config import ConfigError, load_config
-from .engine import GalkaLiveEngine, LiveEngineError
-from .hyperliquid_gateway import GatewayError, HyperliquidGateway
+from .engine import LiveEngineError
+from .hyperliquid_compat import CompatibleGalkaLiveEngine, CompatibleHyperliquidGateway
+from .hyperliquid_gateway import GatewayError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class GalkaRequestHandler(SimpleHTTPRequestHandler):
-    engine: GalkaLiveEngine
+    engine: CompatibleGalkaLiveEngine
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(REPO_ROOT), **kwargs)
@@ -111,8 +112,8 @@ class GalkaRequestHandler(SimpleHTTPRequestHandler):
 def main() -> int:
     try:
         config = load_config()
-        gateway = HyperliquidGateway(config)
-        engine = GalkaLiveEngine(config, gateway)
+        gateway = CompatibleHyperliquidGateway(config)
+        engine = CompatibleGalkaLiveEngine(config, gateway)
     except (ConfigError, RuntimeError, GatewayError) as exc:
         print(f"Galka LIVE не запущена: {exc}", file=sys.stderr, flush=True)
         return 2
