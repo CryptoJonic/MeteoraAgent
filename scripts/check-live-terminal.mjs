@@ -1,33 +1,38 @@
 import fs from 'node:fs';
-import vm from 'node:vm';
+import { execFileSync } from 'node:child_process';
 
 const html = fs.readFileSync('terminal/live.html', 'utf8');
 const css = fs.readFileSync('terminal/live.css', 'utf8');
 const js = fs.readFileSync('terminal/live.js', 'utf8');
-const launcher = fs.readFileSync('scripts/start-termux.sh', 'utf8');
+const setup = fs.readFileSync('scripts/setup-galka-live.sh', 'utf8');
+const launcher = fs.readFileSync('scripts/start-galka-live.sh', 'utf8');
+const ladder = fs.readFileSync('live/live_ladder.py', 'utf8');
+const gateway = fs.readFileSync('live/hyperliquid_gateway.py', 'utf8');
 
 const checks = [
-  ['paper badge', html.includes('PAPER')],
-  ['BTC selector', html.includes('data-symbol="BTCUSDT"')],
-  ['ETH selector', html.includes('data-symbol="ETHUSDT"')],
-  ['SOL selector', html.includes('data-symbol="SOLUSDT"')],
-  ['zoom controls', html.includes('id="zoomIn"') && html.includes('id="zoomOut"')],
-  ['trend tool', html.includes('data-tool="trend"')],
-  ['horizontal tool', html.includes('data-tool="horizontal"')],
-  ['rectangle tool', html.includes('data-tool="rect"')],
-  ['long only', js.includes("side:'long'") && !js.includes("side:'short'" )],
-  ['six ladder depths', js.includes('0.25,0.70,1.25,1.90,2.65,3.50')],
-  ['ladder weights total 100%', js.includes('0.05,0.09,0.14,0.18,0.24,0.30')],
-  ['Binance current websocket', js.includes('fstream.binance.com/public/stream')],
-  ['Binance REST bootstrap', js.includes('/fapi/v1/klines')],
-  ['persistent paper state', js.includes("localStorage.setItem('galka-live-paper-v1'")],
-  ['no exchange keys', !js.match(/api[_-]?key|secretKey|signature/i)],
-  ['Termux opens current terminal', /\/terminal\/(?:pro|live)\.html\?v=/.test(launcher)],
-  ['mobile canvas overlay', html.includes('id="drawingCanvas"') && css.includes('touch-action:none')],
+  ['Hyperliquid title', html.includes('Hyperliquid LIVE') || html.includes('HYPERLIQUID')],
+  ['BTC selector', html.includes('<option>BTC</option>')],
+  ['ETH selector', html.includes('<option>ETH</option>')],
+  ['SOL selector', html.includes('<option>SOL</option>')],
+  ['manual GALKA input', html.includes('id="galkaInput"')],
+  ['real preview modal', html.includes('id="previewModal"') && html.includes('РЕАЛЬНЫЕ ОРДЕРА')],
+  ['eight live depths', ladder.includes('0.15, 0.30, 0.45, 0.60, 0.90, 1.20, 1.50, 2.00')],
+  ['small-account minimum adjustment', ladder.includes('_allocate_targets') && ladder.includes('MIN_ORDER_NOTIONAL')],
+  ['ALO entries', gateway.includes('"tif": "Alo"')],
+  ['exchange-native TP grouping', gateway.includes('grouping="normalTpsl"')],
+  ['non-market TP', gateway.includes('"isMarket": False') && gateway.includes('"tpsl": "tp"')],
+  ['reduce-only target', gateway.includes('"reduce_only": True')],
+  ['local API', js.includes('/api/live/preview') && js.includes('/api/live/campaign')],
+  ['explicit real confirmation', js.includes('PLACE_REAL_ORDERS')],
+  ['double-confirmed emergency', js.includes('EMERGENCY_CLOSE_REAL_POSITION')],
+  ['no browser secret', !/HL_API_SECRET_KEY|api_secret_key|PASTE_API_WALLET_PRIVATE_KEY/.test(html + css + js)],
+  ['private Termux config', setup.includes('chmod 600') && setup.includes('$HOME/.config') && setup.includes('galka-live.env')],
+  ['live launcher', launcher.includes('terminal/live.html') && launcher.includes('127.0.0.1')],
+  ['mobile layout', css.includes('.tradebar') && css.includes('100dvh')],
 ];
 
 for (const [name, ok] of checks) {
   if (!ok) throw new Error(`Live terminal check failed: ${name}`);
 }
-new vm.Script(js, { filename: 'terminal/live.js' });
-console.log(`Live paper terminal: ${checks.length} checks passed`);
+execFileSync(process.execPath, ['--check', 'terminal/live.js'], { stdio: 'inherit' });
+console.log(`Hyperliquid live terminal: ${checks.length} checks passed`);
