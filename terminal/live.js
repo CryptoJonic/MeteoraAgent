@@ -1,42 +1,581 @@
-const $=id=>document.getElementById(id);
-const els={symbol:$('symbolSelect'),interval:$('intervalSelect'),ticker:$('ticker'),liveBadge:$('liveBadge'),chart:$('chart'),watermark:$('watermark'),loading:$('loading'),toast:$('toast'),details:$('detailsButton'),status:$('campaignStatus'),input:$('galkaInput'),preview:$('previewButton'),backdrop:$('backdrop'),drawer:$('drawer'),closeDrawer:$('closeDrawer'),drawerAccount:$('drawerAccount'),accountValue:$('accountValue'),withdrawable:$('withdrawable'),marginUsed:$('marginUsed'),riskMode:$('riskMode'),campaignDetails:$('campaignDetails'),cancel:$('cancelCampaign'),emergency:$('emergencyClose'),notifications:$('enableNotifications'),events:$('events'),modal:$('previewModal'),closePreview:$('closePreview'),previewCancel:$('previewCancel'),confirm:$('confirmLive'),previewGalka:$('previewGalka'),previewNotional:$('previewNotional'),previewMargin:$('previewMargin'),previewLeverage:$('previewLeverage'),previewLevels:$('previewLevels')};
-const ACTIVE=new Set(['placing','waiting','open','closing']);
-const COLORS={green:'#16c784',red:'#ef5350',orange:'#ff9800',blue:'#3d8bfd',gray:'#7c8797',cyan:'#26c6da'};
-const runtime={coin:'BTC',interval:'15m',chart:null,series:null,lines:[],status:null,pendingPreview:null,lastEventKey:null,candleBusy:false,statusBusy:false,toastTimer:null};
+const $ = (id) => document.getElementById(id);
 
-function money(value){return '$'+Number(value||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function price(value,coin=runtime.coin){if(value==null||!Number.isFinite(Number(value)))return'—';return Number(value).toFixed(coin==='SOL'?4:2);}
-function signedMoney(value){const n=Number(value||0);return(n>=0?'+':'')+money(n);}
-function esc(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-function toast(message,type=''){els.toast.textContent=message;els.toast.className='toast '+type;clearTimeout(runtime.toastTimer);runtime.toastTimer=setTimeout(()=>els.toast.classList.add('hidden'),4500);}
-async function api(path,{method='GET',body}={}){const response=await fetch(path,{method,headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined,cache:'no-store'});let payload;try{payload=await response.json();}catch(_){throw new Error('LIVE-сервер вернул некорректный ответ');}if(!response.ok||payload?.ok===false)throw new Error(payload?.error||`HTTP ${response.status}`);return payload.data;}
+const els = {
+  symbol: $('symbolSelect'),
+  interval: $('intervalSelect'),
+  ticker: $('ticker'),
+  liveBadge: $('liveBadge'),
+  chart: $('chart'),
+  watermark: $('watermark'),
+  loading: $('loading'),
+  toast: $('toast'),
+  details: $('detailsButton'),
+  status: $('campaignStatus'),
+  input: $('galkaInput'),
+  preview: $('previewButton'),
+  backdrop: $('backdrop'),
+  drawer: $('drawer'),
+  closeDrawer: $('closeDrawer'),
+  drawerAccount: $('drawerAccount'),
+  accountValue: $('accountValue'),
+  withdrawable: $('withdrawable'),
+  marginUsed: $('marginUsed'),
+  riskMode: $('riskMode'),
+  campaignDetails: $('campaignDetails'),
+  cancel: $('cancelCampaign'),
+  emergency: $('emergencyClose'),
+  notifications: $('enableNotifications'),
+  events: $('events'),
+  modal: $('previewModal'),
+  closePreview: $('closePreview'),
+  previewCancel: $('previewCancel'),
+  confirm: $('confirmLive'),
+  previewGalka: $('previewGalka'),
+  previewNotional: $('previewNotional'),
+  previewMargin: $('previewMargin'),
+  previewLeverage: $('previewLeverage'),
+  previewLevels: $('previewLevels'),
+};
 
-function initChart(){runtime.chart=LightweightCharts.createChart(els.chart,{autoSize:true,layout:{background:{type:'solid',color:'#0b0f15'},textColor:'#9aa4b2'},grid:{vertLines:{visible:false},horzLines:{visible:false}},crosshair:{mode:LightweightCharts.CrosshairMode.Normal},rightPriceScale:{borderColor:'#293241',autoScale:true,scaleMargins:{top:.08,bottom:.12}},timeScale:{borderColor:'#293241',timeVisible:true,secondsVisible:false,rightOffset:8,barSpacing:7},handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:true},handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}});runtime.series=runtime.chart.addSeries(LightweightCharts.CandlestickSeries,{upColor:COLORS.green,downColor:COLORS.red,borderVisible:false,wickUpColor:COLORS.green,wickDownColor:COLORS.red,priceLineVisible:false,lastValueVisible:true});}
-function autoCenter(fit=false){const scale=runtime.chart.priceScale('right');scale.applyOptions({autoScale:true});if(fit)runtime.chart.timeScale().fitContent();else runtime.chart.timeScale().scrollToRealTime();requestAnimationFrame(()=>scale.applyOptions({autoScale:true}));}
-async function loadCandles(fit=false){if(runtime.candleBusy)return;runtime.candleBusy=true;els.loading.classList.remove('hidden');try{const rows=await api(`/api/live/candles?coin=${encodeURIComponent(runtime.coin)}&interval=${encodeURIComponent(runtime.interval)}&limit=1000`);runtime.series.setData(rows.map(row=>({time:row.time,open:row.open,high:row.high,low:row.low,close:row.close})));autoCenter(fit);renderLines();}catch(error){toast(error.message,'error');}finally{runtime.candleBusy=false;els.loading.classList.add('hidden');}}
+const ACTIVE = new Set(['placing', 'waiting', 'open', 'closing']);
+const COLORS = {
+  green: '#16c784',
+  red: '#ef5350',
+  orange: '#ff9800',
+  gray: '#7c8797',
+  cyan: '#26c6da',
+};
 
-function currentCampaign(){const campaign=runtime.status?.campaigns?.[runtime.coin];return campaign&&ACTIVE.has(campaign.status)?campaign:null;}
-function currentPosition(){return runtime.status?.accountState?.positions?.[runtime.coin]||null;}
-function clearLines(){for(const line of runtime.lines){try{runtime.series.removePriceLine(line);}catch(_){}}runtime.lines=[];}
-function addLine(value,color,title,style=LightweightCharts.LineStyle.Dashed,width=1){if(!(Number(value)>0))return;runtime.lines.push(runtime.series.createPriceLine({price:Number(value),color,lineWidth:width,lineStyle:style,axisLabelVisible:true,title}));}
-function renderLines(){if(!runtime.series)return;clearLines();const campaign=currentCampaign();if(!campaign)return;addLine(campaign.galkaPrice,COLORS.orange,'GALKA',LightweightCharts.LineStyle.Solid,2);for(const level of campaign.levels||[]){const filled=['filled','partial'].includes(level.status);addLine(level.price,filled?COLORS.green:COLORS.gray,`L${level.index}`,LightweightCharts.LineStyle.Dashed,1);}const position=currentPosition();if(position?.entryPrice)addLine(position.entryPrice,COLORS.cyan,'AVG',LightweightCharts.LineStyle.Solid,2);}
+const runtime = {
+  coin: 'BTC',
+  interval: '15m',
+  chart: null,
+  series: null,
+  lines: [],
+  status: null,
+  pendingPreview: null,
+  lastEventKey: null,
+  candleBusy: false,
+  statusBusy: false,
+  candlesLoaded: false,
+  toastTimer: null,
+  lineSignature: '',
+  detailsSignature: '',
+  eventsSignature: '',
+};
 
-function renderStatus(){const status=runtime.status;if(!status)return;const mid=status.mids?.[runtime.coin];els.ticker.textContent=price(mid);els.watermark.textContent=`${runtime.coin} · ${runtime.interval} · HYPERLIQUID`;els.liveBadge.textContent=status.liveEnabled?'LIVE ON':'LIVE OFF';els.liveBadge.className='live-badge '+(status.liveEnabled?'on':'off');els.drawerAccount.textContent=`${status.network} · ${status.account}`;const account=status.accountState||{};els.accountValue.textContent=money(account.accountValue);els.withdrawable.textContent=money(account.withdrawable);els.marginUsed.textContent=money(account.totalMarginUsed);els.riskMode.textContent=`${status.leverage}x ${status.isolated?'isolated':'cross'}`;
- const campaign=currentCampaign(),position=currentPosition();if(!campaign){els.status.textContent=`${runtime.coin} · нет GALKA`;els.status.className='campaign-status idle';els.preview.disabled=false;els.input.disabled=false;els.preview.textContent='Проверить';}else{const filled=(campaign.levels||[]).filter(level=>['filled','partial'].includes(level.status)).length;const cycles=Number(campaign.l1Cycles||0);const cycleText=cycles?` · L1×${cycles} ${signedMoney(campaign.l1RealizedPnl)}`:'';if(position&&Math.abs(position.size)>0){els.status.textContent=`${runtime.coin} · ${filled}/8 · ${signedMoney(position.unrealizedPnl)}${cycleText}`;els.status.className='campaign-status open';}else{els.status.textContent=`${runtime.coin} · ждём ${filled}/8${cycleText}`;els.status.className='campaign-status waiting';}els.preview.disabled=true;els.input.disabled=true;els.input.value=price(campaign.galkaPrice);els.preview.textContent='Активна';}
- renderCampaignDetails(campaign,position);renderEvents();renderLines();}
-function renderCampaignDetails(campaign,position){if(!campaign){els.campaignDetails.innerHTML='<div class="campaign-card"><small>Нет активной GALKA для выбранной монеты.</small></div>';els.cancel.disabled=true;els.emergency.disabled=true;return;}const levels=(campaign.levels||[]).map(level=>`<div class="level-row"><span><b>L${level.index}</b> <small>−${Number(level.depth_pct).toFixed(2)}%</small></span><span><b>${price(level.price)}</b> <small>${money(level.notional)} · ${esc(level.status)}</small></span></div>`).join('');els.campaignDetails.innerHTML=`<div class="campaign-card"><div class="row"><span><small>GALKA</small><b>${price(campaign.galkaPrice)}</b></span><span><small>Статус</small><b>${esc(campaign.status)}</b></span></div><div class="row"><span><small>L1 циклы</small><b>${Number(campaign.l1Cycles||0)}</b></span><span><small>L1 прибыль</small><b>${signedMoney(campaign.l1RealizedPnl)}</b></span></div>${position?`<div class="row"><span><small>Позиция</small><b>${position.size}</b></span><span><small>Средняя</small><b>${price(position.entryPrice)}</b></span></div>`:''}</div>${levels}`;els.cancel.disabled=!!(position&&Math.abs(position.size)>0);els.emergency.disabled=!(position&&Math.abs(position.size)>0);}
-function renderEvents(){const events=(runtime.status?.events||[]).slice().reverse().slice(0,40);els.events.innerHTML=events.length?events.map(event=>`<div class="event"><b>${esc(event.message)}</b><small>${new Date(event.time).toLocaleString('ru-RU')}</small></div>`).join(''):'<div class="event"><small>Событий пока нет.</small></div>';const newest=events[0];if(!newest)return;const key=newest.time+'|'+newest.message;if(runtime.lastEventKey&&runtime.lastEventKey!==key){toast(newest.message,newest.type==='error'||newest.type==='risk'?'error':'ok');if(Notification.permission==='granted')new Notification('Galka LIVE',{body:newest.message});}runtime.lastEventKey=key;}
+function money(value) {
+  return '$' + Number(value || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
-async function refreshStatus(){if(runtime.statusBusy)return;runtime.statusBusy=true;try{runtime.status=await api('/api/live/status');renderStatus();}catch(error){els.liveBadge.textContent='SERVER OFF';els.liveBadge.className='live-badge off';toast(error.message,'error');}finally{runtime.statusBusy=false;}}
-function openDrawer(){els.backdrop.classList.remove('hidden');els.drawer.classList.remove('hidden');}
-function closeDrawer(){els.backdrop.classList.add('hidden');els.drawer.classList.add('hidden');}
-function openPreview(){els.modal.classList.remove('hidden');}
-function closePreview(){els.modal.classList.add('hidden');runtime.pendingPreview=null;}
-async function previewGalka(){const galkaPrice=Number(els.input.value);if(!(galkaPrice>0))return toast('Введи цену GALKA','error');els.preview.disabled=true;els.preview.textContent='Проверка…';try{const data=await api('/api/live/preview',{method:'POST',body:{coin:runtime.coin,galkaPrice}});runtime.pendingPreview=data;els.previewGalka.textContent=price(data.galkaPrice);els.previewNotional.textContent=money(data.actualNotional);els.previewMargin.textContent=money(data.requiredMargin);els.previewLeverage.textContent=`${data.leverage}x isolated`;els.previewLevels.innerHTML=data.levels.map(level=>`<div class="level-row"><span><b>L${level.index}</b> <small>−${Number(level.depth_pct).toFixed(2)}%</small></span><span><b>${price(level.price)}</b> <small>${money(level.notional)}</small></span></div>`).join('');els.confirm.disabled=!data.liveEnabled;openPreview();}catch(error){toast(error.message,'error');}finally{els.preview.disabled=!!currentCampaign();els.preview.textContent=currentCampaign()?'Активна':'Проверить';}}
-async function confirmLive(){const data=runtime.pendingPreview;if(!data)return;els.confirm.disabled=true;els.confirm.textContent='Отправка…';try{await api('/api/live/campaign',{method:'POST',body:{coin:data.coin,galkaPrice:data.galkaPrice,confirmation:'PLACE_REAL_ORDERS'}});closePreview();toast('Реальные лимитки выставлены','ok');await refreshStatus();await loadCandles(false);}catch(error){toast(error.message,'error');}finally{els.confirm.disabled=false;els.confirm.textContent='Выставить реальные лимитки';}}
-async function cancelCampaign(){if(!confirm(`Отменить все ожидающие ордера ${runtime.coin}?`))return;try{await api('/api/live/cancel',{method:'POST',body:{coin:runtime.coin}});toast('GALKA отменена','ok');await refreshStatus();}catch(error){toast(error.message,'error');}}
-async function emergencyClose(){if(!confirm(`АВАРИЙНО закрыть реальную позицию ${runtime.coin} по рынку и отменить ордера?`))return;if(!confirm('Это рыночное закрытие с возможным проскальзыванием. Подтвердить ещё раз?'))return;try{await api('/api/live/emergency',{method:'POST',body:{coin:runtime.coin,confirmation:'EMERGENCY_CLOSE_REAL_POSITION'}});toast('Аварийное закрытие отправлено','error');await refreshStatus();}catch(error){toast(error.message,'error');}}
+function price(value, coin = runtime.coin) {
+  if (value == null || !Number.isFinite(Number(value))) return '—';
+  return Number(value).toFixed(coin === 'SOL' ? 4 : 2);
+}
 
-els.symbol.onchange=async()=>{runtime.coin=els.symbol.value;els.input.value='';await loadCandles(true);renderStatus();};els.interval.onchange=async()=>{runtime.interval=els.interval.value;await loadCandles(true);renderStatus();};els.preview.onclick=previewGalka;els.input.onkeydown=event=>{if(event.key==='Enter')previewGalka();};els.confirm.onclick=confirmLive;els.closePreview.onclick=closePreview;els.previewCancel.onclick=closePreview;els.modal.onclick=event=>{if(event.target===els.modal)closePreview();};els.details.onclick=openDrawer;els.status.onclick=openDrawer;els.liveBadge.onclick=openDrawer;els.closeDrawer.onclick=closeDrawer;els.backdrop.onclick=closeDrawer;els.cancel.onclick=cancelCampaign;els.emergency.onclick=emergencyClose;els.notifications.onclick=async()=>{if(!('Notification'in window))return toast('Браузер не поддерживает оповещения','error');const permission=await Notification.requestPermission();toast(permission==='granted'?'Оповещения включены':'Оповещения не разрешены',permission==='granted'?'ok':'error');};
+function signedMoney(value) {
+  const number = Number(value || 0);
+  return (number >= 0 ? '+' : '') + money(number);
+}
 
-initChart();await refreshStatus();await loadCandles(true);setInterval(refreshStatus,1200);setInterval(()=>loadCandles(false),5000);
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+}
+
+function toast(message, type = '') {
+  els.toast.textContent = message;
+  els.toast.className = 'toast ' + type;
+  clearTimeout(runtime.toastTimer);
+  runtime.toastTimer = setTimeout(() => els.toast.classList.add('hidden'), 4500);
+}
+
+async function api(path, { method = 'GET', body } = {}) {
+  const response = await fetch(path, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+    cache: 'no-store',
+  });
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (_) {
+    throw new Error('LIVE-сервер вернул некорректный ответ');
+  }
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(payload?.error || `HTTP ${response.status}`);
+  }
+  return payload.data;
+}
+
+function initChart() {
+  runtime.chart = LightweightCharts.createChart(els.chart, {
+    autoSize: true,
+    layout: {
+      background: { type: 'solid', color: '#0b0f15' },
+      textColor: '#9aa4b2',
+    },
+    grid: {
+      vertLines: { visible: false },
+      horzLines: { visible: false },
+    },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: {
+      borderColor: '#293241',
+      autoScale: true,
+      scaleMargins: { top: 0.08, bottom: 0.12 },
+    },
+    timeScale: {
+      borderColor: '#293241',
+      timeVisible: true,
+      secondsVisible: false,
+      rightOffset: 8,
+      barSpacing: 7,
+    },
+    handleScroll: {
+      mouseWheel: true,
+      pressedMouseMove: true,
+      horzTouchDrag: true,
+      vertTouchDrag: true,
+    },
+    handleScale: {
+      axisPressedMouseMove: true,
+      mouseWheel: true,
+      pinch: true,
+    },
+  });
+
+  runtime.series = runtime.chart.addSeries(LightweightCharts.CandlestickSeries, {
+    upColor: COLORS.green,
+    downColor: COLORS.red,
+    borderVisible: false,
+    wickUpColor: COLORS.green,
+    wickDownColor: COLORS.red,
+    priceLineVisible: false,
+    lastValueVisible: true,
+  });
+}
+
+function autoCenter() {
+  runtime.chart.priceScale('right').applyOptions({ autoScale: true });
+  runtime.chart.timeScale().fitContent();
+  requestAnimationFrame(() => runtime.chart.priceScale('right').applyOptions({ autoScale: true }));
+}
+
+function candleRow(row) {
+  return {
+    time: row.time,
+    open: row.open,
+    high: row.high,
+    low: row.low,
+    close: row.close,
+  };
+}
+
+async function loadCandles({ initial = false } = {}) {
+  if (runtime.candleBusy) return;
+  runtime.candleBusy = true;
+  const fullReload = initial || !runtime.candlesLoaded;
+  if (fullReload) els.loading.classList.remove('hidden');
+
+  try {
+    const limit = fullReload ? 600 : 3;
+    const rows = await api(
+      `/api/live/candles?coin=${encodeURIComponent(runtime.coin)}` +
+      `&interval=${encodeURIComponent(runtime.interval)}&limit=${limit}`,
+    );
+
+    if (fullReload) {
+      runtime.series.setData(rows.map(candleRow));
+      runtime.candlesLoaded = true;
+      autoCenter();
+    } else {
+      for (const row of rows) runtime.series.update(candleRow(row));
+    }
+  } catch (error) {
+    toast(error.message, 'error');
+  } finally {
+    runtime.candleBusy = false;
+    if (fullReload) els.loading.classList.add('hidden');
+  }
+}
+
+function currentCampaign() {
+  const campaign = runtime.status?.campaigns?.[runtime.coin];
+  return campaign && ACTIVE.has(campaign.status) ? campaign : null;
+}
+
+function currentPosition() {
+  return runtime.status?.accountState?.positions?.[runtime.coin] || null;
+}
+
+function clearLines() {
+  for (const line of runtime.lines) {
+    try {
+      runtime.series.removePriceLine(line);
+    } catch (_) {
+      // The chart may already be rebuilding after a symbol change.
+    }
+  }
+  runtime.lines = [];
+}
+
+function addLine(value, color, title, style = LightweightCharts.LineStyle.Dashed, width = 1) {
+  if (!(Number(value) > 0)) return;
+  runtime.lines.push(runtime.series.createPriceLine({
+    price: Number(value),
+    color,
+    lineWidth: width,
+    lineStyle: style,
+    axisLabelVisible: true,
+    title,
+  }));
+}
+
+function renderLines(campaign, position) {
+  const signature = JSON.stringify({
+    id: campaign?.id || null,
+    galka: campaign?.galkaPrice || null,
+    levels: campaign?.levels?.map((level) => [level.index, level.price, level.status]) || [],
+    entry: position?.entryPrice || null,
+  });
+  if (signature === runtime.lineSignature) return;
+  runtime.lineSignature = signature;
+
+  clearLines();
+  if (!campaign) return;
+
+  addLine(campaign.galkaPrice, COLORS.orange, 'GALKA', LightweightCharts.LineStyle.Solid, 2);
+  for (const level of campaign.levels || []) {
+    const filled = ['filled', 'partial'].includes(level.status);
+    addLine(
+      level.price,
+      filled ? COLORS.green : COLORS.gray,
+      `L${level.index}`,
+      LightweightCharts.LineStyle.Dashed,
+      1,
+    );
+  }
+  if (position?.entryPrice) {
+    addLine(position.entryPrice, COLORS.cyan, 'AVG', LightweightCharts.LineStyle.Solid, 2);
+  }
+}
+
+function renderCampaignDetails(campaign, position) {
+  const signature = JSON.stringify({
+    campaign: campaign ? {
+      id: campaign.id,
+      status: campaign.status,
+      galkaPrice: campaign.galkaPrice,
+      l1Cycles: campaign.l1Cycles,
+      l1RealizedPnl: campaign.l1RealizedPnl,
+      levels: campaign.levels?.map((level) => [
+        level.index,
+        level.status,
+        level.filledSize,
+        level.notional,
+      ]),
+    } : null,
+    position: position ? [position.size, position.entryPrice, position.unrealizedPnl] : null,
+  });
+  if (signature === runtime.detailsSignature) return;
+  runtime.detailsSignature = signature;
+
+  if (!campaign) {
+    els.campaignDetails.innerHTML =
+      '<div class="campaign-card"><small>Нет активной GALKA для выбранной монеты.</small></div>';
+    els.cancel.disabled = true;
+    els.emergency.disabled = true;
+    return;
+  }
+
+  const levels = (campaign.levels || []).map((level) => (
+    `<div class="level-row"><span><b>L${level.index}</b> ` +
+    `<small>−${Number(level.depth_pct).toFixed(2)}%</small></span>` +
+    `<span><b>${price(level.price)}</b> ` +
+    `<small>${money(level.notional)} · ${esc(level.status)}</small></span></div>`
+  )).join('');
+
+  els.campaignDetails.innerHTML =
+    `<div class="campaign-card">` +
+    `<div class="row"><span><small>GALKA</small><b>${price(campaign.galkaPrice)}</b></span>` +
+    `<span><small>Статус</small><b>${esc(campaign.status)}</b></span></div>` +
+    `<div class="row"><span><small>L1 циклы</small><b>${Number(campaign.l1Cycles || 0)}</b></span>` +
+    `<span><small>L1 прибыль</small><b>${signedMoney(campaign.l1RealizedPnl)}</b></span></div>` +
+    (position ? `<div class="row"><span><small>Позиция</small><b>${position.size}</b></span>` +
+      `<span><small>Средняя</small><b>${price(position.entryPrice)}</b></span></div>` : '') +
+    `</div>${levels}`;
+
+  els.cancel.disabled = !!(position && Math.abs(position.size) > 0);
+  els.emergency.disabled = !(position && Math.abs(position.size) > 0);
+}
+
+function renderEvents() {
+  const events = (runtime.status?.events || []).slice().reverse().slice(0, 40);
+  const signature = JSON.stringify(events.map((event) => [event.time, event.type, event.message]));
+  if (signature === runtime.eventsSignature) return;
+  runtime.eventsSignature = signature;
+
+  els.events.innerHTML = events.length
+    ? events.map((event) => (
+      `<div class="event"><b>${esc(event.message)}</b>` +
+      `<small>${new Date(event.time).toLocaleString('ru-RU')}</small></div>`
+    )).join('')
+    : '<div class="event"><small>Событий пока нет.</small></div>';
+
+  const newest = events[0];
+  if (!newest) return;
+  const key = newest.time + '|' + newest.message;
+  if (runtime.lastEventKey && runtime.lastEventKey !== key) {
+    toast(newest.message, newest.type === 'error' || newest.type === 'risk' ? 'error' : 'ok');
+    if (Notification.permission === 'granted') {
+      new Notification('Galka LIVE', { body: newest.message });
+    }
+  }
+  runtime.lastEventKey = key;
+}
+
+function renderStatus() {
+  const status = runtime.status;
+  if (!status) return;
+
+  const mid = status.mids?.[runtime.coin];
+  els.ticker.textContent = price(mid);
+  els.watermark.textContent = `${runtime.coin} · ${runtime.interval} · HYPERLIQUID`;
+  els.liveBadge.textContent = status.liveEnabled ? 'LIVE ON' : 'LIVE OFF';
+  els.liveBadge.className = 'live-badge ' + (status.liveEnabled ? 'on' : 'off');
+  els.drawerAccount.textContent = `${status.network} · ${status.account}`;
+
+  const account = status.accountState || {};
+  els.accountValue.textContent = money(account.accountValue);
+  els.withdrawable.textContent = money(account.withdrawable);
+  els.marginUsed.textContent = money(account.totalMarginUsed);
+  els.riskMode.textContent = `${status.leverage}x ${status.isolated ? 'isolated' : 'cross'}`;
+
+  const campaign = currentCampaign();
+  const position = currentPosition();
+  if (!campaign) {
+    els.status.textContent = `${runtime.coin} · нет GALKA`;
+    els.status.className = 'campaign-status idle';
+    els.preview.disabled = false;
+    els.input.disabled = false;
+    els.preview.textContent = 'Проверить';
+  } else {
+    const filled = (campaign.levels || []).filter((level) =>
+      ['filled', 'partial'].includes(level.status)).length;
+    const cycles = Number(campaign.l1Cycles || 0);
+    const cycleText = cycles
+      ? ` · L1×${cycles} ${signedMoney(campaign.l1RealizedPnl)}`
+      : '';
+
+    if (position && Math.abs(position.size) > 0) {
+      els.status.textContent =
+        `${runtime.coin} · ${filled}/8 · ${signedMoney(position.unrealizedPnl)}${cycleText}`;
+      els.status.className = 'campaign-status open';
+    } else {
+      els.status.textContent = `${runtime.coin} · ждём ${filled}/8${cycleText}`;
+      els.status.className = 'campaign-status waiting';
+    }
+    els.preview.disabled = true;
+    els.input.disabled = true;
+    els.input.value = price(campaign.galkaPrice);
+    els.preview.textContent = 'Активна';
+  }
+
+  renderCampaignDetails(campaign, position);
+  renderEvents();
+  renderLines(campaign, position);
+}
+
+async function refreshStatus() {
+  if (runtime.statusBusy) return;
+  runtime.statusBusy = true;
+  try {
+    runtime.status = await api('/api/live/status');
+    renderStatus();
+  } catch (error) {
+    els.liveBadge.textContent = 'SERVER OFF';
+    els.liveBadge.className = 'live-badge off';
+    toast(error.message, 'error');
+  } finally {
+    runtime.statusBusy = false;
+  }
+}
+
+async function statusLoop() {
+  await refreshStatus();
+  const delay = currentCampaign() ? 2000 : 5000;
+  setTimeout(statusLoop, delay);
+}
+
+async function candleLoop() {
+  await loadCandles();
+  setTimeout(candleLoop, 5000);
+}
+
+function openDrawer() {
+  els.backdrop.classList.remove('hidden');
+  els.drawer.classList.remove('hidden');
+}
+
+function closeDrawer() {
+  els.backdrop.classList.add('hidden');
+  els.drawer.classList.add('hidden');
+}
+
+function openPreview() {
+  els.modal.classList.remove('hidden');
+}
+
+function closePreview() {
+  els.modal.classList.add('hidden');
+  runtime.pendingPreview = null;
+}
+
+async function previewGalka() {
+  const galkaPrice = Number(els.input.value);
+  if (!(galkaPrice > 0)) return toast('Введи цену GALKA', 'error');
+
+  els.preview.disabled = true;
+  els.preview.textContent = 'Проверка…';
+  try {
+    const data = await api('/api/live/preview', {
+      method: 'POST',
+      body: { coin: runtime.coin, galkaPrice },
+    });
+    runtime.pendingPreview = data;
+    els.previewGalka.textContent = price(data.galkaPrice);
+    els.previewNotional.textContent = money(data.actualNotional);
+    els.previewMargin.textContent = money(data.requiredMargin);
+    els.previewLeverage.textContent = `${data.leverage}x isolated`;
+    els.previewLevels.innerHTML = data.levels.map((level) => (
+      `<div class="level-row"><span><b>L${level.index}</b> ` +
+      `<small>−${Number(level.depth_pct).toFixed(2)}%</small></span>` +
+      `<span><b>${price(level.price)}</b> <small>${money(level.notional)}</small></span></div>`
+    )).join('');
+    els.confirm.disabled = !data.liveEnabled;
+    openPreview();
+  } catch (error) {
+    toast(error.message, 'error');
+  } finally {
+    els.preview.disabled = !!currentCampaign();
+    els.preview.textContent = currentCampaign() ? 'Активна' : 'Проверить';
+  }
+}
+
+async function confirmLive() {
+  const data = runtime.pendingPreview;
+  if (!data) return;
+  els.confirm.disabled = true;
+  els.confirm.textContent = 'Отправка…';
+  try {
+    await api('/api/live/campaign', {
+      method: 'POST',
+      body: {
+        coin: data.coin,
+        galkaPrice: data.galkaPrice,
+        confirmation: 'PLACE_REAL_ORDERS',
+      },
+    });
+    closePreview();
+    toast('Реальные лимитки выставлены', 'ok');
+    await refreshStatus();
+  } catch (error) {
+    toast(error.message, 'error');
+  } finally {
+    els.confirm.disabled = false;
+    els.confirm.textContent = 'Выставить реальные лимитки';
+  }
+}
+
+async function cancelCampaign() {
+  if (!confirm(`Отменить все ожидающие ордера ${runtime.coin}?`)) return;
+  try {
+    await api('/api/live/cancel', {
+      method: 'POST',
+      body: { coin: runtime.coin },
+    });
+    toast('GALKA отменена', 'ok');
+    await refreshStatus();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+async function emergencyClose() {
+  if (!confirm(`АВАРИЙНО закрыть реальную позицию ${runtime.coin} по рынку и отменить ордера?`)) return;
+  if (!confirm('Это рыночное закрытие с возможным проскальзыванием. Подтвердить ещё раз?')) return;
+  try {
+    await api('/api/live/emergency', {
+      method: 'POST',
+      body: {
+        coin: runtime.coin,
+        confirmation: 'EMERGENCY_CLOSE_REAL_POSITION',
+      },
+    });
+    toast('Аварийное закрытие отправлено', 'error');
+    await refreshStatus();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+els.symbol.onchange = async () => {
+  runtime.coin = els.symbol.value;
+  runtime.candlesLoaded = false;
+  runtime.lineSignature = '';
+  runtime.detailsSignature = '';
+  els.input.value = '';
+  await loadCandles({ initial: true });
+  renderStatus();
+};
+
+els.interval.onchange = async () => {
+  runtime.interval = els.interval.value;
+  runtime.candlesLoaded = false;
+  await loadCandles({ initial: true });
+  renderStatus();
+};
+
+els.preview.onclick = previewGalka;
+els.input.onkeydown = (event) => {
+  if (event.key === 'Enter') previewGalka();
+};
+els.confirm.onclick = confirmLive;
+els.closePreview.onclick = closePreview;
+els.previewCancel.onclick = closePreview;
+els.modal.onclick = (event) => {
+  if (event.target === els.modal) closePreview();
+};
+els.details.onclick = openDrawer;
+els.status.onclick = openDrawer;
+els.liveBadge.onclick = openDrawer;
+els.closeDrawer.onclick = closeDrawer;
+els.backdrop.onclick = closeDrawer;
+els.cancel.onclick = cancelCampaign;
+els.emergency.onclick = emergencyClose;
+els.notifications.onclick = async () => {
+  if (!('Notification' in window)) {
+    return toast('Браузер не поддерживает оповещения', 'error');
+  }
+  const permission = await Notification.requestPermission();
+  toast(
+    permission === 'granted' ? 'Оповещения включены' : 'Оповещения не разрешены',
+    permission === 'granted' ? 'ok' : 'error',
+  );
+};
+
+initChart();
+await refreshStatus();
+await loadCandles({ initial: true });
+statusLoop();
+candleLoop();
