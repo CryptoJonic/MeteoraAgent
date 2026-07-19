@@ -1,0 +1,32 @@
+{
+  "name": "galka-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic historical simulator for the Galka three-pool strategy.",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run test && npm run build",
+    "android:add": "npm run build && cap add android",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "7.6.8",
+    "lightweight-charts": "5.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "7.6.8",
+    "@capacitor/cli": "7.6.8",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

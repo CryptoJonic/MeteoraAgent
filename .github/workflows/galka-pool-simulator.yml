@@ -1,0 +1,29 @@
+name: Galka Pool Simulator
+
+on:
+  push:
+    branches:
+      - agent/galka-pool-simulator
+    paths:
+      - 'galka-lab/**'
+      - '.github/workflows/galka-pool-simulator.yml'
+  pull_request:
+    paths:
+      - 'galka-lab/**'
+      - '.github/workflows/galka-pool-simulator.yml'
+  workflow_dispatch:
+
+jobs:
+  deterministic-simulator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: galka-lab/package-lock.json
+      - run: npm ci
+        working-directory: galka-lab
+      - run: npm run check
+        working-directory: galka-lab
