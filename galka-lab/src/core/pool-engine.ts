@@ -145,6 +145,39 @@ export function fillBuyBin(pool: PoolState, bin: BuyBin, time: number): number {
   return quantity;
 }
 
+/**
+ * Returns a filled bin of an unflipped pool to USDC when price crosses it up.
+ * This models the reversible side of the original DLMM range. Once a pool is
+ * flipped, its buy bins are deliberately no longer eligible for reopening.
+ */
+export function reopenBuyBin(pool: PoolState, bin: BuyBin): number {
+  if (
+    bin.status !== 'FILLED' ||
+    pool.status === 'FILLED' ||
+    pool.status === 'ASK_OPEN' ||
+    pool.status === 'SETTLED'
+  ) {
+    return 0;
+  }
+
+  const quantity = bin.assetQuantity;
+  if (quantity <= 0) return 0;
+
+  bin.status = 'OPEN';
+  bin.assetQuantity = 0;
+  bin.filledAt = null;
+  pool.purchasedAsset = Math.max(0, pool.purchasedAsset - quantity);
+  pool.remainingAsset = Math.max(0, pool.remainingAsset - quantity);
+  pool.costBasisUsdc = Math.max(0, pool.costBasisUsdc - bin.usdc);
+  pool.averageEntry = pool.purchasedAsset > EPSILON
+    ? pool.costBasisUsdc / pool.purchasedAsset
+    : null;
+  pool.status = pool.buyBins.some((candidate) => candidate.status === 'FILLED')
+    ? 'PARTIAL'
+    : 'BID_OPEN';
+  return quantity;
+}
+
 export function createSellLadder(
   pool: PoolState,
   galkaPrice: number,

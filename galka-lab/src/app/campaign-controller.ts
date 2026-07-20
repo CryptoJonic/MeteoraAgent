@@ -77,17 +77,24 @@ export class CampaignController {
     if (!this.marketWindowValue || this.marketWindowValue.symbol !== config.symbol) {
       throw new Error('Сначала загрузите историю выбранной монеты.');
     }
-    const previous = [...this.marketCandles]
+    const finishedReplay = this.replayValue?.campaign.state.status === 'ACTIVE'
+      ? null
+      : this.replayValue;
+    const previous = finishedReplay?.lastVisibleCandle ?? [...this.marketCandles]
       .reverse()
       .find((candle) => candle.time < config.startTime);
-    const next = this.marketCandles.find((candle) => candle.time >= config.startTime);
+    const next = finishedReplay?.nextCandle ?? this.marketCandles.find(
+      (candle) => candle.time >= config.startTime,
+    );
     const initialPrice = previous?.close ?? next?.open;
     if (initialPrice === undefined) throw new Error('Нет цены для старта кампании.');
     const campaign = new CampaignEngine(config, config.galkaPrice);
     if (initialPrice !== config.galkaPrice) {
       campaign.processPrice(initialPrice, config.startTime);
     }
-    this.replayValue = new ReplayEngine(this.marketCandles, campaign);
+    this.replayValue = finishedReplay
+      ? finishedReplay.continueWith(campaign)
+      : new ReplayEngine(this.marketCandles, campaign);
     this.store.saveConfig(config);
     this.persist();
     return this.replayValue;
@@ -122,6 +129,20 @@ export class CampaignController {
     const result = this.requireReplay().stepOneHour();
     this.afterMutation();
     return result;
+  }
+
+  public stepHours(count: number): ReplayStepResult {
+    const result = this.requireReplay().stepHours(count);
+    this.afterMutation();
+    return result;
+  }
+
+  public nextCampaignStartTime(): number {
+    const replay = this.replayValue;
+    if (replay && replay.campaign.state.status !== 'ACTIVE') {
+      return replay.nextCandleTime ?? replay.campaign.state.currentTime;
+    }
+    return this.marketWindowValue?.replayStartTime ?? 0;
   }
 
   public jumpToNextEvent(): ReplayStepResult {

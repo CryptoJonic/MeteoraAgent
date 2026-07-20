@@ -4,6 +4,7 @@ import {
   createPools,
   createSellLadder,
   fillBuyBin,
+  reopenBuyBin,
   settleSellBin,
 } from './pool-engine';
 import type {
@@ -30,6 +31,15 @@ interface SellCandidate {
   bin: SellBin;
 }
 
+interface ReopenCandidate {
+  pool: PoolState;
+  bin: BuyBin;
+}
+
+type UpwardCandidate =
+  | { kind: 'reopen'; price: number; value: ReopenCandidate }
+  | { kind: 'sell'; price: number; value: SellCandidate };
+
 function deepClone<T>(value: T): T {
   return structuredClone(value);
 }
@@ -43,6 +53,10 @@ export class CampaignEngine {
         throw new Error('Stored campaign state is incompatible.');
       }
       this.stateValue = deepClone(restoredState);
+      this.stateValue.deepestPoolReached ??= this.stateValue.events.reduce(
+        (deepest, event) => Math.max(deepest, event.poolIndex ?? 0),
+        0,
+      );
       return;
     }
     if (!Number.isFinite(initialPrice) || initialPrice <= 0) {
@@ -66,6 +80,7 @@ export class CampaignEngine {
       maxDrawdownUsdc: 0,
       maxDrawdownPct: 0,
       lowestPrice: initialPrice,
+      deepestPoolReached: 0,
       hasPurchased: false,
       lowerBoundEventEmitted: false,
       finalUsdc: null,
@@ -155,7 +170,7 @@ export class CampaignEngine {
       this.processBuys(fromPrice, toPrice, time);
       this.emitLowerBoundIfNeeded(fromPrice, toPrice, time);
     } else {
-      this.processSells(fromPrice, toPrice, time);
+      this.processUpward(fromPrice, toPrice, time);
       if (
         this.stateValue.status === 'ACTIVE' &&
         this.stateValue.hasPurchased &&
@@ -191,7 +206,10 @@ export class CampaignEngine {
       this.stateValue.assetQuantity += quantity;
       this.stateValue.remainingCostBasisUsdc += bin.usdc;
       this.stateValue.hasPurchased = true;
-      this.emit('BUY_BIN_FILLED', time, bin.price, pool.index, bin.index, quantity, bin.usdc, `P${pool.index} buy ${bin.index + 1}/${pool.buyBins.length}`);
+      this.stateValue.deepestPoolReached = Math.max(
+        this.stateValue.deepestPoolReached,
+        pool.index,
+      );
       this.markToMarket(bin.price);
 
       if (pool.status === 'FILLED') {
@@ -202,19 +220,42 @@ export class CampaignEngine {
     }
   }
 
-  private processSells(fromPrice: number, toPrice: number, time: number): void {
-    const candidates: SellCandidate[] = [];
+  private processUpward(fromPrice: number, toPrice: number, time: number): void {
+    const candidates: UpwardCandidate[] = [];
     for (const pool of this.stateValue.pools) {
-      if (pool.status !== 'ASK_OPEN') continue;
-      for (const bin of pool.sellBins) {
-        if (bin.status === 'OPEN' && crossesUp(fromPrice, toPrice, bin.price)) {
-          candidates.push({ pool, bin });
+      if (pool.status === 'BID_OPEN' || pool.status === 'PARTIAL') {
+        for (const bin of pool.buyBins) {
+          if (bin.status === 'FILLED' && crossesUp(fromPrice, toPrice, bin.price)) {
+            candidates.push({ kind: 'reopen', price: bin.price, value: { pool, bin } });
+          }
+        }
+      }
+      if (pool.status === 'ASK_OPEN') {
+        for (const bin of pool.sellBins) {
+          if (bin.status === 'OPEN' && crossesUp(fromPrice, toPrice, bin.price)) {
+            candidates.push({ kind: 'sell', price: bin.price, value: { pool, bin } });
+          }
         }
       }
     }
-    candidates.sort((left, right) => left.bin.price - right.bin.price);
+    candidates.sort((left, right) => left.price - right.price);
 
-    for (const { pool, bin } of candidates) {
+    for (const candidate of candidates) {
+      if (candidate.kind === 'reopen') {
+        const { pool, bin } = candidate.value;
+        const quantity = reopenBuyBin(pool, bin);
+        if (quantity <= 0) continue;
+        this.stateValue.freeUsdc += bin.usdc;
+        this.stateValue.assetQuantity = Math.max(0, this.stateValue.assetQuantity - quantity);
+        this.stateValue.remainingCostBasisUsdc = Math.max(
+          0,
+          this.stateValue.remainingCostBasisUsdc - bin.usdc,
+        );
+        this.markToMarket(bin.price);
+        continue;
+      }
+
+      const { pool, bin } = candidate.value;
       const proceeds = settleSellBin(pool, bin, time);
       if (proceeds <= 0) continue;
       this.stateValue.lockedUsdc += proceeds;
@@ -223,7 +264,6 @@ export class CampaignEngine {
         0,
         this.stateValue.remainingCostBasisUsdc - bin.costBasis,
       );
-      this.emit('SELL', time, bin.price, pool.index, bin.index, bin.assetQuantity, proceeds, `P${pool.index} SELL ${bin.index + 1}/${pool.sellBins.length}`);
       this.markToMarket(bin.price);
     }
   }
@@ -244,6 +284,9 @@ export class CampaignEngine {
     for (const pool of this.stateValue.pools) {
       cancelPoolBins(pool);
       if (pool.remainingAsset > EPSILON) {
+        if (status === 'COMPLETED' && pool.remainingAsset > 1e-8) {
+          throw new Error('Completion invariant failed: non-dust asset remains at GALKA.');
+        }
         const remainingCost = Math.max(0, pool.costBasisUsdc - pool.soldCostBasisUsdc);
         const proceeds = pool.remainingAsset * price;
         pool.lockedProceedsUsdc += proceeds;

@@ -44,6 +44,7 @@ export function campaignResultFromState(state: CampaignState): CampaignResult {
     maxDrawdownPct: state.maxDrawdownPct,
     durationSeconds: Math.max(0, state.completedAt - state.config.startTime),
     lowestPrice: state.lowestPrice,
+    deepestPoolReached: state.deepestPoolReached,
   };
 }
 

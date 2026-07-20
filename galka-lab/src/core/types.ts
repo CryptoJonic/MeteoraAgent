@@ -113,6 +113,7 @@ export interface CampaignState {
   maxDrawdownUsdc: number;
   maxDrawdownPct: number;
   lowestPrice: number;
+  deepestPoolReached: number;
   hasPurchased: boolean;
   lowerBoundEventEmitted: boolean;
   finalUsdc: number | null;
@@ -167,6 +168,7 @@ export interface CampaignResult {
   maxDrawdownPct: number;
   durationSeconds: number;
   lowestPrice: number;
+  deepestPoolReached: number;
 }
 
 export interface StoredReplayState {

@@ -27,13 +27,58 @@ function scenarioCandles(): Candle[] {
 }
 
 describe('campaign lifecycle', () => {
-  it('return to GALKA liquidates all remaining asset and completes', () => {
+  it('starts with all three buy pools active and 400 USDC each', () => {
+    const engine = createEngine();
+    expect(engine.state.pools.map((pool) => pool.status)).toEqual([
+      'BID_OPEN',
+      'BID_OPEN',
+      'BID_OPEN',
+    ]);
+    expect(engine.state.pools.map((pool) => pool.capitalUsdc)).toEqual([400, 400, 400]);
+  });
+
+  it('keeps a partial pool unflipped and naturally returns it to USDC upward', () => {
     const engine = createEngine();
     engine.processPrice(94, START + 300);
+    expect(engine.state.pools[0]?.status).toBe('PARTIAL');
+    expect(engine.state.pools[0]?.sellBins).toHaveLength(0);
     expect(engine.state.assetQuantity).toBeGreaterThan(0);
+    expect(engine.state.freeUsdc).toBe(1_000);
+
+    engine.processPrice(96, START + 600);
+    expect(engine.state.status).toBe('ACTIVE');
+    expect(engine.state.pools[0]?.status).toBe('BID_OPEN');
+    expect(engine.state.assetQuantity).toBe(0);
+    expect(engine.state.freeUsdc).toBeCloseTo(1_200, 12);
+  });
+
+  it('flips only a fully traversed pool and never reopens its settled sells', () => {
+    const engine = createEngine();
+    engine.processPrice(94, START + 300);
+    expect(engine.state.pools[0]?.status).toBe('PARTIAL');
+    engine.processPrice(90, START + 600);
+    const pool = engine.state.pools[0];
+    expect(pool?.status).toBe('ASK_OPEN');
+    expect(pool?.sellBins).toHaveLength(2);
+    expect(pool?.sellBins.at(-1)?.price).toBe(100);
+
+    engine.processPrice(95, START + 900);
+    const lockedAfterSale = engine.state.lockedUsdc;
+    expect(pool?.sellBins[0]?.status).toBe('SETTLED');
+    engine.processPrice(80, START + 1_200);
+    expect(engine.state.pools[0]?.sellBins[0]?.status).toBe('SETTLED');
+    expect(engine.state.lockedUsdc).toBe(lockedAfterSale);
+  });
+
+  it('returns to GALKA with zero asset after partial bins unwind and flipped bins sell', () => {
+    const engine = createEngine();
+    engine.processPrice(84, START + 300);
+    expect(engine.state.pools[0]?.status).toBe('ASK_OPEN');
+    expect(engine.state.pools[1]?.status).toBe('PARTIAL');
+    expect(engine.state.deepestPoolReached).toBe(2);
     engine.processPrice(100, START + 600);
     expect(engine.state.status).toBe('COMPLETED');
-    expect(engine.state.assetQuantity).toBe(0);
+    expect(engine.state.assetQuantity).toBeLessThanOrEqual(1e-12);
     expect(engine.state.finalUsdc).not.toBeNull();
     expect(engine.state.finalPnlUsdc).toBeGreaterThan(0);
     expect(engine.state.pools.every((pool) => pool.status === 'SETTLED')).toBe(true);
@@ -49,20 +94,6 @@ describe('campaign lifecycle', () => {
     expect(engine.state.status).toBe('STOPPED');
     expect(engine.state.assetQuantity).toBe(0);
     expect(engine.state.finalUsdc).toBeCloseTo(freeBeforeStop + assetBeforeStop * 85, 9);
-  });
-
-  it('a settled sell bin stays settled after price falls again', () => {
-    const engine = createEngine();
-    engine.processPrice(90, START + 300);
-    const pool = engine.state.pools[0];
-    expect(pool?.status).toBe('ASK_OPEN');
-    engine.processPrice(95, START + 600);
-    const lockedAfterSale = engine.state.lockedUsdc;
-    expect(pool?.sellBins[0]?.status).toBe('SETTLED');
-    engine.processPrice(80, START + 900);
-    expect(engine.state.pools[0]?.sellBins[0]?.status).toBe('SETTLED');
-    expect(engine.state.pools[0]?.sellBins[0]?.proceeds).toBeGreaterThan(0);
-    expect(engine.state.lockedUsdc).toBe(lockedAfterSale);
   });
 
   it('produces identical output for identical candle data', () => {

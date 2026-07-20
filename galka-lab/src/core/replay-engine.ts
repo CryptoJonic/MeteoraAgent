@@ -13,6 +13,20 @@ export interface ReplayStepResult {
   campaignEnded: boolean;
 }
 
+export type ReplaySpeed = 1 | 5 | 20 | 100;
+
+export interface PlaybackPlan {
+  intervalMs: number;
+  hoursPerTick: number;
+}
+
+export function playbackPlan(speed: ReplaySpeed): PlaybackPlan {
+  if (speed === 1) return { intervalMs: 1_000, hoursPerTick: 1 };
+  if (speed === 5) return { intervalMs: 200, hoursPerTick: 1 };
+  if (speed === 20) return { intervalMs: 50, hoursPerTick: 1 };
+  return { intervalMs: 50, hoursPerTick: 5 };
+}
+
 function sortAndDedupe(candles: readonly Candle[]): Candle[] {
   const rows = new Map<number, Candle>();
   for (const candle of candles) rows.set(candle.time, { ...candle });
@@ -80,6 +94,16 @@ export class ReplayEngine {
     return this.candles[this.cursorValue]?.time ?? null;
   }
 
+  public get lastVisibleCandle(): Candle | null {
+    const candle = this.candles[this.cursorValue - 1];
+    return candle ? { ...candle } : null;
+  }
+
+  public get nextCandle(): Candle | null {
+    const candle = this.candles[this.cursorValue];
+    return candle ? { ...candle } : null;
+  }
+
   public visibleFiveMinuteCandles(): Candle[] {
     return this.candles.slice(0, this.cursorValue).map((candle) => ({ ...candle }));
   }
@@ -137,6 +161,33 @@ export class ReplayEngine {
       exhausted: this.exhausted,
       campaignEnded: this.campaign.state.status !== 'ACTIVE',
     };
+  }
+
+  public stepHours(count: number): ReplayStepResult {
+    if (!Number.isInteger(count) || count < 1) {
+      throw new RangeError('Replay hour count must be a positive integer.');
+    }
+    const events: CampaignEvent[] = [];
+    let processed = 0;
+    for (let index = 0; index < count; index += 1) {
+      if (this.exhausted || this.campaign.state.status !== 'ACTIVE') break;
+      const result = this.stepOneHour();
+      processed += result.processed;
+      events.push(...result.events);
+    }
+    return {
+      processed,
+      events,
+      exhausted: this.exhausted,
+      campaignEnded: this.campaign.state.status !== 'ACTIVE',
+    };
+  }
+
+  public continueWith(campaign: CampaignEngine): ReplayEngine {
+    if (this.campaign.state.status === 'ACTIVE') {
+      throw new Error('Cannot replace an active campaign.');
+    }
+    return new ReplayEngine(this.candles, campaign, this.cursorValue);
   }
 
   public jumpToNextEvent(maxCandles = 100_000): ReplayStepResult {

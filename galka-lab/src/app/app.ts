@@ -4,15 +4,17 @@ import {
   type CampaignState,
   type MarketSymbol,
 } from '../core/types';
+import { playbackPlan, type ReplaySpeed } from '../core/replay-engine';
 import { BinanceProvider } from '../data/binance-provider';
 import { IndexedDbCandleCache } from '../data/cache';
 import { CampaignStore } from '../storage/campaign-store';
 import { MeasurementStore } from '../storage/measurement-store';
 import { CampaignController } from './campaign-controller';
 import { ChartController, type ChartPoint } from './chart-controller';
+import { InteractionState, type InteractionSnapshot } from './interaction-state';
 import { MeasurementController } from './measurement-controller';
 
-const SPEEDS = [1, 10, 50, 200] as const;
+const SPEEDS: readonly ReplaySpeed[] = [1, 5, 20, 100];
 
 function element<T extends HTMLElement>(id: string): T {
   const value = document.getElementById(id);
@@ -52,6 +54,16 @@ function duration(seconds: number | null): string {
   return days > 0 ? `${days}д ${hours}ч` : `${hours}ч`;
 }
 
+function preciseDuration(seconds: number): string {
+  const totalMinutes = Math.floor(Math.abs(seconds) / 60);
+  const days = Math.floor(totalMinutes / 1_440);
+  const hours = Math.floor((totalMinutes % 1_440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}д ${hours}ч ${minutes}м`;
+  if (hours > 0) return `${hours}ч ${minutes}м`;
+  return `${minutes}м`;
+}
+
 function dateTime(seconds: number | null): string {
   if (seconds === null) return '—';
   return new Intl.DateTimeFormat('ru-RU', {
@@ -82,19 +94,21 @@ export class GalkaLabApp {
     this.campaignStore,
   );
   private readonly measurementController = new MeasurementController(this.measurementStore);
+  private readonly interaction = new InteractionState();
   private readonly chart: ChartController;
-  private speed: (typeof SPEEDS)[number] = 1;
+  private speed: ReplaySpeed = 1;
   private playTimer: number | null = null;
   private playBusy = false;
   private historyDirty = false;
   private measurementMode = false;
   private toastTimer: number | null = null;
+  private lastAnnouncedResult: string | null = null;
 
   public constructor(private readonly root: HTMLElement) {
     this.root.innerHTML = this.template();
     this.chart = new ChartController(element('chartHost'), {
-      onPointSelected: (point) => this.onChartPoint(point),
-      onCrosshair: (point) => this.renderCrosshair(point),
+      onCrosshair: (point) => this.onCrosshairMoved(point),
+      onGalkaPriceChanged: (value) => this.setGalkaPrice(value),
       onLowerPriceChanged: (value) => this.setLowerPrice(value),
     });
     this.installEvents();
@@ -112,6 +126,7 @@ export class GalkaLabApp {
         this.galkaInput.value = String(config.galkaPrice);
         this.lowerInput.value = String(config.lowerPrice);
         this.depthInput.value = String(config.rangePct * 100);
+        this.interaction.setRange(config.galkaPrice, config.lowerPrice);
         await this.campaignController.restoreActive(stored);
         this.historyDirty = false;
         this.updateRangeVisual();
@@ -169,7 +184,7 @@ export class GalkaLabApp {
               <label class="date-field"><span>Старт replay</span><input id="startTime" type="datetime-local" min="2023-01-01T00:00"></label>
               <button id="loadHistory" class="secondary" type="button">Загрузить историю</button>
               <span id="marketStatus" class="market-status">Ожидание</span>
-              <div class="chart-actions"><button id="fitChart" type="button">Fit</button><button id="latestChart" type="button">К replay</button></div>
+              <div class="chart-actions hidden"><button id="fitChart" type="button">Fit</button><button id="latestChart" type="button">К replay</button></div>
             </div>
 
             <div id="chartHost" class="chart-host">
@@ -186,19 +201,17 @@ export class GalkaLabApp {
             </div>
 
             <div class="replay-controls">
-              <button id="stepHour" type="button">Следующая свеча</button>
-              <button id="play" class="play" type="button">▶ Воспроизведение</button>
+              <button id="play" class="play" type="button">▶ Play</button>
               <button id="pause" type="button">Ⅱ Пауза</button>
               <div id="speedButtons" class="speed-buttons">
                 ${SPEEDS.map((value) => `<button data-speed="${value}" class="${value === 1 ? 'active' : ''}" type="button">×${value}</button>`).join('')}
               </div>
-              <button id="jumpEvent" class="event-jump" type="button">До следующего события</button>
               <button id="stopCampaign" class="danger" type="button">Остановить кампанию</button>
             </div>
           </section>
 
           <aside class="side-panel">
-            <div class="panel-tabs">
+            <div class="panel-tabs hidden">
               <button id="campaignTab" class="active" type="button">Кампания</button>
               <button id="measurementTab" type="button">Измерения</button>
             </div>
@@ -206,13 +219,18 @@ export class GalkaLabApp {
             <div id="campaignPane">
               <section class="card setup-card">
                 <div class="card-head"><div><small>POOL CAMPAIGN</small><b>Настройка диапазона</b></div><span class="paper-pill">SIMULATION</span></div>
+                <div class="setup-actions">
+                  <button id="setGalka" class="secondary-action" type="button">Установить GALKA</button>
+                  <button id="measureToggle" class="secondary-action measure" type="button">Измерить</button>
+                </div>
                 <div class="setup-grid">
                   <label><span>GALKA</span><input id="galkaPrice" type="number" min="0" step="any" inputmode="decimal"></label>
                   <label><span>Нижняя цена</span><input id="lowerPrice" type="number" min="0" step="any" inputmode="decimal"></label>
-                  <label><span>Глубина, %</span><input id="depthPct" type="number" min="0.01" max="95" step="0.01" inputmode="decimal" value="15"></label>
                   <label><span>Депозит</span><input type="text" value="$1 200" readonly></label>
+                  <input id="depthPct" type="hidden" value="15">
                 </div>
-                <p class="hint">Нажмите на график, чтобы зафиксировать GALKA. Красный маркер справа меняет низ диапазона.</p>
+                <p class="hint">Переместите crosshair и нажмите «Установить GALKA». Оранжевый и красный маркеры справа позволяют отдельно двигать обе границы.</p>
+                <div id="measurementReadout" class="measurement-readout hidden"></div>
                 <div id="rangeSummary" class="range-summary"></div>
                 <button id="startCampaign" class="primary wide" type="button">Запустить кампанию</button>
               </section>
@@ -230,16 +248,18 @@ export class GalkaLabApp {
                   <span class="emphasis"><small>Итоговый PnL</small><b id="totalPnl">$0.00</b></span>
                   <span><small>Макс. просадка</small><b id="maxDrawdown">$0.00</b></span>
                   <span><small>Минимум кампании</small><b id="lowestPrice">—</b></span>
+                  <span><small>Final USDC</small><b id="finalUsdc">—</b></span>
+                  <span><small>Самый глубокий пул</small><b id="deepestPool">—</b></span>
                 </div>
                 <div id="poolProgress" class="pool-progress"></div>
               </section>
 
-              <section class="card">
+              <section class="card hidden">
                 <div class="card-head"><div><small>EVENT STREAM</small><b>События</b></div><span id="eventCount">0</span></div>
                 <div id="eventLog" class="event-log"><p class="empty">Кампания ещё не запущена.</p></div>
               </section>
 
-              <section class="card">
+              <section class="card hidden">
                 <div class="card-head"><div><small>LOCAL RESULTS</small><b>Последние кампании</b></div></div>
                 <div id="campaignResults" class="results-list"></div>
               </section>
@@ -278,14 +298,13 @@ export class GalkaLabApp {
       this.historyDirty = true;
       this.updateHistoryStatus();
     });
-    this.galkaInput.addEventListener('input', () => this.updateLowerFromDepth());
-    this.lowerInput.addEventListener('input', () => this.updateDepthFromLower());
-    this.depthInput.addEventListener('input', () => this.updateLowerFromDepth());
+    this.galkaInput.addEventListener('change', () => this.applyGalkaInput());
+    this.lowerInput.addEventListener('change', () => this.applyLowerInput());
+    element('setGalka').addEventListener('click', () => this.fixGalkaFromCrosshair());
+    element('measureToggle').addEventListener('click', () => this.toggleLiveMeasurement());
     element('startCampaign').addEventListener('click', () => this.startCampaign());
-    element('stepHour').addEventListener('click', () => void this.stepHour());
     element('play').addEventListener('click', () => this.play());
     element('pause').addEventListener('click', () => this.pause());
-    element('jumpEvent').addEventListener('click', () => void this.jumpToEvent());
     element('stopCampaign').addEventListener('click', () => this.stopCampaign());
     element('fitChart').addEventListener('click', () => this.chart.fitContent());
     element('latestChart').addEventListener('click', () => this.chart.fitContent());
@@ -293,10 +312,15 @@ export class GalkaLabApp {
       const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-speed]');
       if (!button) return;
       const speed = Number(button.dataset.speed);
-      if (!SPEEDS.includes(speed as (typeof SPEEDS)[number])) return;
-      this.speed = speed as (typeof SPEEDS)[number];
+      if (!SPEEDS.includes(speed as ReplaySpeed)) return;
+      const wasPlaying = this.playTimer !== null;
+      this.speed = speed as ReplaySpeed;
       for (const candidate of element('speedButtons').querySelectorAll('button')) {
         candidate.classList.toggle('active', candidate === button);
+      }
+      if (wasPlaying) {
+        this.pause();
+        this.play();
       }
     });
     element('campaignTab').addEventListener('click', () => this.setPane(false));
@@ -345,13 +369,14 @@ export class GalkaLabApp {
       );
       this.historyDirty = false;
       this.chart.setCandles(candles, fit);
-      const last = candles.at(-1);
-      if (last && !Number(this.galkaInput.value)) {
-        this.galkaInput.value = String(last.close);
-        this.updateLowerFromDepth();
-      } else {
-        this.updateRangeVisual();
-      }
+      this.interaction.clearRange();
+      this.interaction.clearMeasurement();
+      this.galkaInput.value = '';
+      this.lowerInput.value = '';
+      this.depthInput.value = '15';
+      this.chart.setMeasurement(null, null);
+      this.updateRangeVisual();
+      this.renderMeasurementReadout();
       this.render();
       this.toast(
         candles.length > 0
@@ -372,7 +397,12 @@ export class GalkaLabApp {
       if (this.historyDirty) throw new Error('После смены даты или монеты загрузите историю заново.');
       const galkaPrice = Number(this.galkaInput.value);
       const lowerPrice = Number(this.lowerInput.value);
-      const startTime = this.selectedStartTime();
+      this.interaction.setRange(galkaPrice, lowerPrice);
+      const previousState = this.campaignController.replay?.campaign.state;
+      const startTime = previousState && previousState.status !== 'ACTIVE'
+        ? this.campaignController.nextCampaignStartTime()
+        : this.selectedStartTime();
+      this.startInput.value = datetimeLocalValue(new Date(startTime * 1_000));
       const config = createCampaignConfig({
         id: randomId(),
         symbol: this.symbolInput.value as MarketSymbol,
@@ -381,6 +411,7 @@ export class GalkaLabApp {
         lowerPrice,
       });
       this.campaignController.startCampaign(config);
+      this.lastAnnouncedResult = null;
       this.chart.setRangeEditable(false);
       this.setPane(false);
       this.render();
@@ -409,7 +440,8 @@ export class GalkaLabApp {
     }
     if (this.playTimer !== null) return;
     element('play').classList.add('active');
-    this.playTimer = window.setInterval(() => void this.playTick(), 260);
+    const plan = playbackPlan(this.speed);
+    this.playTimer = window.setInterval(() => void this.playTick(), plan.intervalMs);
   }
 
   private pause(): void {
@@ -426,8 +458,9 @@ export class GalkaLabApp {
         this.pause();
         return;
       }
-      this.campaignController.stepFiveMinute(this.speed);
-      this.render();
+      const plan = playbackPlan(this.speed);
+      this.campaignController.stepHours(plan.hoursPerTick);
+      this.render(true);
       if (this.campaignController.replay?.campaign.state.status !== 'ACTIVE') this.pause();
     } catch (error) {
       this.pause();
@@ -480,44 +513,93 @@ export class GalkaLabApp {
     }
   }
 
-  private onChartPoint(point: ChartPoint): void {
-    if (this.measurementMode) {
-      try {
-        const draft = this.measurementController.selectPoint(point);
-        this.chart.setMeasurement(draft.start, draft.bottom);
-        this.renderMeasurements();
-      } catch (error) {
-        this.toast(this.message(error), 'error');
+  private onCrosshairMoved(point: ChartPoint | null): void {
+    const snapshot = this.interaction.moveCrosshair(point);
+    this.renderCrosshair(snapshot.crosshair);
+    const measurement = snapshot.measurement;
+    if (measurement.start && measurement.current) {
+      this.chart.setMeasurement(measurement.start, measurement.current);
+    }
+    this.renderMeasurementReadout();
+  }
+
+  private fixGalkaFromCrosshair(): void {
+    if (this.campaignController.replay?.campaign.state.status === 'ACTIVE') return;
+    try {
+      this.applyInteractionRange(this.interaction.fixGalkaFromCrosshair());
+      this.toast('GALKA зафиксирована. Границы трёх пулов рассчитаны.', 'ok');
+    } catch (error) {
+      this.toast(this.message(error), 'error');
+    }
+  }
+
+  private toggleLiveMeasurement(): void {
+    try {
+      const snapshot = this.interaction.toggleMeasurement();
+      const measurement = snapshot.measurement;
+      const button = element<HTMLButtonElement>('measureToggle');
+      button.classList.toggle('active', measurement.active);
+      button.textContent = measurement.active ? 'Завершить измерение' : 'Измерить';
+      if (measurement.start && measurement.current) {
+        this.chart.setMeasurement(measurement.start, measurement.current);
       }
+      this.renderMeasurementReadout();
+    } catch (error) {
+      this.toast(this.message(error), 'error');
+    }
+  }
+
+  private applyGalkaInput(): void {
+    if (this.campaignController.replay?.campaign.state.status === 'ACTIVE') return;
+    const value = Number(this.galkaInput.value);
+    if (!(value > 0)) {
+      this.updateRangeVisual();
+      this.updateSetupAvailability();
       return;
     }
+    try {
+      this.applyInteractionRange(this.interaction.setGalkaPrice(value));
+    } catch {
+      this.updateRangeVisual();
+      this.updateSetupAvailability();
+    }
+  }
+
+  private applyLowerInput(): void {
     if (this.campaignController.replay?.campaign.state.status === 'ACTIVE') return;
-    this.galkaInput.value = String(point.price);
-    this.updateLowerFromDepth();
+    const value = Number(this.lowerInput.value);
+    if (!(value > 0)) {
+      this.updateRangeVisual();
+      this.updateSetupAvailability();
+      return;
+    }
+    try {
+      this.applyInteractionRange(this.interaction.setLowerPrice(value));
+    } catch {
+      this.updateRangeVisual();
+      this.updateSetupAvailability();
+    }
+  }
+
+  private setGalkaPrice(value: number): void {
+    if (this.campaignController.replay?.campaign.state.status === 'ACTIVE') return;
+    this.applyInteractionRange(this.interaction.setGalkaPrice(value));
   }
 
   private setLowerPrice(value: number): void {
     if (this.campaignController.replay?.campaign.state.status === 'ACTIVE') return;
-    this.lowerInput.value = String(value);
-    this.updateDepthFromLower();
+    this.applyInteractionRange(this.interaction.setLowerPrice(value));
   }
 
-  private updateLowerFromDepth(): void {
-    const galka = Number(this.galkaInput.value);
-    const depth = Number(this.depthInput.value);
-    if (galka > 0 && depth > 0 && depth < 100) {
-      this.lowerInput.value = String(galka * (1 - depth / 100));
-    }
+  private applyInteractionRange(snapshot: InteractionSnapshot): void {
+    if (snapshot.galkaPrice === null || snapshot.lowerPrice === null) return;
+    this.galkaInput.value = String(snapshot.galkaPrice);
+    this.lowerInput.value = String(snapshot.lowerPrice);
+    this.depthInput.value = String(
+      ((snapshot.galkaPrice - snapshot.lowerPrice) / snapshot.galkaPrice) * 100,
+    );
     this.updateRangeVisual();
-  }
-
-  private updateDepthFromLower(): void {
-    const galka = Number(this.galkaInput.value);
-    const lower = Number(this.lowerInput.value);
-    if (galka > 0 && lower > 0 && lower < galka) {
-      this.depthInput.value = String(((galka - lower) / galka) * 100);
-    }
-    this.updateRangeVisual();
+    this.updateSetupAvailability();
   }
 
   private updateRangeVisual(): void {
@@ -531,10 +613,28 @@ export class GalkaLabApp {
     const rangePct = (galka - lower) / galka;
     const boundaries = calculatePoolBoundaries(galka, rangePct);
     this.chart.setRange({ galkaPrice: galka, lowerPrice: lower, boundaries });
-    element('rangeSummary').innerHTML = boundaries.slice(0, 3).map((upper, index) => {
+    const pools = boundaries.slice(0, 3).map((upper, index) => {
       const bottom = boundaries[index + 1];
       return `<div><span><i class="pool-dot p${index + 1}"></i>Пул ${index + 1}</span><b>${price(upper ?? null)}–${price(bottom ?? null)}</b><small>$400</small></div>`;
     }).join('');
+    element('rangeSummary').innerHTML = `
+      <div class="range-meta"><span>GALKA</span><b>${price(galka)}</b><small>верх</small></div>
+      <div class="range-meta"><span>Низ</span><b>${price(lower)}</b><small>−${(rangePct * 100).toFixed(2)}%</small></div>
+      ${pools}
+      <div class="range-meta total"><span>Капитал</span><b>$400 / $400 / $400</b><small>$1 200</small></div>
+    `;
+  }
+
+  private updateSetupAvailability(): void {
+    const active = this.campaignController.replay?.campaign.state.status === 'ACTIVE';
+    const galka = Number(this.galkaInput.value);
+    const lower = Number(this.lowerInput.value);
+    const validRange = galka > lower && lower > 0;
+    element<HTMLButtonElement>('startCampaign').disabled = active
+      || this.historyDirty
+      || !this.campaignController.window
+      || !validRange;
+    element<HTMLButtonElement>('setGalka').disabled = active;
   }
 
   private setPane(measurement: boolean): void {
@@ -561,16 +661,13 @@ export class GalkaLabApp {
     }
   }
 
-  private render(): void {
+  private render(followLatest = false): void {
     const replay = this.campaignController.replay;
     const state = replay?.campaign.snapshot() ?? null;
-    this.chart.setCandles(this.campaignController.chartCandles());
+    this.chart.setCandles(this.campaignController.chartCandles(), false, followLatest);
     this.chart.setCampaign(state);
     this.updateRangeVisual();
     this.renderStats(state);
-    this.renderEvents(state);
-    this.renderResults();
-    this.renderMeasurements();
     this.updateHistoryStatus();
 
     const active = state?.status === 'ACTIVE';
@@ -578,18 +675,25 @@ export class GalkaLabApp {
       input.disabled = active;
     }
     element<HTMLButtonElement>('loadHistory').disabled = active;
-    element<HTMLButtonElement>('startCampaign').disabled = active || this.historyDirty || !this.campaignController.window;
-    for (const id of ['stepHour', 'play', 'pause', 'jumpEvent', 'stopCampaign']) {
+    this.updateSetupAvailability();
+    for (const id of ['play', 'pause', 'stopCampaign']) {
       element<HTMLButtonElement>(id).disabled = !active;
     }
+    element<HTMLButtonElement>('setGalka').disabled = active;
     this.chart.setRangeEditable(!active && !this.measurementMode);
     element('replayTime').textContent = state ? dateTime(state.currentTime) : dateTime(this.campaignController.window?.replayStartTime ?? null);
     const badge = element('campaignBadge');
     badge.textContent = state?.status ?? 'SETUP';
     badge.className = `campaign-badge ${(state?.status ?? 'idle').toLowerCase()}`;
     if (state && state.status !== 'ACTIVE') {
+      const nextStart = this.campaignController.nextCampaignStartTime();
+      if (nextStart > 0) this.startInput.value = datetimeLocalValue(new Date(nextStart * 1_000));
       const finalPnl = state.finalPnlUsdc ?? 0;
-      this.toast(`${state.status}: ${signedMoney(finalPnl)}`, finalPnl >= 0 ? 'ok' : 'error');
+      const resultKey = `${state.config.id}:${state.status}`;
+      if (this.lastAnnouncedResult !== resultKey) {
+        this.lastAnnouncedResult = resultKey;
+        this.toast(`${state.status}: ${signedMoney(finalPnl)}`, finalPnl >= 0 ? 'ok' : 'error');
+      }
     }
   }
 
@@ -610,6 +714,12 @@ export class GalkaLabApp {
       ? `${money(state.maxDrawdownUsdc)} · ${state.maxDrawdownPct.toFixed(2)}%`
       : '$0.00';
     element('lowestPrice').textContent = price(state?.lowestPrice ?? null);
+    element('finalUsdc').textContent = state?.finalUsdc === null || state?.finalUsdc === undefined
+      ? '—'
+      : money(state.finalUsdc);
+    element('deepestPool').textContent = state && state.deepestPoolReached > 0
+      ? `Pool ${state.deepestPoolReached}`
+      : '—';
     element('durationValue').textContent = state
       ? duration(Math.max(0, state.currentTime - state.config.startTime))
       : '0ч';
@@ -623,7 +733,12 @@ export class GalkaLabApp {
   }
 
   private renderEvents(state: CampaignState | null): void {
-    const events = state?.events ?? [];
+    const events = (state?.events ?? []).filter((event) => [
+      'POOL_FILLED',
+      'FLIPPED',
+      'COMPLETED',
+      'STOPPED',
+    ].includes(event.type));
     element('eventCount').textContent = String(events.length);
     element('eventLog').innerHTML = events.length === 0
       ? '<p class="empty">Кампания ещё не создала событий.</p>'
@@ -675,6 +790,25 @@ export class GalkaLabApp {
     element('crosshairPrice').textContent = point ? price(point.price) : '—';
   }
 
+  private renderMeasurementReadout(): void {
+    const measurement = this.interaction.snapshot.measurement;
+    const target = element('measurementReadout');
+    if (!measurement.start || !measurement.current) {
+      target.classList.add('hidden');
+      target.innerHTML = '';
+      return;
+    }
+    const absolute = measurement.current.price - measurement.start.price;
+    const percent = (absolute / measurement.start.price) * 100;
+    target.classList.remove('hidden');
+    target.innerHTML = `
+      <span><small>Начало</small><b>${price(measurement.start.price)}</b></span>
+      <span><small>Текущая</small><b>${price(measurement.current.price)}</b></span>
+      <span><small>Изменение</small><b class="${absolute >= 0 ? 'positive' : 'negative'}">${absolute >= 0 ? '+' : '−'}${price(Math.abs(absolute))} · ${percent >= 0 ? '+' : '−'}${Math.abs(percent).toFixed(2)}%</b></span>
+      <span><small>Время</small><b>${preciseDuration(measurement.current.time - measurement.start.time)}</b></span>
+    `;
+  }
+
   private updateHistoryStatus(): void {
     const status = element('marketStatus');
     if (this.historyDirty) {
@@ -683,9 +817,9 @@ export class GalkaLabApp {
       return;
     }
     const windowState = this.campaignController.window;
-    status.textContent = windowState
-      ? `${dateTime(windowState.startTime)} → ${dateTime(windowState.endTime)}`
-      : 'История не загружена';
+    const visibleTime = this.campaignController.replay?.lastVisibleCandle?.time
+      ?? (windowState ? windowState.replayStartTime - 300 : null);
+    status.textContent = windowState ? `Видимо до ${dateTime(visibleTime)}` : 'История не загружена';
     status.className = `market-status ${windowState ? 'ready' : ''}`;
   }
 

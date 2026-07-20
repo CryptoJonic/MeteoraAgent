@@ -16,23 +16,27 @@ describe('Galka Lab UI contract', () => {
     for (const label of [
       'POOL',
       'FAST PERP',
-      'Следующая свеча',
-      'Воспроизведение',
+      'Установить GALKA',
+      'Измерить',
+      'Запустить кампанию',
+      'Play',
       'Пауза',
-      'До следующего события',
       'Остановить кампанию',
       'Будущее скрыто',
     ]) {
       expect(appSource).toContain(label);
     }
-    for (const speed of ['1', '10', '50', '200']) expect(appSource).toContain(speed);
+    expect(appSource).toContain('[1, 5, 20, 100]');
   });
 
-  it('renders campaign zones, bins, markers and the draggable lower handle', () => {
+  it('renders campaign zones, bins, markers and separate draggable boundaries', () => {
     expect(chartSource).toContain('createSeriesMarkers');
     expect(chartSource).toContain('drawCampaignBins');
-    expect(chartSource).toContain('range-handle');
-    expect(chartSource).toContain("event.type === 'SELL'");
+    expect(chartSource).toContain("range-handle upper");
+    expect(chartSource).toContain("range-handle lower");
+    expect(chartSource).toContain('onGalkaPriceChanged');
+    expect(chartSource).not.toContain('onPointSelected');
+    expect(chartSource).toContain('scrollToRealTime');
   });
 
   it('defines phone, landscape and desktop layouts', () => {

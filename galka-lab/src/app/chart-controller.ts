@@ -17,7 +17,7 @@ import {
 
 import { poolFillPct } from '../core/pool-engine';
 import { ONE_HOUR_SECONDS, type CampaignEvent, type CampaignState, type Candle } from '../core/types';
-import type { MeasurementPoint } from './measurement-controller';
+import type { InteractionPoint } from './interaction-state';
 
 export interface ChartPoint {
   time: number;
@@ -25,8 +25,8 @@ export interface ChartPoint {
 }
 
 export interface ChartControllerOptions {
-  onPointSelected: (point: ChartPoint) => void;
   onCrosshair: (point: ChartPoint | null) => void;
+  onGalkaPriceChanged: (price: number) => void;
   onLowerPriceChanged: (price: number) => void;
 }
 
@@ -49,17 +49,12 @@ const COLORS = {
 };
 
 function markerForEvent(event: CampaignEvent): SeriesMarker<Time> | null {
-  if (event.type === 'BUY_BIN_FILLED' || event.type === 'LOWER_BOUND_REACHED') return null;
+  if (
+    event.type === 'BUY_BIN_FILLED' ||
+    event.type === 'LOWER_BOUND_REACHED' ||
+    event.type === 'SELL'
+  ) return null;
   const time = (Math.floor(event.time / ONE_HOUR_SECONDS) * ONE_HOUR_SECONDS) as UTCTimestamp;
-  if (event.type === 'SELL') {
-    return {
-      time,
-      position: 'aboveBar',
-      color: COLORS.cyan,
-      shape: 'arrowDown',
-      text: 'SELL',
-    };
-  }
   if (event.type === 'POOL_FILLED') {
     return {
       time,
@@ -75,7 +70,7 @@ function markerForEvent(event: CampaignEvent): SeriesMarker<Time> | null {
       position: 'belowBar',
       color: COLORS.violet,
       shape: 'arrowUp',
-      text: 'FLIPPED',
+      text: `P${event.poolIndex ?? ''} FLIPPED`,
     };
   }
   return {
@@ -83,13 +78,14 @@ function markerForEvent(event: CampaignEvent): SeriesMarker<Time> | null {
     position: 'aboveBar',
     color: event.type === 'COMPLETED' ? COLORS.green : COLORS.red,
     shape: 'square',
-    text: event.type,
+    text: `CAMPAIGN ${event.type}`,
   };
 }
 
 export class ChartController {
   private readonly chartSurface: HTMLDivElement;
   private readonly overlay: HTMLCanvasElement;
+  private readonly upperHandle: HTMLButtonElement;
   private readonly lowerHandle: HTMLButtonElement;
   private readonly chart: IChartApi;
   private readonly series: ISeriesApi<'Candlestick'>;
@@ -98,9 +94,9 @@ export class ChartController {
   private readonly priceLines: IPriceLine[] = [];
   private range: RangeOverlay | null = null;
   private campaign: CampaignState | null = null;
-  private measurement: { start: MeasurementPoint; bottom: MeasurementPoint } | null = null;
+  private measurement: { start: InteractionPoint; current: InteractionPoint } | null = null;
   private rangeEditable = true;
-  private draggingLower = false;
+  private draggingBoundary: 'upper' | 'lower' | null = null;
   private lastCrosshair: ChartPoint | null = null;
   private drawQueued = false;
 
@@ -112,11 +108,15 @@ export class ChartController {
     this.chartSurface.className = 'chart-surface';
     this.overlay = document.createElement('canvas');
     this.overlay.className = 'chart-overlay';
+    this.upperHandle = document.createElement('button');
+    this.upperHandle.className = 'range-handle upper hidden';
+    this.upperHandle.type = 'button';
+    this.upperHandle.setAttribute('aria-label', 'Изменить цену GALKA');
     this.lowerHandle = document.createElement('button');
-    this.lowerHandle.className = 'range-handle hidden';
+    this.lowerHandle.className = 'range-handle lower hidden';
     this.lowerHandle.type = 'button';
     this.lowerHandle.setAttribute('aria-label', 'Изменить нижнюю границу');
-    this.host.append(this.chartSurface, this.overlay, this.lowerHandle);
+    this.host.append(this.chartSurface, this.overlay, this.upperHandle, this.lowerHandle);
 
     this.chart = createChart(this.chartSurface, {
       autoSize: true,
@@ -177,7 +177,7 @@ export class ChartController {
     this.installHandleDrag();
   }
 
-  public setCandles(candles: readonly Candle[], fit = false): void {
+  public setCandles(candles: readonly Candle[], fit = false, followLatest = false): void {
     this.series.setData(candles.map((candle) => ({
       time: candle.time as UTCTimestamp,
       open: candle.open,
@@ -186,6 +186,7 @@ export class ChartController {
       close: candle.close,
     })));
     if (fit) this.chart.timeScale().fitContent();
+    else if (followLatest) this.chart.timeScale().scrollToRealTime();
     this.queueDraw();
   }
 
@@ -206,13 +207,14 @@ export class ChartController {
     this.queueDraw();
   }
 
-  public setMeasurement(start: MeasurementPoint | null, bottom: MeasurementPoint | null): void {
-    this.measurement = start && bottom ? { start, bottom } : null;
+  public setMeasurement(start: InteractionPoint | null, current: InteractionPoint | null): void {
+    this.measurement = start && current ? { start, current } : null;
     this.queueDraw();
   }
 
   public setRangeEditable(editable: boolean): void {
     this.rangeEditable = editable;
+    this.upperHandle.classList.toggle('locked', !editable);
     this.lowerHandle.classList.toggle('locked', !editable);
   }
 
@@ -243,13 +245,13 @@ export class ChartController {
   }
 
   private handleClick(parameter: MouseEventParams<Time>): void {
-    if (this.draggingLower || !parameter.point || typeof parameter.time !== 'number') return;
+    if (this.draggingBoundary || !parameter.point || typeof parameter.time !== 'number') return;
     const value = this.series.coordinateToPrice(parameter.point.y);
     if (value === null) return;
     const point = { time: Number(parameter.time), price: Number(value) };
     this.lastCrosshair = point;
     this.pinCrosshair(point);
-    this.options.onPointSelected(point);
+    this.options.onCrosshair(point);
   }
 
   private rebuildPriceLines(): void {
@@ -286,31 +288,41 @@ export class ChartController {
   }
 
   private installHandleDrag(): void {
-    this.lowerHandle.addEventListener('pointerdown', (event) => {
-      if (!this.rangeEditable || !this.range) return;
-      event.preventDefault();
-      this.draggingLower = true;
-      this.lowerHandle.setPointerCapture(event.pointerId);
-    });
-    this.lowerHandle.addEventListener('pointermove', (event) => {
-      if (!this.draggingLower || !this.range) return;
-      const rectangle = this.host.getBoundingClientRect();
-      const coordinate = event.clientY - rectangle.top;
-      const value = this.series.coordinateToPrice(coordinate);
-      if (value === null) return;
-      const maximum = this.range.galkaPrice * 0.9999;
-      const minimum = this.range.galkaPrice * 0.05;
-      this.options.onLowerPriceChanged(Math.min(maximum, Math.max(minimum, Number(value))));
-    });
-    const finish = (event: PointerEvent) => {
-      if (!this.draggingLower) return;
-      this.draggingLower = false;
-      if (this.lowerHandle.hasPointerCapture(event.pointerId)) {
-        this.lowerHandle.releasePointerCapture(event.pointerId);
-      }
+    const install = (handle: HTMLButtonElement, boundary: 'upper' | 'lower') => {
+      handle.addEventListener('pointerdown', (event) => {
+        if (!this.rangeEditable || !this.range) return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.draggingBoundary = boundary;
+        handle.setPointerCapture(event.pointerId);
+      });
+      handle.addEventListener('pointermove', (event) => {
+        if (this.draggingBoundary !== boundary || !this.range) return;
+        const rectangle = this.host.getBoundingClientRect();
+        const coordinate = event.clientY - rectangle.top;
+        const value = this.series.coordinateToPrice(coordinate);
+        if (value === null) return;
+        if (boundary === 'upper') {
+          const minimum = this.range.lowerPrice * 1.0001;
+          this.options.onGalkaPriceChanged(Math.max(minimum, Number(value)));
+          return;
+        }
+        const maximum = this.range.galkaPrice * 0.9999;
+        const minimum = this.range.galkaPrice * 0.05;
+        this.options.onLowerPriceChanged(Math.min(maximum, Math.max(minimum, Number(value))));
+      });
+      const finish = (event: PointerEvent) => {
+        if (this.draggingBoundary !== boundary) return;
+        this.draggingBoundary = null;
+        if (handle.hasPointerCapture(event.pointerId)) {
+          handle.releasePointerCapture(event.pointerId);
+        }
+      };
+      handle.addEventListener('pointerup', finish);
+      handle.addEventListener('pointercancel', finish);
     };
-    this.lowerHandle.addEventListener('pointerup', finish);
-    this.lowerHandle.addEventListener('pointercancel', finish);
+    install(this.upperHandle, 'upper');
+    install(this.lowerHandle, 'lower');
   }
 
   private queueDraw(): void {
@@ -352,12 +364,19 @@ export class ChartController {
         context.fillText(`POOL ${index + 1}`, 10, upperY + 15);
       }
       const handleY = this.series.priceToCoordinate(this.range.lowerPrice);
+      const upperHandleY = this.series.priceToCoordinate(this.range.galkaPrice);
+      if (upperHandleY !== null) {
+        this.upperHandle.classList.remove('hidden');
+        this.upperHandle.style.top = `${Math.max(0, Math.min(height - 28, upperHandleY - 14))}px`;
+        this.upperHandle.textContent = `GALKA ${this.range.galkaPrice.toLocaleString('en-US', { maximumFractionDigits: 4 })}`;
+      }
       if (handleY !== null) {
         this.lowerHandle.classList.remove('hidden');
         this.lowerHandle.style.top = `${Math.max(0, Math.min(height - 28, handleY - 14))}px`;
-        this.lowerHandle.textContent = this.range.lowerPrice.toLocaleString('en-US', { maximumFractionDigits: 4 });
+        this.lowerHandle.textContent = `LOW ${this.range.lowerPrice.toLocaleString('en-US', { maximumFractionDigits: 4 })}`;
       }
     } else {
+      this.upperHandle.classList.add('hidden');
       this.lowerHandle.classList.add('hidden');
     }
 
@@ -369,13 +388,36 @@ export class ChartController {
     if (!this.campaign) return;
     const startX = Math.max(0, width * 0.58);
     for (const pool of this.campaign.pools) {
+      const upperY = this.series.priceToCoordinate(pool.upperPrice);
+      const lowerY = this.series.priceToCoordinate(pool.lowerPrice);
+      if (upperY !== null && lowerY !== null) {
+        if (pool.status === 'ASK_OPEN' || pool.status === 'SETTLED') {
+          context.fillStyle = pool.status === 'ASK_OPEN'
+            ? 'rgba(139,124,255,.13)'
+            : 'rgba(38,198,218,.08)';
+          context.fillRect(0, upperY, width, lowerY - upperY);
+        } else if (pool.status === 'PARTIAL') {
+          const filledPrices = pool.buyBins
+            .filter((bin) => bin.status === 'FILLED')
+            .map((bin) => bin.price);
+          const filledEdge = filledPrices.length > 0
+            ? this.series.priceToCoordinate(Math.min(...filledPrices))
+            : null;
+          if (filledEdge !== null) {
+            context.fillStyle = 'rgba(22,199,132,.10)';
+            context.fillRect(0, upperY, width, filledEdge - upperY);
+          }
+        }
+      }
       for (const bin of pool.buyBins) {
         const y = this.series.priceToCoordinate(bin.price);
         if (y === null) continue;
         context.beginPath();
         context.moveTo(startX, y);
         context.lineTo(width - 60, y);
-        context.strokeStyle = bin.status === 'FILLED'
+        context.strokeStyle = pool.status === 'ASK_OPEN' || pool.status === 'SETTLED'
+          ? 'rgba(139,124,255,.14)'
+          : bin.status === 'FILLED'
           ? 'rgba(22,199,132,.52)'
           : bin.status === 'OPEN'
             ? 'rgba(255,255,255,.10)'
@@ -394,11 +436,11 @@ export class ChartController {
         context.lineWidth = 0.7 + bin.weight * 22;
         context.stroke();
       }
-      const lowerY = this.series.priceToCoordinate(pool.lowerPrice);
-      if (lowerY !== null) {
+      const labelLowerY = this.series.priceToCoordinate(pool.lowerPrice);
+      if (labelLowerY !== null) {
         context.fillStyle = 'rgba(255,255,255,.62)';
         context.font = '700 9px Inter, system-ui, sans-serif';
-        context.fillText(`${poolFillPct(pool).toFixed(0)}%`, width - 52, lowerY - 3);
+        context.fillText(`${poolFillPct(pool).toFixed(0)}%`, width - 52, labelLowerY - 3);
       }
     }
   }
@@ -406,9 +448,9 @@ export class ChartController {
   private drawMeasurement(context: CanvasRenderingContext2D): void {
     if (!this.measurement) return;
     const startX = this.chart.timeScale().timeToCoordinate(this.measurement.start.time as UTCTimestamp);
-    const bottomX = this.chart.timeScale().timeToCoordinate(this.measurement.bottom.time as UTCTimestamp);
+    const bottomX = this.chart.timeScale().timeToCoordinate(this.measurement.current.time as UTCTimestamp);
     const startY = this.series.priceToCoordinate(this.measurement.start.price);
-    const bottomY = this.series.priceToCoordinate(this.measurement.bottom.price);
+    const bottomY = this.series.priceToCoordinate(this.measurement.current.price);
     if (startX === null || bottomX === null || startY === null || bottomY === null) return;
     context.beginPath();
     context.moveTo(startX, startY);
@@ -418,9 +460,9 @@ export class ChartController {
     context.setLineDash([6, 4]);
     context.stroke();
     context.setLineDash([]);
-    const depth = ((this.measurement.start.price - this.measurement.bottom.price) / this.measurement.start.price) * 100;
+    const change = ((this.measurement.current.price - this.measurement.start.price) / this.measurement.start.price) * 100;
     context.fillStyle = COLORS.violet;
     context.font = '800 11px Inter, system-ui, sans-serif';
-    context.fillText(`−${depth.toFixed(2)}%`, bottomX + 7, bottomY - 7);
+    context.fillText(`${change >= 0 ? '+' : '−'}${Math.abs(change).toFixed(2)}%`, bottomX + 7, bottomY - 7);
   }
 }

@@ -7,6 +7,7 @@ import {
   createPools,
   createSellLadder,
   fillBuyBin,
+  reopenBuyBin,
   settleSellBin,
 } from '../src/core/pool-engine';
 
@@ -22,6 +23,10 @@ const config = createCampaignConfig({
 describe('pool construction', () => {
   it('calculates the exact three pool boundaries', () => {
     expect(calculatePoolBoundaries(2_000, 0.15)).toEqual([2_000, 1_900, 1_800, 1_700]);
+    const boundaries = calculatePoolBoundaries(2_000, 0.15);
+    expect((boundaries[0] - boundaries[1]) / 2_000).toBeCloseTo(0.05, 12);
+    expect((boundaries[1] - boundaries[2]) / 2_000).toBeCloseTo(0.05, 12);
+    expect((boundaries[2] - boundaries[3]) / 2_000).toBeCloseTo(0.05, 12);
   });
 
   it('always allocates exactly 1,200 USDC across three pools', () => {
@@ -47,6 +52,19 @@ describe('pool construction', () => {
     expect(pool.costBasisUsdc).toBe(10);
   });
 
+  it('reopens a partial buy bin into its original USDC without flipping', () => {
+    const pool = createPools(config)[0];
+    const bin = pool?.buyBins[0];
+    if (!pool || !bin) throw new Error('Test pool was not created.');
+    const quantity = fillBuyBin(pool, bin, config.startTime);
+    expect(pool.status).toBe('PARTIAL');
+    expect(reopenBuyBin(pool, bin)).toBeCloseTo(quantity, 14);
+    expect(bin.status).toBe('OPEN');
+    expect(pool.status).toBe('BID_OPEN');
+    expect(pool.remainingAsset).toBe(0);
+    expect(pool.costBasisUsdc).toBe(0);
+  });
+
   it('flips a full pool into a sell ladder with exactly the same asset', () => {
     const pool = createPools(config)[0];
     if (!pool) throw new Error('Test pool was not created.');
@@ -56,6 +74,19 @@ describe('pool construction', () => {
     const ladder = createSellLadder(pool, config.galkaPrice, config.startTime);
     expect(ladder.reduce((sum, bin) => sum + bin.assetQuantity, 0)).toBeCloseTo(purchased, 12);
     expect(ladder.reduce((sum, bin) => sum + bin.costBasis, 0)).toBeCloseTo(400, 10);
+    expect(ladder[0]?.price).toBe(pool.lowerPrice);
+    expect(ladder.at(-1)?.price).toBe(config.galkaPrice);
+  });
+
+  it('refuses to flip a pool before every buy bin is filled', () => {
+    const pool = createPools(config)[0];
+    const bin = pool?.buyBins[0];
+    if (!pool || !bin) throw new Error('Test pool was not created.');
+    fillBuyBin(pool, bin, config.startTime);
+    expect(pool.status).toBe('PARTIAL');
+    expect(() => createSellLadder(pool, config.galkaPrice, config.startTime)).toThrow(
+      'Only a fully filled pool can be flipped',
+    );
   });
 });
 
