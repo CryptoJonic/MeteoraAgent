@@ -65,6 +65,18 @@ cat .galka-hardening/part-* > "$BACKUP_ROOT/hardening.patch.b64"
 base64 --decode "$BACKUP_ROOT/hardening.patch.b64" > "$BACKUP_ROOT/hardening.patch.gz"
 gzip -dc "$BACKUP_ROOT/hardening.patch.gz" > "$BACKUP_ROOT/hardening.patch"
 printf '%s  %s\n' "$PATCH_SHA" "$BACKUP_ROOT/hardening.patch" | sha256sum --check -
+
+# The audited source archive already contained the user's deliberate $1000 validation cap,
+# while the GitHub base branch still has the earlier guarded $200 cap. Normalize only this
+# known two-line difference so the audited patch applies exactly; reject any unknown variant.
+if grep -q 'total_notional > 200' live/config.py && \
+   grep -q 'between \$80 and \$200 for the guarded first version' live/config.py; then
+  sed -i 's/total_notional > 200/total_notional > 1000/' live/config.py
+  sed -i 's/between \$80 and \$200 for the guarded first version/between \$80 and \$1000/' live/config.py
+elif ! grep -q 'total_notional > 1000' live/config.py; then
+  fail "неизвестная версия ограничения HL_TOTAL_NOTIONAL в live/config.py"
+fi
+
 patch --dry-run --batch --forward -p1 < "$BACKUP_ROOT/hardening.patch"
 patch --batch --forward -p1 < "$BACKUP_ROOT/hardening.patch"
 rm -rf .galka-hardening
