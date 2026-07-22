@@ -19,7 +19,8 @@ fail() {
 }
 trap 'fail "команда завершилась на строке $LINENO"' ERR
 
-[[ -d "$REPO/.git" ]] || fail "не найден Git-репозиторий $REPO"
+git -C "$REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1 || \
+  fail "не найден Git-репозиторий $REPO"
 mkdir -p "$BACKUP_ROOT"
 chmod 700 "$BACKUP_ROOT"
 
