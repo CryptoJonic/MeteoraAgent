@@ -54,6 +54,10 @@ git fetch origin "$BRANCH"
 git switch -C "$BRANCH" "origin/$BRANCH"
 
 printf '[4/10] Восстанавливаю и проверяю hardened-патч...\n'
+if ! command -v patch >/dev/null 2>&1; then
+  command -v pkg >/dev/null 2>&1 || fail "не найдена команда patch"
+  pkg install -y patch
+fi
 [[ -f .galka-hardening/READY ]] || fail "в ветке отсутствует .galka-hardening/READY"
 cat .galka-hardening/part-* > "$BACKUP_ROOT/hardening.patch.b64"
 base64 --decode "$BACKUP_ROOT/hardening.patch.b64" > "$BACKUP_ROOT/hardening.patch.gz"
