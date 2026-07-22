@@ -84,6 +84,16 @@ rm -f .github/workflows/apply-galka-hardening-v3.yml
 chmod +x scripts/setup-galka-live.sh scripts/start-galka-live.sh \
   scripts/verify-galka-live.sh scripts/check-galka-live-account.sh
 
+# Normalize the single known packaging-only artifact from the audited archive:
+# source files must end with exactly one newline, not an extra blank line.
+python - <<'PY'
+from pathlib import Path
+
+path = Path("live/engine.py")
+text = path.read_text(encoding="utf-8")
+path.write_text(text.rstrip("\n") + "\n", encoding="utf-8")
+PY
+
 printf '[5/10] Принудительно оставляю реальную торговлю выключенной...\n'
 if [[ -f "$CONFIG" ]]; then
   sed -i 's/^HL_LIVE_ENABLED=.*/HL_LIVE_ENABLED=NO/' "$CONFIG"
