@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 REPO="$HOME/GalkaLive"
 BRANCH="agent/galka-live-hardening-v3"
+REMOTE_REF="refs/remotes/origin/$BRANCH"
 PATCH_SHA="98414f915ce0ff2aae06edb63ead566ffd51abe734d17edcf4c9db76396069d7"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_ROOT="$HOME/GalkaLive-backups/$STAMP"
@@ -50,8 +51,8 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 printf '[3/10] Получаю подготовленную ветку из GitHub...\n'
-git fetch origin "$BRANCH"
-git switch -C "$BRANCH" "origin/$BRANCH"
+git fetch origin "$BRANCH:$REMOTE_REF"
+git switch -C "$BRANCH" "$REMOTE_REF"
 
 printf '[4/10] Восстанавливаю и проверяю hardened-патч...\n'
 if ! command -v patch >/dev/null 2>&1; then
